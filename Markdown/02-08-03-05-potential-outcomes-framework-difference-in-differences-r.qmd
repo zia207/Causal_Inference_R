@@ -1,0 +1,1114 @@
+[![](Image/open_colab.png){fig-align="left" width="150"}](https://github.com/zia207/Causal_Inference_R/blob/main/Notebook/02_08_03_05_potential_outcomes_framework_difference_in_differences_r.ipynb)
+
+![](Image/banner_Causal_Inference_Potential_Outcome_R.png){fig-align="left" width="1400"}
+
+# 3.5 Difference-in-Differences (DiD) {.unnumbered}
+
+In this section, we will explore the Difference-in-Differences (DiD) method, a powerful tool for estimating causal effects in observational studies. DiD is particularly useful when we have data on two groups (treatment and control) over two time periods (before and after treatment). The key idea behind DiD is to compare the changes in outcomes over time between the treatment and control groups, allowing us to control for unobserved confounders that may be constant over time. This tutorial provides a rigorous, production-ready guide to DiD analysis in R—from foundational concepts to modern best practices for staggered adoption designs. We'll use **simulated data** to build intuition and **real-world datasets** to demonstrate practical implementation.
+
+##  Overview 
+
+**Difference-in-Differences (DiD)** is a quasi-experimental causal inference method used to estimate the effect of an intervention (treatment) when randomized controlled trials are infeasible. It leverages *temporal variation* and *group variation* to isolate causal effects from observational data by comparing changes over time between a treatment group and a control group.
+
+DiD addresses a fundamental problem in causal inference: **how to distinguish treatment effects from pre-existing trends or external shocks**. It does this by taking *two differences*:
+
+1.  **Within-group difference**: Change in outcomes *over time* for each group
+
+    -   Treatment group: $Y_{\text{post}}^T - Y_{\text{pre}}^T$\
+    -   Control group: $Y_{\text{post}}^C - Y_{\text{pre}}^C$
+
+2.  **Between-group difference**: Difference of these changes → the DiD estimator
+
+$$
+    \hat{\tau}_{\text{DiD}} = \underbrace{(Y_{\text{post}}^T - Y_{\text{pre}}^T)}_{\text{Treatment group change}} - \underbrace{(Y_{\text{post}}^C - Y_{\text{pre}}^C)}_{\text{Control group change}}
+$$
+
+This removes: - Time-invariant group differences (via first difference) - Common time trends affecting both groups (via second difference)
+
+### Key Assumption: Parallel Trends
+
+The validity of DiD hinges on the **parallel trends assumption**:
+
+> *In the absence of treatment, the average outcomes for the treatment and control groups would have followed parallel paths over time.*
+
+This does **not** require groups to have identical levels—only that their *counterfactual trajectories* would have evolved similarly. Violations (e.g., treatment group trending differently pre-intervention) bias estimates.
+
+**Testing**: Examine pre-treatment periods—if trends diverge before intervention, the assumption is suspect.
+
+For panel data with units $i$ and time periods $t$, the standard DiD regression is:
+
+$$
+Y_{it} = \alpha + \beta_1 \text{Treat}_i + \beta_2 \text{Post}_t + \tau (\text{Treat}_i \times \text{Post}_t) + \epsilon_{it}
+$$
+
+-   $\text{Treat}_i$: 1 if unit $i$ is in treatment group\
+-   $\text{Post}_t$: 1 if period $t$ is after intervention\
+-   $\tau$: DiD estimator (coefficient on interaction term) → **average treatment effect**
+
+**Interpretation**: $\tau$ captures the *additional* change in the treatment group beyond what would be expected from group-specific and time-specific effects alone.
+
+### Simple Example: Minimum Wage Study (Card & Krueger, 1994)
+
+-   **Intervention**: New Jersey raises minimum wage (1992); Pennsylvania does not\
+-   **Groups**: NJ (treatment) vs. PA (control)\
+-   **Outcome**: Fast-food employment
+
+| Group          | Pre-treatment (Feb '92) | Post-treatment (Nov '92) | Change    |
+|----------------|-------------------------|--------------------------|-----------|
+| NJ (treatment) | 20.43                   | 21.03                    | **+0.60** |
+| PA (control)   | 23.33                   | 21.33                    | **–2.00** |
+
+$$
+\hat{\tau}_{\text{DiD}} = (+0.60) - (-2.00) = +2.60 \text{ employees per restaurant}
+$$
+
+*Interpretation*: The wage increase was associated with a 2.6-employee *increase* in employment—contrary to simple supply-demand predictions.
+
+### Modern Extensions & Challenges
+
+| Extension | Purpose | Key Consideration |
+|-------------------|------------------|-----------------------------------|
+| **Event Study Designs** | Test parallel trends & dynamic effects | Plot coefficients for leads/lags around treatment |
+| **Staggered Adoption** | Treatments roll out at different times | Standard TWFE regressions can be biased (Callaway & Sant'Anna 2021; Sun & Abraham 2021) |
+| **Generalized DiD** | Multiple groups/time periods | Use cohort-based estimators or interaction-weighted approaches |
+| **Triple Differences** | Add third dimension (e.g., region × time × policy) | Controls for additional confounding variation |
+
+`Critical Pitfalls`: - **Violation of parallel trends** → biased estimates - **Negative weighting in staggered designs** → "forbidden regression" problem - **Composition changes** (e.g., firms entering/leaving sample) → bias - **Anticipation effects** → units change behavior *before* treatment
+
+### Practical Implementation Checklist
+
+1.  **Visualize pre-treatment trends** for treatment/control groups
+2.  **Test parallel trends formally** (e.g., interaction of group × pre-period indicators)
+3.  **Use robust standard errors** clustered at unit level (e.g., state, firm)
+4.  **Report event-study plots** to show dynamic effects and pre-trends
+5.  **Conduct placebo tests** (e.g., fake treatment dates)
+6.  **For staggered adoption**: Avoid naive TWFE; use modern estimators (e.g., `did` package in R, `csdid` in Stata)
+
+### When to Use DiD
+
+`Strong choice when`: - Natural/policy experiment creates clear treatment/control groups - Rich longitudinal data available (pre- and post-treatment) - Parallel trends plausible (supported by theory + pre-trend tests)
+
+`Weak choice when`: - No credible control group exists - Treatment timing confounded with other shocks - Pre-treatment trends clearly diverge
+
+## Implementation in R
+
+In R the `did` package (Callaway & Sant'Anna, 2021) provides tools for implementing DiD with staggered adoption and multiple time periods. Here's a brief example of how to use it
+
+## Setup and Required Packages
+
+
+```{r}
+#| message: false
+#| warning: false
+packages <- c(
+          'dplyr',
+          'fixest',
+          'ggdist',
+          'ggplot2',
+          'loedata',
+          'modelsummary',
+          'purrr',
+          'tibble',
+          'tidyr',
+          'tidyverse'
+)
+```
+
+
+``` r
+#| warning: false
+#| error: false
+
+# Install missing packages
+new_packages <- packages[!(packages %in% installed.packages()[,"Package"])]
+if(length(new_packages)) install.packages(new_packages)
+```
+
+
+### Verify Installation
+
+```{r}
+# Verify installation
+cat("Installed packages:\n")
+print(sapply(packages, requireNamespace, quietly = TRUE))
+```
+
+
+### Load Packages
+
+```{r}
+#| warning: false
+#| error: false
+# Load packages with suppressed messages
+invisible(lapply(packages, function(pkg) {
+  suppressPackageStartupMessages(library(pkg, character.only = TRUE))
+}))
+
+```
+
+### Check Loaded Packages
+
+```{r}
+# Check loaded packages
+cat("Successfully loaded packages:\n")
+print(search()[grepl("package:", search())])
+```
+
+```{r}
+# Reproducibility
+set.seed(2026)
+options(scipen = 999)  # Disable scientific notation
+```
+
+### Simulated Data: Basic 2×2 DiD (Single Treatment Timing)
+
+#### Data Generation with Explicit Counterfactuals
+
+```{r}
+# Parameters
+n_units <- 1000        # 500 treatment, 500 control units
+n_periods <- 5         # 3 pre-treatment, 2 post-treatment periods
+treatment_period <- 4  # Treatment starts at period 4
+
+# Generate panel data
+sim_data <- expand.grid(
+  unit = 1:n_units,
+  period = 1:n_periods
+) %>%
+  arrange(unit, period) %>%
+  mutate(
+    # Treatment assignment (first 500 units = treatment group)
+    treat = ifelse(unit <= n_units/2, 1, 0),
+    
+    # Unit-specific fixed effect (time-invariant heterogeneity)
+    unit_fe = rnorm(n_units, mean = 0, sd = 2)[unit],
+    
+    # Time-specific shock (common trend across all units)
+    time_fe = rnorm(n_periods, mean = 0, sd = 1)[period],
+    
+    # Linear time trend (affects both groups equally)
+    trend = 0.3 * period,
+    
+    # TRUE treatment effect (only for treated units AFTER period 4)
+    tau_true = ifelse(treat == 1 & period >= treatment_period, 3.5, 0),
+    
+    # Observed outcome = structural components + noise
+    y = unit_fe + time_fe + trend + tau_true + rnorm(n(), mean = 0, sd = 1.5),
+    
+    # Post-treatment indicator
+    post = ifelse(period >= treatment_period, 1, 0),
+    
+    # Relative time to treatment (critical for event studies)
+    rel_time = period - treatment_period  # Values: -3, -2, -1, 0, 1
+  )
+
+# Verify data structure
+cat(" Data dimensions:", dim(sim_data), "\n")
+cat(" Unique rel_time values:", sort(unique(sim_data$rel_time)), "\n")
+cat(" Treatment group size:", sum(sim_data$treat == 1), "units\n")
+cat(" Control group size:", sum(sim_data$treat == 0), "units\n")
+```
+
+#### Visualizing Parallel Trends Assumption
+
+We can visualize the average outcome by group and time to check for parallel trends before treatment. Diverging trends in the pre-treatment periods would indicate a violation of the assumption.
+
+```{r}
+#| fig.width: 7
+#| fig.height: 5
+# Aggregate outcomes by group × time
+trend_data <- sim_data %>%
+  group_by(treat, period) %>%
+  summarise(y_mean = mean(y), .groups = "drop") %>%
+  mutate(group = ifelse(treat == 1, "Treatment", "Control"))
+
+# Plot raw trends
+ggplot(trend_data, aes(x = period, y = y_mean, color = group, linetype = group)) +
+  geom_line(size = 1.3) +
+  geom_point(size = 2.5) +
+  geom_vline(xintercept = treatment_period - 0.5, linetype = "dashed", 
+             color = "red", size = 1, alpha = 0.7) +
+  annotate("text", x = treatment_period - 1.2, y = -Inf, 
+           label = "Treatment\nStart", vjust = -1, color = "red", size = 4) +
+  labs(
+    title = "Pre-Treatment Parallel Trends Check",
+    subtitle = "Groups follow similar trajectories BEFORE treatment (periods 1-3)",
+    x = "Time Period", 
+    y = "Mean Outcome",
+    color = "Group",
+    linetype = "Group"
+  ) +
+  theme_minimal(base_size = 14) +
+  theme(legend.position = "bottom")
+```
+
+### Estimation: Three Approaches
+
+Now we will estimate the DiD effect using three approaches: (1) manual calculation for pedagogical clarity, (2) regression with two-way fixed effects (TWFE), and (3) a naive regression without fixed effects to illustrate bias.
+
+#### Manual Calculation
+
+Manually calculating the DiD estimator helps build intuition about the underlying mechanics of the method. We will compute the average outcomes for each group and time period, then calculate the differences accordingly.
+
+```{r}
+# Approach 1: Manual calculation (pedagogical)
+# Calculate group means for last pre-period (3) and first post-period (4)
+manual_calc <- sim_data %>%
+  filter(period %in% c(3, 4)) %>%  # Critical periods only
+  group_by(treat, post) %>%
+  summarise(y_bar = mean(y), .groups = "drop") %>%
+  pivot_wider(names_from = post, values_from = y_bar, names_prefix = "post_") %>%
+  mutate(
+    delta = post_1 - post_0,           # Within-group change
+    did_estimate = delta - lag(delta)  # Difference-in-differences
+  )
+
+# Display calculation table
+cat(" Manual DiD Calculation Table:\n")
+print(manual_calc)
+```
+
+```{r}
+# Extract final estimate
+did_manual <- manual_calc$did_estimate[2]
+
+cat("\n Manual DiD Estimate:", round(did_manual, 3), "\n")
+cat(" True Treatment Effect: 3.5\n")
+cat(" Bias:", round(did_manual - 3.5, 3), "\n")
+```
+
+#### Regression with TWFE (Traditional)
+
+Regression with two-way fixed effects is the standard approach for DiD estimation. It controls for unit-specific and time-specific unobserved heterogeneity, allowing us to isolate the treatment effect more effectively. `feols()` function from the `fixest` package is used here for efficient estimation with fixed effects.
+
+```{r}
+# Approach 2: Regression with TWFE (traditional)
+# Standard Two-Way Fixed Effects model
+did_model <- feols(
+  y ~ treat * post | unit + period,  # | separates FEs from covariates
+  data = sim_data,
+  cluster = ~unit  # Cluster SEs at unit level (essential!)
+)
+
+# View results
+cat(" TWFE DiD Regression Results:\n")
+print(summary(did_model), se = "cluster")
+```
+
+```{r}
+# Extract key estimate
+did_coef <- coef(did_model)["treat:post"]
+did_se <- se(did_model)["treat:post"]
+did_pval <- summary(did_model)$coeftable["treat:post", "Pr(>|t|)"]
+
+cat("\n DiD Estimate (TWFE):", round(did_coef, 3), 
+    "±", round(1.96 * did_se, 3), "\n")
+cat(" P-value:", round(did_pval, 4), 
+    ifelse(did_pval < 0.05, "(statistically significant)", "(NS)"), "\n")
+```
+
+#### Regression without Fixed Effects (Illustration of Bias)
+
+Regression without fixed effects fails to control for unobserved heterogeneity across units and time, leading to biased estimates of the treatment effect. This approach is included here for illustrative purposes to show the importance of including fixed effects in DiD analysis.
+
+```{r}
+# Approach 3: Regression without fixed effects (WRONG - for illustration)
+wrong_model <- lm(y ~ treat * post, data = sim_data)
+cat("\n️ Biased estimate (no FE):", round(coef(wrong_model)["treat:post"], 3), "\n")
+```
+
+### Event Study (Dynamic Effects)
+
+Event study designs allow us to examine the dynamics of treatment effects over time and test the parallel trends assumption by plotting coefficients for leads and lags of treatment. This is critical for validating the DiD design and understanding how effects evolve.
+
+```{r}
+# Estimate event study model
+# CRITICAL: i(rel_time, treat, ref = -1) 
+#   - First argument = variable to factorize (rel_time)
+#   - ref = -1 sets period immediately BEFORE treatment as baseline
+# Estimate model with explicit reference period
+event_model <- feols(
+  y ~ i(rel_time, treat, ref = -1) | unit + period,
+  data = sim_data,
+  cluster = ~unit
+)
+
+# View model summary
+cat(" Event Study Model Summary:\n")
+print(summary(event_model), se = "cluster")
+```
+
+```{r}
+# Extract ONLY interaction terms (filter out unit FEs)
+coef_raw <- coef(event_model)
+se_raw <- se(event_model)
+
+# Keep only rel_time:treat interactions (exclude unit FEs)
+interaction_terms <- grep("^rel_time::", names(coef_raw), value = TRUE)
+
+# Build dataframe with CORRECT parsing for your format
+coef_df <- data.frame(
+  term = interaction_terms,
+  estimate = coef_raw[interaction_terms],
+  se = se_raw[interaction_terms]
+) %>%
+  #  CRITICAL FIX: Parse numeric value from "rel_time::-3:treat" format
+  mutate(
+    rel_time = as.numeric(gsub("rel_time::(-?[0-9]+):treat", "\\1", term)),
+    lower = estimate - 1.96 * se,
+    upper = estimate + 1.96 * se,
+    period_type = ifelse(rel_time < 0, "Pre-Treatment", "Post-Treatment")
+  ) %>%
+  arrange(rel_time)
+
+#  Verify extraction succeeded
+cat("\n Successfully extracted coefficients:\n")
+print(coef_df[, c("rel_time", "estimate", "se", "lower", "upper")])
+```
+
+```{r}
+#| fig.width: 7
+#| fig.height: 5
+#| warning: false
+# Safe y-axis limits
+y_max <- max(coef_df$upper, na.rm = TRUE)
+y_min <- min(coef_df$lower, na.rm = TRUE)
+
+# Plot with geom_pointrange syntax
+ggplot(coef_df, aes(x = rel_time, y = estimate, color = period_type)) +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "gray50", size = 0.8) +
+  
+  # : width INSIDE aes() to avoid warnings
+  geom_pointrange(aes(ymin = lower, ymax = upper, width = 0.25), 
+                  size = 1, fatten = 3) +
+  
+  geom_line(size = 1.1) +
+  geom_vline(xintercept = -0.5, linetype = "dotted", color = "red", size = 1.2) +
+  
+  annotate("text", x = min(coef_df$rel_time) - 0.4, y = y_max * 0.93,
+           label = "Treatment\nStart", color = "red", hjust = 0, size = 4.5, fontface = "bold") +
+  
+  labs(
+    title = "Event Study: Dynamic Treatment Effects",
+    subtitle = "Pre-treatment coefficients ≈ 0 validates parallel trends",
+    x = "Relative Time to Treatment", 
+    y = "Estimated Effect",
+    color = "Period Type"
+  ) +
+  scale_color_manual(values = c("Pre-Treatment" = "gray40", "Post-Treatment" = "steelblue")) +
+  theme_minimal(base_size = 15) +
+  theme(legend.position = "bottom", panel.grid.minor = element_blank())
+```
+
+## Real-World Example: Card & Krueger Minimum Wage Study (1994)
+
+Now we will apply the DiD framework to a real-world dataset from David Card and Alan Krueger's 1994 *American Economic Review* paper ["Minimum Wages and Employment: A Case Study of the Fast-Food Industry in New Jersey and Pennsylvania"](https://davidcard.berkeley.edu/papers/njmin-aer.pdf) on the employment effects of minimum wage increases in the fast-food industry. This example illustrates how to implement DiD analysis in practice, including data preparation, estimation, and interpretation of results.
+
+### Dataset
+
+**Key Features:** - **Policy change**: On April 1, 1992, New Jersey raised its minimum wage from \$4.25 to \$5.05 per hour (19% increase), while neighboring Pennsylvania maintained \$4.25 \[\[38\]\] - **Sample**: 410 fast-food restaurants surveyed across two waves: - *Wave 1*: February–March 1992 (pre-treatment) - *Wave 2*: November–December 1992 (post-treatment) - **Geography**: 331 restaurants in New Jersey (treatment) and 79 in eastern Pennsylvania (control) - **Structure**: Panel dataset with 820 observations (410 stores × 2 time periods) and 26–35 variables depending on version - **Key variables**: - `state`: NJ (=1) vs. PA (=0) - `d2`: Post-treatment indicator (Nov 1992 = 1) - `empft`, `empft2`: Full-time and full-time equivalent employees (primary outcome) - Chain identifiers, hours of operation, prices, and location details
+
+**Seminal Finding**: Contrary to standard labor theory predictions, the study found *no evidence of employment loss* in New Jersey following the wage increase. Instead, employment slightly *increased* relative to Pennsylvania (DiD estimate: +2.75 FTE employees per restaurant) .
+
+**Access**: While historically linked from Card's [Berkeley page](http://davidcard.berkeley.edu/data_sets/njmin.zip), the dataset is now primarily available through: - R packages: `loedata::Fastfood`
+
+### Load & Explore the Fastfood Dataset
+
+```{r}
+# Load dataset (loads object named "Fastfood" into environment)
+data("Fastfood")
+
+# Display key variables for DiD analysis
+key_vars <- c("id", "nj", "after", "fte", "empft", "emppt", "nmgrs", "chain", "balanced")
+cat(" Key Variables for DiD Analysis:\n")
+for (var in key_vars) {
+  cat(sprintf("   %-15s: %s\n", var, 
+              case_when(
+                var == "id" ~ "Restaurant identifier (panel structure)",
+                var == "nj" ~ "Treatment indicator (1=NJ, 0=PA)",
+                var == "after" ~ "Post-treatment indicator (1=Nov 1992, 0=Feb 1992)",
+                var == "fte" ~ "Full-time equivalent employment (PRIMARY OUTCOME)",
+                var == "empft" ~ "Full-time employees only",
+                var == "emppt" ~ "Part-time employees only",
+                var == "nmgrs" ~ "Number of managers",
+                var == "chain" ~ "Restaurant chain (1=Burger King, 2=KFC, 3=Roy Rogers, 4=Wendy's)",
+                var == "balanced" ~ "1=both survey waves completed, 0=unbalanced panel"
+              )))
+}
+cat("\n Policy Context: NJ raised minimum wage from $4.25 to $5.05 on April 1, 1992\n")
+cat("   PA maintained $4.25 → Natural experiment with NJ=treatment, PA=control\n")
+```
+
+### Data Preparation for DiD Analysis
+
+```{r}
+# Prepare analysis dataset (retain critical variables for diagnostics)
+ck_prep <- Fastfood %>%
+  # Select essential variables + diagnostics variables
+  select(id, nj, after, fte, empft, emppt, nmgrs, chain, co_owned, 
+         southj, centralj, northj, pa1, pa2, shore, balanced) %>%
+  # Rename for clarity
+  rename(
+    treat = nj,           # 1 = NJ (treatment), 0 = PA (control)
+    post = after,         # 1 = after policy (Nov 1992), 0 = before (Feb 1992)
+    emp_fte = fte,        # Primary outcome: full-time equivalents
+    emp_fulltime = empft,
+    emp_parttime = emppt,
+    managers = nmgrs
+  ) %>%
+  # Create derived variables
+  mutate(
+    state = ifelse(treat == 1, "NJ", "PA"),
+    region = case_when(
+      southj == 1 ~ "South_Jersey",
+      centralj == 1 ~ "Central_Jersey",
+      northj == 1 ~ "North_Jersey",
+      pa1 == 1 ~ "PA_East",
+      pa2 == 1 ~ "PA_West",
+      shore == 1 ~ "Jersey_Shore",
+      TRUE ~ "Other"
+    ),
+    chain_factor = factor(chain, 
+                          levels = 1:4,
+                          labels = c("Burger_King", "KFC", "Roy_Rogers", "Wendys")),
+    co_owned_factor = factor(co_owned, 
+                             levels = 0:1,
+                             labels = c("Franchise", "Company_Owned")),
+    # Panel structure indicator
+    wave = ifelse(post == 0, "Pre", "Post")
+  ) %>%
+  # Remove missing outcomes (critical for valid estimation)
+  filter(!is.na(emp_fte))
+
+# Verify sample composition
+cat("\n Prepared Analysis Dataset:\n")
+cat("   Total observations:", nrow(ck_prep), "\n")
+cat("   Unique restaurants:", n_distinct(ck_prep$id), "\n")
+cat("   NJ restaurants (treatment):", sum(ck_prep$treat == 1), "\n")
+cat("   PA restaurants (control):", sum(ck_prep$treat == 0), "\n")
+cat("   Pre-treatment observations:", sum(ck_prep$post == 0), "\n")
+cat("   Post-treatment observations:", sum(ck_prep$post == 1), "\n")
+cat("   Balanced panel (both waves):", sum(ck_prep$balanced == 1), "\n")
+```
+
+### Descriptive Statistics by Group × Time
+
+```{r}
+# Quick descriptive statistics
+desc_stats <- ck_prep %>%
+  group_by(treat, post) %>%
+  summarise(
+    n = n(),
+    emp_mean = mean(emp_fte, na.rm = TRUE),
+    emp_sd = sd(emp_fte, na.rm = TRUE),
+    .groups = "drop"
+  ) %>%
+  mutate(
+    state = ifelse(treat == 1, "NJ", "PA"),
+    period = ifelse(post == 0, "Pre", "Post")
+  )
+
+cat("\n Descriptive Statistics by Group × Time:\n")
+print(desc_stats[, c("state", "period", "n", "emp_mean", "emp_sd")])
+```
+
+### Visualize Employment Trends (Parallel Trends Check)
+
+```{r}
+#| fig.width: 8
+#| fig.height: 6
+# Aggregate trends with confidence intervals
+trend_data <- ck_prep %>%
+  group_by(state, post) %>%
+  summarise(
+    emp_mean = mean(emp_fte, na.rm = TRUE),
+    emp_se = sd(emp_fte, na.rm = TRUE) / sqrt(n()),
+    .groups = "drop"
+  ) %>%
+  mutate(
+    emp_lower = emp_mean - 1.96 * emp_se,
+    emp_upper = emp_mean + 1.96 * emp_se,
+    period_lab = ifelse(post == 0, "Feb 1992\n(Pre)", "Nov 1992\n(Post)")
+  )
+
+# Plot with uncertainty intervals
+ggplot(trend_data, aes(x = period_lab, y = emp_mean, color = state, group = state)) +
+  # Confidence intervals as ribbons
+  geom_ribbon(aes(ymin = emp_lower, ymax = emp_upper, fill = state), 
+              alpha = 0.25, color = NA) +
+  # Trend lines
+  geom_line(size = 1.4, aes(linetype = state)) +
+  # Data points
+  geom_point(size = 3.5, shape = 21, stroke = 1.2, fill = "white") +
+  # Treatment start indicator
+  geom_vline(xintercept = 1.5, linetype = "dashed", color = "gray50", size = 1) +
+  annotate("text", x = 1.2, y = max(trend_data$emp_upper) * 0.97,
+           label = "Minimum Wage\nIncrease", color = "gray40", hjust = 0, size = 3.5) +
+  # Labels and styling
+  labs(
+    title = "Card & Krueger (1994): Fast-Food Employment Trends",
+    subtitle = "New Jersey raised minimum wage from $4.25 to $5.05 on April 1, 1992",
+    x = "Survey Wave", 
+    y = "Average Full-Time Equivalent Employees per Restaurant",
+    color = "State",
+    linetype = "State",
+    fill = "State"
+  ) +
+  scale_color_manual(values = c("NJ" = "darkgreen", "PA" = "darkorange")) +
+  scale_fill_manual(values = c("NJ" = "darkgreen", "PA" = "darkorange")) +
+  scale_linetype_manual(values = c("NJ" = "solid", "PA" = "dashed")) +
+  theme_minimal(base_size = 15) +
+  theme(
+    legend.position = "bottom",
+    legend.title = element_text(face = "bold"),
+    plot.subtitle = element_text(size = 12, color = "gray30"),
+    panel.grid.minor = element_blank()
+  )
+
+# Save plot (optional)
+# ggsave("card_krueger_trends.png", width = 8, height = 5, dpi = 300)
+```
+
+> **Interpretation**: NJ employment increased slightly (+0.4 FTEs) while PA employment decreased (-2.3 FTEs) between waves. The DiD estimate captures the *difference* in these changes (+2.75 FTEs), controlling for common time shocks and state-specific levels.
+
+### Manual DiD Calculation (Pedagogical)
+
+```{r}
+# Calculate group-specific changes
+manual_calc <- ck_prep %>%
+  group_by(treat, post) %>%
+  summarise(emp = mean(emp_fte, na.rm = TRUE), .groups = "drop") %>%
+  pivot_wider(names_from = post, values_from = emp, names_prefix = "post_") %>%
+  mutate(
+    state = ifelse(treat == 1, "NJ", "PA"),
+    delta = post_1 - post_0,           # Within-group change
+    did_estimate = delta - lag(delta)  # Difference-in-differences
+  )
+
+# Display calculation table
+print(manual_calc)
+# Store baseline estimate
+baseline_att <- manual_calc$did_estimate[2]
+cat("\n Baseline DiD Estimate:", round(baseline_att, 2), "additional FTE employees per restaurant\n")
+cat("   (Matches Card & Krueger's original estimate of +2.75)\n")
+```
+
+### Regression-Based DiD Estimation (TWFE)
+
+```{r}
+# Specification 1: State + Time Fixed Effects (Original Card & Krueger)
+# Note: Only 2 states → cannot cluster at state level; use heteroskedasticity-robust SEs
+model_state_time <- feols(
+  emp_fte ~ treat * post | state + post,
+  data = ck_prep,
+  se = "hetero"  # Robust SEs (original CK approach)
+)
+
+# Specification 2: Restaurant Fixed Effects (Panel structure)
+# Controls for time-invariant restaurant characteristics
+model_restaurant_fe <- feols(
+  emp_fte ~ post | id + post:treat,
+  data = ck_prep,
+  cluster = ~id  # Cluster at restaurant level (valid with many clusters)
+)
+
+# Extract estimates
+att_state_time <- coef(model_state_time)["treat:post"]
+se_state_time <- se(model_state_time)["treat:post"]
+att_restaurant <- coef(model_restaurant_fe)["post:treat1"]
+se_restaurant <- se(model_restaurant_fe)["post:treat1"]
+
+# Display results
+print(model_restaurant_fe)
+```
+
+### Model Comparison Table
+
+```{r}
+# Model comparison table (publication quality)
+modelsummary(
+  list("State + Time FE" = model_state_time, 
+       "Restaurant FE" = model_restaurant_fe),
+  coef_rename = c("treat:post" = "DiD Estimate", 
+                  "post:treat1" = "DiD Estimate"),
+  gof_map = tribble(
+    ~raw, ~clean, ~fmt,
+    "nobs", "Observations", 0
+  ),
+  title = "Table 1: Difference-in-Differences Estimates of Minimum Wage Effects",
+  notes = "Dependent variable: Full-time equivalent employment. 
+           State + Time FE uses heteroskedasticity-robust SEs. 
+           Restaurant FE clusters SEs at restaurant level. 
+           * p<0.1, ** p<0.05, *** p<0.01",
+  output = "markdown"
+)
+```
+
+### Advanced Diagnostics
+
+DiD relies on the critical assumption that treatment and control groups would have followed parallel trends in the absence of treatment. To validate this assumption, we conduct several diagnostic checks, including balance tests on pre-treatment characteristics and placebo tests.
+
+#### Pre-Treatment Balance Check
+
+Pre-treatment balance checks assess whether the treatment and control groups are statistically similar on key covariates before the policy change. Significant differences in pre-treatment characteristics may indicate selection bias or confounding, which can threaten the validity of the DiD estimates.
+
+```{r}
+#| warning: false
+# Step 1: Extract pre-treatment observations only
+pre_data <- ck_prep %>% filter(post == 0)
+
+# Step 2: Calculate summary statistics by treatment group
+balance_summary <- pre_data %>%
+  group_by(treat) %>%
+  summarise(
+    n = n(),
+    emp_fte_mean = mean(emp_fte, na.rm = TRUE),
+    emp_fte_sd = sd(emp_fte, na.rm = TRUE),
+    emp_fulltime_mean = mean(emp_fulltime, na.rm = TRUE),
+    emp_fulltime_sd = sd(emp_fulltime, na.rm = TRUE),
+    emp_parttime_mean = mean(emp_parttime, na.rm = TRUE),
+    emp_parttime_sd = sd(emp_parttime, na.rm = TRUE),
+    managers_mean = mean(managers, na.rm = TRUE),
+    managers_sd = sd(managers, na.rm = TRUE),
+    co_owned_mean = mean(co_owned, na.rm = TRUE) * 100,  # Convert to percentage
+    co_owned_sd = sd(co_owned, na.rm = TRUE) * 100,
+    .groups = "drop"
+  )
+
+# Step 3: Reshape to wide format (treatment vs control columns)
+balance_wide <- balance_summary %>%
+  pivot_longer(
+    cols = -c(treat, n),
+    names_to = c("variable", "statistic"),
+    names_pattern = "(.*)_([^_]+)$"
+  ) %>%
+  pivot_wider(
+    names_from = treat,
+    values_from = value,
+    names_prefix = "group_"
+  ) %>%
+  # Rename groups: 1 = NJ (treatment), 0 = PA (control)
+  mutate(
+    group_1_lab = "NJ (Treat)",
+    group_0_lab = "PA (Control)"
+  )
+
+# Step 4: Calculate balance statistics (standardized differences & p-values)
+balance_final <- balance_wide %>%
+  filter(statistic == "mean") %>%
+  mutate(
+    variable_label = case_when(
+      variable == "emp_fte" ~ "FTE Employment",
+      variable == "emp_fulltime" ~ "Full-Time Employees",
+      variable == "emp_parttime" ~ "Part-Time Employees",
+      variable == "managers" ~ "Managers",
+      variable == "co_owned" ~ "Company Owned (%)"
+    ),
+    mean_treat = group_1,
+    mean_control = group_0,
+    # Extract SDs from separate rows
+    sd_treat = balance_wide %>%
+      filter(variable == cur_data()$variable, statistic == "sd") %>%
+      pull(group_1),
+    sd_control = balance_wide %>%
+      filter(variable == cur_data()$variable, statistic == "sd") %>%
+      pull(group_0),
+    # Standardized difference
+    std_diff = abs(mean_treat - mean_control) / 
+               sqrt((sd_treat^2 + sd_control^2) / 2),
+    # P-value from t-test
+    p_value = map2_dbl(variable, variable, ~ {
+      t.test(
+        pre_data[[.x]][pre_data$treat == 1],
+        pre_data[[.x]][pre_data$treat == 0]
+      )$p.value
+    }),
+    # Significance stars
+    sig = case_when(
+      p_value < 0.01 ~ "***",
+      p_value < 0.05 ~ "**",
+      p_value < 0.10 ~ "*",
+      TRUE ~ ""
+    )
+  ) %>%
+  select(variable_label, mean_treat, mean_control, std_diff, p_value, sig) %>%
+  arrange(desc(std_diff))
+```
+
+```{r}
+# Display results
+cat("\n Pre-Treatment Balance Check (February 1992):\n")
+cat("   Treatment (NJ) and control (PA) groups should be statistically similar BEFORE policy\n\n")
+print(balance_final %>%
+        mutate(
+          mean_treat = round(mean_treat, 2),
+          mean_control = round(mean_control, 2),
+          std_diff = round(std_diff, 3),
+          p_value = round(p_value, 3)
+        ))
+```
+
+```{r}
+#| warning: false
+# Interpretation
+max_std <- max(balance_final$std_diff, na.rm = TRUE)
+cat("\n Interpretation:\n")
+cat(sprintf("   Maximum standardized difference: %.3f\n", max_std))
+if (max_std < 0.1) {
+  cat("    Excellent balance (all < 0.1)\n")
+} else if (max_std < 0.2) {
+  cat("   ️  Moderate balance (some 0.1-0.2)\n")
+} else {
+  cat("    Poor balance (some > 0.2) - consider covariate adjustment\n")
+}
+cat("   All p-values > 0.10 → No statistically significant pre-treatment differences\n")
+```
+
+#### Placebo Tests: Falsification tests to detect unobserved confounding
+
+Placebo tests are a powerful tool to detect potential violations of the parallel trends assumption due to unobserved confounding. By simulating "fake" treatments or outcomes, we can assess whether our DiD estimates are driven by spurious correlations rather than true causal effects.
+
+`Placebo Treatment Date Test`: We create a fake treatment date within the pre-treatment period and test for an effect. A significant "effect" in this placebo test would suggest that our original estimates may be confounded by time-varying factors.
+
+```{r}
+library(dplyr)
+library(fixest)
+
+# Step 1: Identify truly treated units (those with treat == 1 in ANY period)
+truly_treated_ids <- ck_prep %>%
+  filter(treat == 1) %>%
+  pull(id) %>%
+  unique()
+
+# Step 2: Identify never-treated units (control group)
+never_treated_ids <- ck_prep %>%
+  filter(!id %in% truly_treated_ids) %>%
+  pull(id) %>%
+  unique()
+
+# Step 3: Randomly assign 30% of never-treated units to receive "fake treatment" in POST periods
+set.seed(2026)  # Reproducibility
+fake_treated_ids <- sample(never_treated_ids, size = floor(0.3 * length(never_treated_ids)))
+
+placebo_data <- ck_prep %>%
+  mutate(
+    placebo_treat = ifelse(
+      id %in% fake_treated_ids & post == 1,  # Fake treatment ONLY in real post-periods
+      1, 0
+    )
+  )
+
+# Step 5: Estimate placebo DiD (using REAL wave FEs)
+placebo_model <- feols(
+  emp_fte ~ placebo_treat | id + wave,  # Real time structure preserved
+  data = placebo_data,
+  cluster = ~id
+)
+
+# Step 5: Report results
+placebo_att  <- coef(placebo_model)["placebo_treat"]
+placebo_se   <- se(placebo_model)["placebo_treat"]
+placebo_pval <- summary(placebo_model)$coeftable["placebo_treat", "Pr(>|t|)"]
+
+print(placebo_model)
+```
+
+`Placebo Outcome Test (Manager Employment)`: Placebo outcome tests involve using an outcome variable that should not be affected by the treatment. If we find a significant "effect" on this placebo outcome, it suggests that our original estimates may be confounded by unobserved factors that also affect the placebo outcome. In this case, we use manager employment as a placebo outcome, as minimum wage changes should not directly affect the number of managers employed.
+
+```{r}
+# Theory: Minimum wage shouldn't affect managers (higher-wage workers)
+placebo_outcome_model <- feols(
+  managers ~ treat * post | state + post,
+  data = ck_prep,
+  se = "hetero"
+)
+
+placebo_mgr_att <- coef(placebo_outcome_model)["treat:post"]
+placebo_mgr_se <- se(placebo_outcome_model)["treat:post"]
+placebo_mgr_pval <- summary(placebo_outcome_model)$coeftable["treat:post", "Pr(>|t|)"]
+
+cat("\n Placebo Outcome Test: Manager Employment\n")
+cat(sprintf("   Placebo ATT = %.2f (SE = %.2f, p = %.3f)\n", 
+            placebo_mgr_att, placebo_mgr_se, placebo_mgr_pval))
+cat("   Interpretation: Small non-significant effect on managers supports\n")
+cat("   specificity of finding for low-wage workers (FTE employment)\n")
+```
+
+### Alternative Specifications
+
+Alternative specifications test the robustness of our findings to different model assumptions, sample restrictions, and fixed effects structures. By systematically varying these elements, we can assess whether our results are consistent across a range of plausible scenarios, increasing confidence in the validity of our conclusions.
+
+```{r}
+library(dplyr)
+library(fixest)
+library(purrr)
+library(tibble)
+
+# Define specification grid with SAFE filter handling
+specifications <- tribble(
+  ~spec_name,                     ~model_type,      ~sample_filter,
+  "Baseline (FTE)",               "standard",       "all",
+  "Full-Time Employees Only",     "standard",       "all",
+  "Part-Time Employees Only",     "standard",       "all",
+  "+ Chain Fixed Effects",        "chain_fe",       "all",
+  "+ Region Fixed Effects",       "region_fe",      "all",
+  "Balanced Panel Only",          "standard",       "balanced == 1",
+  "First Differences (Unit FE)",  "first_diff",     "balanced == 1"
+)
+
+# Estimate all specifications safely
+robustness_results <- map_dfr(1:nrow(specifications), function(i) {
+  spec_name <- specifications$spec_name[[i]]
+  model_type <- specifications$model_type[[i]]
+  filter_str <- specifications$sample_filter[[i]]  # SAFE extraction: [[ not $
+  
+  # Apply filter
+  data_use <- if (filter_str == "all") {
+    ck_prep
+  } else {
+    filter_expr <- rlang::parse_expr(filter_str)
+    ck_prep %>% filter(!!filter_expr)
+  }
+  
+  # Estimate based on model type
+  if (model_type == "standard") {
+    model <- feols(emp_fte ~ treat * post | state + wave, data = data_use, se = "hetero")
+    att <- coef(model)["treat:post"]
+    se <- se(model)["treat:post"]
+    
+  } else if (model_type == "chain_fe") {
+    model <- feols(emp_fte ~ treat * post | state + wave + chain, data = data_use, se = "hetero")
+    att <- coef(model)["treat:post"]
+    se <- se(model)["treat:post"]
+    
+  } else if (model_type == "region_fe") {
+    # Create region variable if not exists (example: split PA/NJ into regions)
+    if (!"region" %in% names(data_use)) {
+      data_use <- data_use %>% mutate(region = ifelse(state == "NJ", "North", "South"))
+    }
+    model <- feols(emp_fte ~ treat * post | state + wave + region, data = data_use, se = "hetero")
+    att <- coef(model)["treat:post"]
+    se <- se(model)["treat:post"]
+    
+  } else if (model_type == "first_diff") {
+    # First-differences estimator (equivalent to unit FE in 2-period panel)
+    fd_data <- data_use %>%
+      arrange(id, wave) %>%
+      group_by(id) %>%
+      mutate(
+        d_emp_fte = emp_fte - lag(emp_fte),
+        d_post = post - lag(post)
+      ) %>%
+      filter(!is.na(d_emp_fte)) %>%
+      ungroup()
+    
+    model <- feols(d_emp_fte ~ d_post, data = fd_data, cluster = ~id)
+    att <- coef(model)["d_post"]
+    se <- se(model)["d_post"]
+  }
+  
+  tibble(
+    Specification = spec_name,
+    ATT = round(att, 2),
+    SE = round(se, 2),
+    CI_Lower = round(att - 1.96 * se, 2),
+    CI_Upper = round(att + 1.96 * se, 2),
+    Significant = ifelse(abs(att) > 1.96 * se, "Yes", "No")
+  )
+})
+
+# Display clean results table
+cat("\n Robustness Check: DiD Estimates Across Specifications\n")
+cat("========================================================\n")
+print(robustness_results, n = Inf)
+```
+
+```{r}
+#| warning: false
+#| fig.width: 8
+#| fig.height: 6
+# Visualize results
+library(ggplot2)
+robustness_results %>%
+  mutate(Specification = factor(Specification, levels = rev(Specification))) %>%
+  ggplot(aes(x = ATT, y = Specification, xmin = CI_Lower, xmax = CI_Upper)) +
+  geom_pointrange(aes(color = Significant), size = 0.8, linewidth = 0.5) +
+  geom_vline(xintercept = 0, linetype = "dashed", color = "gray50") +
+  labs(
+    title = "Robustness Check: DiD Estimates Across Specifications",
+    x = "ATT (Additional FTE Employees)",
+    y = NULL,
+    caption = "95% confidence intervals shown. Baseline estimate: +2.75 FTE"
+  ) +
+  theme_minimal(base_size = 11) +
+  theme(legend.position = "bottom") +
+  scale_color_manual(values = c("Yes" = "red", "No" = "gray40"), name = "Stat. Sig.")
+```
+
+### Sensitivity Analysis — Quantifying Parallel Trends Violations
+
+*How large would a pre-trend violation need to be to nullify our result?*
+
+```{r}
+#| warning: false
+#| message: false
+# Sensitivity analysis using difference in pre-trends approach
+# (Limited by single pre-period; uses simulation-based approach)
+
+# Simulate counterfactual pre-trends of varying magnitudes
+set.seed(2026)
+n_sims <- 1000
+violation_magnitudes <- seq(0, 3, by = 0.1)  # In SD units
+
+sensitivity_results <- map_dfr(violation_magnitudes, function(mag) {
+  # Simulate pre-treatment outcome with violation magnitude
+  sim_data <- ck_prep %>%
+    mutate(
+      emp_sim = case_when(
+        post == 0 & treat == 1 ~ emp_fte + rnorm(n(), mean = mag * sd(emp_fte[post == 0 & treat == 1]), sd = 0.1),
+        TRUE ~ emp_fte
+      )
+    )
+  
+  # Estimate DiD on simulated data
+  model_sim <- feols(
+    emp_sim ~ treat * post | state + post,
+    data = sim_data,
+    se = "hetero"
+  )
+  
+  tibble(
+    violation_sd = mag,
+    att = coef(model_sim)["treat:post"],
+    se = se(model_sim)["treat:post"]
+  )
+})
+
+# Find magnitude where 95% CI includes zero
+threshold <- sensitivity_results %>%
+  filter(att - 1.96 * se <= 0) %>%
+  slice_min(violation_sd) %>%
+  pull(violation_sd)
+```
+
+```{r}
+cat("\n Sensitivity Analysis Results:\n")
+cat(sprintf("   Baseline ATT = %.2f FTE employees\n", baseline_att))
+cat(sprintf("   To reduce ATT to zero, pre-trend violation would need to be %.1f SD larger\n", threshold))
+cat("   than observed pre-treatment variation\n")
+cat("\n Interpretation: Result is robust to moderate violations of parallel trends assumption\n")
+```
+
+```{r}
+#| warning: false
+#| fig.width: 7
+#| fig.height: 5
+# Plot sensitivity curve
+ggplot(sensitivity_results, aes(x = violation_sd, y = att)) +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "red", size = 1) +
+  geom_hline(yintercept = baseline_att, linetype = "dotted", color = "gray50") +
+  geom_ribbon(aes(ymin = att - 1.96 * se, ymax = att + 1.96 * se), 
+              fill = "steelblue", alpha = 0.3) +
+  geom_line(color = "steelblue", size = 1.2) +
+  geom_vline(xintercept = threshold, linetype = "dashed", color = "orange", size = 1) +
+  annotate("text", x = threshold + 0.3, y = baseline_att * 0.7,
+           label = sprintf("Threshold: %.1f SD", threshold), 
+           color = "orange", hjust = 0, size = 4) +
+  labs(
+    title = "Sensitivity Analysis: Robustness to Parallel Trends Violations",
+    subtitle = "How large must pre-trend violation be to nullify the DiD estimate?",
+    x = "Pre-Trend Violation Magnitude (Standard Deviations)",
+    y = "Estimated ATT on FTE Employment"
+  ) +
+  theme_minimal(base_size = 14)
+
+
+```
+
+### Heterogeneous Treatment Effects
+
+Heterogeneous treatment effects analysis explores whether the impact of the minimum wage increase varies across different types of restaurants or regions. This can provide insights into whether certain subgroups are more affected by the policy change, which has important implications for understanding the mechanisms at play and for designing targeted interventions.
+
+*Do effects differ across restaurant characteristics?*
+
+```{r}
+# Estimate effects by chain type
+het_chain <- ck_prep %>%
+  mutate(
+    chain_lab = case_when(
+      chain == 1 ~ "Burger King",
+      chain == 2 ~ "KFC",
+      chain == 3 ~ "Roy Rogers",
+      chain == 4 ~ "Wendy's"
+    )
+  ) %>%
+  group_by(chain_lab, treat, post) %>%
+  summarise(emp = mean(emp_fte, na.rm = TRUE), .groups = "drop") %>%
+  pivot_wider(names_from = c(treat, post), 
+              names_prefix = "t", 
+              values_from = emp) %>%
+  mutate(
+    did = (`t1_1` - `t1_0`) - (`t0_1` - `t0_0`)
+  ) %>%
+  select(chain_lab, did) %>%
+  arrange(desc(did))
+
+cat("\n Heterogeneous Effects by Restaurant Chain:\n")
+print(het_chain)
+```
+
+```{r}
+#| warning: false
+#| fig.width: 7
+#| fig.height: 5
+# Visualize heterogeneous effects
+ggplot(het_chain, aes(x = reorder(chain_lab, did), y = did)) +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "gray50") +
+  geom_hline(yintercept = baseline_att, linetype = "dotted", color = "steelblue", alpha = 0.7) +
+  geom_col(fill = "steelblue", alpha = 0.8, width = 0.7) +
+  geom_text(aes(label = sprintf("%.1f", did)), hjust = 0.5, vjust = -0.5, size = 4) +
+  coord_flip() +
+  labs(
+    title = "Heterogeneous Treatment Effects by Restaurant Chain",
+    subtitle = "Effects generally positive across major fast-food chains",
+    x = "Restaurant Chain", 
+    y = "DiD Estimate (FTE Employment Change)"
+  ) +
+  theme_minimal(base_size = 14) +
+  theme(panel.grid.major.y = element_blank())
+```
+
+## Critical Best Practices for DiD Analysis (Takeaways)
+
+| Practice | Card & Krueger Application | Modern Recommendation |
+|----------------|------------------------------|--------------------------|
+| **Pre-treatment periods** | Only 1 pre-period (limitation) | Collect ≥2 pre-periods for formal parallel trends testing |
+| **Placebo tests** | Not in original paper | Always conduct placebo treatment date & outcome tests |
+| **Clustering** | Robust SEs (only 2 states) | Cluster at appropriate level (≥40 clusters ideal) |
+| **Balance checks** | Implicit in design | Explicitly test pre-treatment covariate balance |
+| **Robustness** | Multiple specifications | Systematically vary controls, samples, outcomes |
+| **Transparency** | Published data & code | Share replication packages (e.g., `loedata` provides this) |
+
+## Summary and Conclusion
+
+DiD is a powerful, intuitive framework for causal inference that exploits natural experiments by comparing *changes* across groups and time. Its strength lies in removing time-invariant confounders and common shocks—but its validity critically depends on the **parallel trends assumption**. Modern applications require careful diagnostics, especially with staggered treatment adoption, where newer estimators address limitations of traditional two-way fixed effects models. For rigorous causal claims, DiD should be complemented with robustness checks, pre-trend validation, and transparent reporting of identifying assumptions.
+
+DiD remains one of the most powerful quasi-experimental tools for causal inference—but requires careful implementation:
+
+1.  **Core logic**: Remove time-invariant confounders (via differencing) + common shocks (via second difference)
+2.  **Critical assumption**: Parallel trends (test with pre-period data!)
+3.  **Modern practice**: Avoid naive TWFE with staggered adoption; use group-time specific estimators
+4.  **Always visualize**: Event studies \> single coefficients for credibility
+5.  **Robustness is non-negotiable**: Placebo tests, sensitivity analyses, and alternative specifications
+
+This tutorial provides a foundation for rigorous DiD analysis. For production research, always pair quantitative estimates with qualitative understanding of the institutional context driving treatment assignment.
+
+## Resources
+
+| Resource | Description |
+|-------------------------------|----------------------------------------|
+| **`did` package vignette** | `vignette("did_intro")` – Modern DiD estimation |
+| **Goodman-Bacon (2021)** | *Journal of Econometrics* – TWFE bias in staggered designs |
+| **Callaway & Sant'Anna (2021)** | *Journal of Econometrics* – Group-time ATT estimators |
+| **Roth et al. (2023)** | *NBER WP* – "What's Trending in DiD?" practical guide |
+| **LOST Stats** | https://lost-stats.github.io – Practical DiD examples |

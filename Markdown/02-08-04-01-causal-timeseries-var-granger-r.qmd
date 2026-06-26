@@ -1,0 +1,603 @@
+[![](Image/open_colab.png){fig-align="left" width="150"}](https://github.com/zia207/Causal_Inference_in_R/blob/main/Colab_Notebook/02_08_04_01_causal_timeseries_var_granger_r.ipynb)
+
+![](Image/banner_Causal_Inference_temporal_CI_R.png){fig-align="left" width="1400"}
+
+# 4.1 Time-Series Causal Models: VAR, Granger Causality, SVAR, and ECM {.unnumbered}
+
+Time-series causal models form the foundational layer of temporal causal inference for settings where a single unit — a country, a market, a patient, an ecosystem — is observed over many periods. Unlike cross-sectional methods that compare units at a single point in time, these models exploit the *temporal ordering* of variables to assess whether past values of one series help predict future values of another, above and beyond the series' own past. This predictive precedence — formalized as **Granger causality** — is the workhorse concept connecting dynamic regression to causal reasoning in macroeconomics, finance, epidemiology, and environmental science.
+
+This chapter covers four interconnected models. **Vector Autoregression (VAR)** generalizes univariate autoregression to a system of equations, capturing linear dynamic interdependencies among multiple time series. **Granger causality** tests derived from VAR provide a formal statistical framework for asking whether $X$ Granger-causes $Y$. **Structural VAR (SVAR)** imposes economic or domain-theory restrictions to recover causally interpretable structural shocks and **impulse response functions (IRFs)**. Finally, **Error Correction Models (ECM)** address the special case of cointegrated — that is, long-run equilibrium-linked — non-stationary series, separating short-run dynamics from long-run adjustment.
+
+## Overview
+
+### Vector Autoregression (VAR)
+
+A VAR model of order $p$ — written VAR($p$) — jointly models $K$ time series as a linear function of their own and each other's past $p$ values:
+
+$$
+\mathbf{Y}_t = \mathbf{c} + \mathbf{A}_1 \mathbf{Y}_{t-1} + \mathbf{A}_2 \mathbf{Y}_{t-2} + \cdots + \mathbf{A}_p \mathbf{Y}_{t-p} + \boldsymbol{\varepsilon}_t
+$$
+
+where:
+
+- $\mathbf{Y}_t = (y_{1t}, y_{2t}, \ldots, y_{Kt})^\top$ is a $K \times 1$ vector of endogenous variables at time $t$
+- $\mathbf{c}$ is a $K \times 1$ vector of intercepts
+- $\mathbf{A}_j$ are $K \times K$ coefficient matrices for lag $j$
+- $\boldsymbol{\varepsilon}_t \sim \mathcal{N}(\mathbf{0}, \boldsymbol{\Sigma})$ is white noise with covariance $\boldsymbol{\Sigma}$
+
+**Key outputs from a VAR:**
+
+| Output | Description | Causal Interpretation |
+|---|---|---|
+| Granger causality F-test | Does $X$ improve prediction of $Y$ beyond $Y$'s own past? | Predictive precedence |
+| Impulse Response Function (IRF) | How does $Y$ respond to a shock in $X$ over time? | Dynamic causal pathway |
+| Forecast Error Variance Decomposition (FEVD) | What fraction of $Y$'s forecast error variance is attributable to $X$? | Relative causal contribution |
+
+### Granger Causality
+
+$X$ **Granger-causes** $Y$ if past values of $X$ contain information that helps predict $Y$ beyond what $Y$'s own past provides:
+
+$$
+\text{Restricted:} \quad y_t = \alpha + \sum_{j=1}^p \beta_j y_{t-j} + \varepsilon_t
+$$
+
+$$
+\text{Unrestricted:} \quad y_t = \alpha + \sum_{j=1}^p \beta_j y_{t-j} + \sum_{j=1}^p \gamma_j x_{t-j} + \varepsilon_t
+$$
+
+**Null hypothesis:** $H_0: \gamma_1 = \gamma_2 = \cdots = \gamma_p = 0$ (X does NOT Granger-cause Y).
+
+The F-test (or $\chi^2$ Wald test) compares the restricted and unrestricted models. Rejection means $X$ adds predictive content for $Y$ beyond $Y$'s own history.
+
+::: {.callout-important}
+## Granger Causality is Predictive, Not Structural
+
+Granger causality tests whether $X$ predicts $Y$ — not whether $X$ *causes* $Y$ in the structural sense. A spurious common driver $Z$ can induce Granger causality from $X$ to $Y$ without any direct causal link. Structural identification (via SVAR or theory-based restrictions) is required for causal claims.
+:::
+
+### Structural VAR (SVAR)
+
+The reduced-form VAR $\mathbf{A}_0 \mathbf{Y}_t = \mathbf{c} + \mathbf{A}_1^* \mathbf{Y}_{t-1} + \cdots + \mathbf{u}_t$ contains *structural shocks* $\mathbf{u}_t$ that are interpretable as causal innovations (demand shock, supply shock, monetary policy shock). Identification requires imposing $K(K-1)/2$ restrictions on $\mathbf{A}_0$:
+
+- **Choleski (recursive) decomposition**: A lower-triangular $\mathbf{A}_0$ implies a causal ordering — variable 1 has no contemporaneous effect on variables 2, 3, ... Variable 2 affects 3, 4, ... but not 1. The ordering must be theory-justified.
+- **Long-run restrictions** (Blanchard-Quah): Some shocks have zero long-run effect on certain variables (e.g., demand shocks have no long-run effect on output).
+- **Sign restrictions**: Shocks are identified by the sign pattern of their IRFs.
+
+**Impulse response function** at horizon $h$: $\text{IRF}(h) = \frac{\partial \mathbf{Y}_{t+h}}{\partial u_{j,t}}$ — the response of all variables to a unit shock in structural shock $j$ at time $t$.
+
+### Cointegration and Error Correction Models (ECM)
+
+When two I(1) (non-stationary, integrated of order 1) series share a long-run equilibrium, they are **cointegrated**. The Engle-Granger representation theorem states that a cointegrated system must have an error correction representation:
+
+$$
+\Delta y_t = \alpha_1 (y_{t-1} - \beta x_{t-1}) + \sum_{j=1}^{p-1} \Gamma_{1j} \Delta y_{t-j} + \sum_{j=1}^{p-1} \Gamma_{2j} \Delta x_{t-j} + \varepsilon_t
+$$
+
+where:
+
+- $(y_{t-1} - \beta x_{t-1})$ is the **error correction term** — the deviation from long-run equilibrium
+- $\alpha_1 < 0$ is the **speed of adjustment** — how quickly $y$ corrects toward equilibrium
+- $\Gamma_{1j}, \Gamma_{2j}$ capture short-run dynamics
+
+**Testing for cointegration:**
+
+| Test | Null hypothesis | R function |
+|---|---|---|
+| Engle-Granger two-step | No cointegration | `po.test()` in `tseries` |
+| Johansen trace/max | $r$ cointegrating vectors | `ca.jo()` in `urca` |
+| Phillips-Ouliaris | No cointegration | `po.test()` in `tseries` |
+
+### Practical Decision Guide
+
+| Scenario | Recommended Model | Key Assumption |
+|---|---|---|
+| All series stationary I(0) | VAR in levels | Stationarity |
+| All series I(1), not cointegrated | VAR in first differences | No spurious regression |
+| Series I(1) and cointegrated | VECM (ECM) | Long-run equilibrium exists |
+| Need structural causal identification | SVAR | Theory-based restrictions |
+| Pairwise predictive causality | Bivariate Granger test | No omitted third variable |
+
+## Implementation in R
+
+This section provides a complete production-ready workflow: simulated data for pedagogical clarity, followed by a real-world macroeconomic application.
+
+### Setup and Required Packages
+
+```{r}
+#| message: false
+#| warning: false
+packages <- c(
+  "tidyverse",
+  "vars",
+  "urca",
+  "tseries",
+  "lmtest",
+  "tsDyn",
+  "ggplot2",
+  "patchwork",
+  "modelsummary"
+)
+```
+
+``` r
+#| warning: false
+#| error: false
+
+# Install missing packages
+new_packages <- packages[!(packages %in% installed.packages()[,"Package"])]
+if(length(new_packages)) install.packages(new_packages)
+```
+
+### Verify Installation
+
+```{r}
+cat("Installed packages:\n")
+print(sapply(packages, requireNamespace, quietly = TRUE))
+```
+
+### Load Packages
+
+```{r}
+#| warning: false
+#| error: false
+invisible(lapply(packages, function(pkg) {
+  suppressPackageStartupMessages(library(pkg, character.only = TRUE))
+}))
+```
+
+### Check Loaded Packages
+
+```{r}
+cat("Successfully loaded packages:\n")
+print(search()[grepl("package:", search())])
+```
+
+```{r}
+set.seed(2026)
+options(scipen = 999)
+```
+
+## Simulated Data: VAR and Granger Causality
+
+### Data Generation
+
+We simulate a two-variable system where $X$ Granger-causes $Y$ but $Y$ does not Granger-cause $X$. This allows us to verify that the Granger test recovers the known data-generating structure.
+
+```{r}
+# True DGP: X -> Y (one-way Granger causality)
+# X(t) = 0.6*X(t-1) + e_x(t)
+# Y(t) = 0.4*Y(t-1) + 0.5*X(t-1) + e_y(t)
+
+T <- 300  # time periods
+
+# Initialize
+x <- numeric(T)
+y <- numeric(T)
+
+x[1] <- rnorm(1, sd = 2)
+y[1] <- rnorm(1, sd = 2)
+
+# Generate the series
+for(t in 2:T) {
+  x[t] <- 0.6 * x[t-1] + rnorm(1, sd = 1)
+  y[t] <- 0.4 * y[t-1] + 0.5 * x[t-1] + rnorm(1, sd = 1)
+}
+
+# Combine into data frame
+ts_df <- tibble(
+  t     = 1:T,
+  X     = x,
+  Y     = y
+)
+
+cat("Simulated series summary:\n")
+print(summary(ts_df[, c("X", "Y")]))
+```
+
+### Visualizing the Series
+
+```{r}
+#| fig.width: 15
+#| fig.height: 5
+p1 <- ggplot(ts_df, aes(x = t, y = X)) +
+  geom_line(color = "steelblue", linewidth = 0.8) +
+  labs(title = "Simulated Series X", x = "Time", y = "X(t)") +
+  theme_minimal(base_size = 13)
+
+p2 <- ggplot(ts_df, aes(x = t, y = Y)) +
+  geom_line(color = "firebrick", linewidth = 0.8) +
+  labs(title = "Simulated Series Y (driven by X)", x = "Time", y = "Y(t)") +
+  theme_minimal(base_size = 13)
+
+p1 + p2 + plot_layout(ncol = 2)
+```
+
+### Stationarity Testing (ADF Test)
+
+Before fitting a VAR, confirm that both series are stationary. Non-stationary series require differencing or a VECM framework.
+
+```{r}
+# Augmented Dickey-Fuller test for each series
+adf_x <- adf.test(ts_df$X, k = 2)
+adf_y <- adf.test(ts_df$Y, k = 2)
+
+cat("=== ADF Test Results ===\n")
+cat(sprintf("X: ADF statistic = %.4f, p-value = %.4f  %s\n",
+            adf_x$statistic, adf_x$p.value,
+            ifelse(adf_x$p.value < 0.05, "→ Stationary", "→ Non-stationary")))
+cat(sprintf("Y: ADF statistic = %.4f, p-value = %.4f  %s\n",
+            adf_y$statistic, adf_y$p.value,
+            ifelse(adf_y$p.value < 0.05, "→ Stationary", "→ Non-stationary")))
+```
+
+### Lag Order Selection
+
+```{r}
+# Create multivariate time series matrix
+ts_mat <- ts(cbind(X = ts_df$X, Y = ts_df$Y))
+
+# Select optimal lag order using information criteria
+lag_select <- VARselect(ts_mat, lag.max = 8, type = "const")
+
+cat("=== Lag Order Selection Criteria ===\n")
+print(lag_select$criteria)
+cat(sprintf("\nSelected lag (AIC): %d\n", lag_select$selection["AIC(n)"])  )
+cat(sprintf("Selected lag (BIC): %d\n", lag_select$selection["SC(n)"]))
+```
+
+### Fitting the VAR Model
+
+```{r}
+# Fit VAR with AIC-selected lag order
+p_opt <- lag_select$selection["AIC(n)"]
+var_fit <- VAR(ts_mat, p = p_opt, type = "const")
+
+cat("=== VAR Model Summary ===\n")
+summary(var_fit)
+```
+
+### Granger Causality Tests
+
+```{r}
+# Test X -> Y (does X Granger-cause Y?)
+gc_x_to_y <- causality(var_fit, cause = "X")
+
+# Test Y -> X (does Y Granger-cause X?)
+gc_y_to_x <- causality(var_fit, cause = "Y")
+
+cat("=== Granger Causality Tests ===\n\n")
+
+cat("H0: X does NOT Granger-cause Y\n")
+cat(sprintf("  F-statistic: %.4f, df: (%d, %d), p-value: %.4f  %s\n",
+            gc_x_to_y$Granger$statistic,
+            gc_x_to_y$Granger$parameter[1],
+            gc_x_to_y$Granger$parameter[2],
+            gc_x_to_y$Granger$p.value,
+            ifelse(gc_x_to_y$Granger$p.value < 0.05, "→ REJECT H0 (X Granger-causes Y)", "→ FAIL TO REJECT")))
+
+cat("\nH0: Y does NOT Granger-cause X\n")
+cat(sprintf("  F-statistic: %.4f, df: (%d, %d), p-value: %.4f  %s\n",
+            gc_y_to_x$Granger$statistic,
+            gc_y_to_x$Granger$parameter[1],
+            gc_y_to_x$Granger$parameter[2],
+            gc_y_to_x$Granger$p.value,
+            ifelse(gc_y_to_x$Granger$p.value < 0.05, "→ REJECT H0 (Y Granger-causes X)", "→ FAIL TO REJECT")))
+
+cat("\nConclusion: X → Y (one-way causality recovered as specified in DGP)\n")
+```
+
+### Impulse Response Functions (IRF)
+
+The IRF traces the dynamic response of each variable to a one-unit shock in $X$ or $Y$ over 12 periods.
+
+```{r}
+#| fig.width: 10
+#| fig.height: 7
+# Compute IRFs with bootstrapped confidence intervals
+irf_x_to_y <- irf(var_fit, impulse = "X", response = "Y",
+                   n.ahead = 12, boot = TRUE, ci = 0.95, runs = 200)
+
+irf_y_to_x <- irf(var_fit, impulse = "Y", response = "X",
+                   n.ahead = 12, boot = TRUE, ci = 0.95, runs = 200)
+
+# Plot
+par(mfrow = c(1, 2))
+plot(irf_x_to_y, main = "IRF: Shock to X → Response of Y")
+plot(irf_y_to_x, main = "IRF: Shock to Y → Response of X")
+par(mfrow = c(1, 1))
+```
+
+### Forecast Error Variance Decomposition (FEVD)
+
+FEVD quantifies how much of the forecast error variance of $Y$ is attributable to shocks in $X$ vs. $Y$'s own past.
+
+```{r}
+#| fig.width: 10
+#| fig.height: 5
+fevd_result <- fevd(var_fit, n.ahead = 12)
+
+# Plot FEVD for Y
+plot(fevd_result, addbars = 10)
+```
+
+## Structural VAR (SVAR) with Choleski Identification
+
+### Setting Up the SVAR
+
+We impose a Choleski (recursive) ordering: $X$ is ordered first, meaning $X$ has no contemporaneous effect on $Y$ but $Y$ can have a contemporaneous effect on $X$. This reflects a structural assumption: $X$ is pre-determined relative to $Y$ within each period.
+
+```{r}
+# Identify SVAR via Choleski decomposition
+# A matrix: lower-triangular (contemporaneous relationships)
+# B matrix: diagonal (structural shock variances)
+amat <- diag(2)
+amat[2, 1] <- NA   # Y responds contemporaneously to X (free parameter)
+
+bmat <- diag(2)
+diag(bmat) <- NA   # Free diagonal (structural shock SDs)
+
+svar_fit <- SVAR(var_fit, estmethod = "scoring",
+                 Amat = amat, Bmat = bmat,
+                 max.iter = 500, conv.crit = 1e-6)
+
+cat("=== SVAR Identification: A Matrix ===\n")
+print(svar_fit$A)
+cat("\n=== SVAR Identification: B Matrix ===\n")
+print(svar_fit$B)
+```
+
+### Structural IRFs
+
+```{r}
+#| fig.width: 10
+#| fig.height: 7
+# Structural IRF from SVAR
+sirf_x <- irf(svar_fit, impulse = "X", response = c("X", "Y"),
+               n.ahead = 12, boot = TRUE, runs = 200)
+
+par(mfrow = c(1, 2))
+plot(sirf_x, main = "SVAR IRF: Structural Shock to X")
+par(mfrow = c(1, 1))
+```
+
+## Cointegration and Error Correction Model (ECM)
+
+### Simulating a Cointegrated System
+
+We simulate two I(1) series that share a long-run equilibrium: $y_t - 0.8 x_t = $ stationary process.
+
+```{r}
+T2 <- 300
+# Shared stochastic trend (random walk)
+shared_trend <- cumsum(rnorm(T2, sd = 1))
+
+# X: random walk + noise
+x2 <- shared_trend + rnorm(T2, sd = 0.5)
+
+# Y: cointegrated with X (long-run: Y = 0.8*X + stationary part)
+ecm_term <- numeric(T2)
+ecm_term[1] <- 0
+for(t in 2:T2) {
+  ecm_term[t] <- -0.4 * ecm_term[t-1] + rnorm(1, sd = 0.3)  # stationary AR(1)
+}
+y2 <- 0.8 * x2 + ecm_term
+
+coint_df <- tibble(t = 1:T2, X = x2, Y = y2)
+
+cat("Correlation between X and Y:", round(cor(x2, y2), 3), "\n")
+cat("Long-run equilibrium deviation (Y - 0.8X):\n")
+print(summary(y2 - 0.8 * x2))
+```
+
+### Unit Root Tests on Each Series
+
+```{r}
+adf_x2 <- adf.test(x2)
+adf_y2 <- adf.test(y2)
+adf_dx2 <- adf.test(diff(x2))
+adf_dy2 <- adf.test(diff(y2))
+
+cat("=== Unit Root Tests ===\n")
+cat(sprintf("X levels:       p = %.4f  %s\n", adf_x2$p.value,
+            ifelse(adf_x2$p.value > 0.05, "I(1) — non-stationary", "I(0)")))
+cat(sprintf("Y levels:       p = %.4f  %s\n", adf_y2$p.value,
+            ifelse(adf_y2$p.value > 0.05, "I(1) — non-stationary", "I(0)")))
+cat(sprintf("ΔX (1st diff):  p = %.4f  %s\n", adf_dx2$p.value,
+            ifelse(adf_dx2$p.value < 0.05, "Stationary after differencing → confirmed I(1)", "Still non-stationary")))
+cat(sprintf("ΔY (1st diff):  p = %.4f  %s\n", adf_dy2$p.value,
+            ifelse(adf_dy2$p.value < 0.05, "Stationary after differencing → confirmed I(1)", "Still non-stationary")))
+```
+
+### Johansen Cointegration Test
+
+```{r}
+# Johansen test for cointegrating rank
+ts_mat2 <- ts(cbind(X = x2, Y = y2))
+jo_test <- ca.jo(ts_mat2, type = "trace", ecdet = "const", K = 2)
+summary(jo_test)
+```
+
+### Vector Error Correction Model (VECM)
+
+```{r}
+# Estimate VECM (1 cointegrating vector, 2 lags)
+vecm_fit <- cajorls(jo_test, r = 1)
+
+cat("=== VECM Estimation Results ===\n")
+cat("\nCointegrating vector (beta):\n")
+print(jo_test@V[, 1])
+
+cat("\nAdjustment coefficients (alpha — speed of adjustment):\n")
+print(jo_test@W[, 1])
+
+cat("\nInterpretation: alpha < 0 for Y confirms Y corrects toward equilibrium.\n")
+```
+
+### ECM Visualization
+
+```{r}
+#| fig.width: 10
+#| fig.height: 5
+# Plot the cointegrating residual (error correction term)
+ect <- y2 - 0.8 * x2  # Long-run equilibrium deviation
+
+ect_df <- tibble(t = 1:T2, ECT = ect)
+
+p_ect <- ggplot(ect_df, aes(x = t, y = ECT)) +
+  geom_line(color = "darkgreen", linewidth = 0.8) +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "red") +
+  labs(
+    title    = "Error Correction Term: Y - 0.8X",
+    subtitle = "Stationary series confirms cointegration",
+    x        = "Time", y = "Y - 0.8X"
+  ) +
+  theme_minimal(base_size = 13)
+
+# Plot the two cointegrated series
+series_df <- coint_df %>%
+  pivot_longer(cols = c(X, Y), names_to = "Series", values_to = "Value")
+
+p_series <- ggplot(series_df, aes(x = t, y = Value, color = Series)) +
+  geom_line(linewidth = 0.8, alpha = 0.85) +
+  labs(title = "Cointegrated Series X and Y",
+       subtitle = "Share a common stochastic trend",
+       x = "Time", y = "Value") +
+  scale_color_manual(values = c("X" = "steelblue", "Y" = "firebrick")) +
+  theme_minimal(base_size = 13) +
+  theme(legend.position = "bottom")
+
+p_series + p_ect + plot_layout(ncol = 2)
+```
+
+## Real-World Application: US Macroeconomic Data
+
+We apply VAR and Granger causality to US quarterly macroeconomic data from the `vars` package (`Canada` dataset), examining dynamic relationships among output, employment, the real wage, and productivity.
+
+### Load and Explore Data
+
+```{r}
+# Load the Canada dataset (quarterly, 1980 Q1 to 2000 Q4)
+data(Canada)
+cat("Dataset dimensions:", dim(Canada), "\n")
+cat("Variables:", colnames(Canada), "\n")
+cat("Date range:", time(Canada)[1], "to", time(Canada)[nrow(Canada)], "\n\n")
+
+# Variable descriptions
+cat("Variable descriptions:\n")
+cat("  e  : Employment (log)\n")
+cat("  prod: Labour productivity (log)\n")
+cat("  rw : Real wage (log)\n")
+cat("  U  : Unemployment rate\n")
+```
+
+### Stationarity and Lag Selection
+
+```{r}
+# ADF tests for each variable
+adf_results <- apply(Canada, 2, function(x) adf.test(x)$p.value)
+cat("=== ADF p-values (H0: non-stationary) ===\n")
+print(round(adf_results, 4))
+cat("Note: Variables in levels may be I(1); differentiate if needed.\n\n")
+
+# Use first differences for stationary VAR
+Canada_diff <- diff(Canada)
+cat("Using first-differenced series for VAR estimation.\n")
+
+# Lag selection
+lag_can <- VARselect(Canada_diff, lag.max = 6, type = "const")
+cat("\n=== Lag Order Selection (differenced data) ===\n")
+print(lag_can$criteria[c("AIC(n)", "SC(n)"), ])
+p_can <- lag_can$selection["AIC(n)"]
+cat(sprintf("Selected lag (AIC): %d\n", p_can))
+```
+
+### Fit VAR and Granger Causality
+
+```{r}
+# Fit VAR
+var_canada <- VAR(Canada_diff, p = p_can, type = "const")
+
+cat("=== VAR Fit: Canada Labour Market ===\n")
+cat(sprintf("Observations: %d, Variables: %d, Lags: %d\n",
+            nrow(residuals(var_canada)), length(var_canada$varresult), p_can))
+
+# Granger causality: does productivity Granger-cause wages?
+gc_prod_rw <- causality(var_canada, cause = "prod")
+gc_rw_prod <- causality(var_canada, cause = "rw")
+
+cat("\n=== Granger Causality: Productivity ↔ Real Wages ===\n")
+cat(sprintf("prod → rw: F = %.3f, p = %.4f  %s\n",
+            gc_prod_rw$Granger$statistic,
+            gc_prod_rw$Granger$p.value,
+            ifelse(gc_prod_rw$Granger$p.value < 0.05, "→ Significant", "→ Not significant")))
+cat(sprintf("rw → prod: F = %.3f, p = %.4f  %s\n",
+            gc_rw_prod$Granger$statistic,
+            gc_rw_prod$Granger$p.value,
+            ifelse(gc_rw_prod$Granger$p.value < 0.05, "→ Significant", "→ Not significant")))
+```
+
+### IRF: Productivity Shock on Real Wages
+
+```{r}
+#| fig.width: 9
+#| fig.height: 5
+irf_prod_rw <- irf(var_canada, impulse = "prod", response = "rw",
+                    n.ahead = 12, boot = TRUE, ci = 0.95, runs = 300)
+plot(irf_prod_rw,
+     main = "IRF: Shock to Productivity → Response of Real Wages",
+     ylab = "Response (log real wage, differenced)")
+```
+
+### FEVD: What Drives Real Wage Variation?
+
+```{r}
+#| fig.width: 10
+#| fig.height: 5
+fevd_canada <- fevd(var_canada, n.ahead = 12)
+cat("=== FEVD for Real Wages (rw) at horizon 1, 4, 8, 12 ===\n")
+print(round(fevd_canada$rw[c(1, 4, 8, 12), ], 3))
+plot(fevd_canada, plot.type = "single",
+     main = "FEVD: Forecast Error Variance Decomposition (All Variables)")
+```
+
+### Diagnostics: Serial Correlation and Stability
+
+```{r}
+#| fig.width: 8
+#| fig.height: 5
+# Serial correlation test (Portmanteau)
+portmanteau <- serial.test(var_canada, lags.pt = 12, type = "PT.asymptotic")
+cat("=== Portmanteau Serial Correlation Test ===\n")
+print(portmanteau)
+
+# Stability check (characteristic roots should be < 1)
+roots <- roots(var_canada, modulus = TRUE)
+cat("\n=== Characteristic Roots (should all be < 1 for stability) ===\n")
+cat("Max root:", round(max(roots), 4), "\n")
+cat("All roots < 1:", all(roots < 1), "\n")
+plot(stability(var_canada), nc = 2)
+```
+
+## Summary and Conclusion
+
+This chapter covered the foundational toolkit for time-series causal inference: VAR, Granger causality, SVAR, and ECM. Key takeaways include:
+
+**On VAR and Granger Causality.** The VAR($p$) model characterizes linear dynamic interdependencies among $K$ stationary time series. Granger causality tests — derived from F-tests on lagged coefficients — provide a formal framework for predictive precedence. They are necessary but not sufficient for structural causation: a common omitted driver can generate Granger causality without a direct causal link.
+
+**On Structural VAR.** Reduced-form VAR residuals are correlated across equations; causal interpretation requires structural identification. The Choleski decomposition imposes a causal ordering based on theory, recovering structurally interpretable IRFs. The ordering must be justified — different orderings yield different IRFs.
+
+**On Cointegration and ECM.** When series are I(1) and cointegrated, differencing discards long-run information. The VECM combines short-run dynamics (in differences) with long-run equilibrium correction. The speed-of-adjustment parameter $\alpha$ quantifies how rapidly deviations from long-run equilibrium are corrected each period.
+
+**On Diagnostics.** Every VAR should be validated with serial correlation tests (Portmanteau), stability checks (characteristic roots $< 1$), and normality tests on residuals. Granger causality results depend heavily on correct lag order selection — use AIC/BIC, not arbitrary choices.
+
+## Resources
+
+| Resource | Description |
+|---|---|
+| **`vars` package vignette** | Pfaff (2008) — comprehensive VAR/VECM guide with R code |
+| **Lütkepohl (2005)** | *New Introduction to Multiple Time Series Analysis* — definitive reference |
+| **Sims (1980)** | *Econometrica* — original VAR paper |
+| **Engle & Granger (1987)** | *Econometrica* — cointegration and ECM |
+| **Johansen (1991)** | *Econometrica* — maximum likelihood cointegration |
+| **Granger (1969)** | *Econometrica* — original Granger causality paper |
+| **`urca` package** | Pfaff — unit root and cointegration tests |

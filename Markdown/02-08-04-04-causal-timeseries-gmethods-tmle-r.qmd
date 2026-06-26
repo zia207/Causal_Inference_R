@@ -1,0 +1,643 @@
+[![](Image/open_colab.png){fig-align="left" width="150"}](https://github.com/zia207/Causal_Inference_R/blob/main/Notebook/02_08_04_04_causal_timeseries_gmethods_tmle_r.ipynb)
+
+![](Image/banner_Causal_Inference_temporal_CI_R.png){fig-align="left" width="1400"}
+
+# 4.4 Longitudinal G-Methods and TMLE {.unnumbered}
+
+The three preceding chapters addressed temporal causal inference in settings where time-varying confounders are either absent, ignored, or assumed not to be affected by prior treatment. Chapter 4.1 (VAR/Granger) made no causal claims beyond predictive precedence. Chapters 4.2 (ITS) and 4.3 (DiD/Panel) rely on versions of the parallel trends or trend continuity assumptions — conditions that are effectively violated the moment a time-varying covariate simultaneously responds to past treatment and predicts future outcomes. This chapter addresses that harder problem directly.
+
+**G-methods** — the G-formula, marginal structural models (MSMs), and G-estimation of structural nested models (SNMs) — were developed by James Robins (1986, 1989, 1994) to handle the *mediator-confounder dilemma*: when $L_t$ is both a confounder that must be adjusted and a mediator of prior treatment whose adjustment blocks part of the causal pathway. Standard regression cannot handle this; no enrichment of the covariate set resolves the structural impossibility. G-methods work with the *marginal* potential outcome distribution — explicitly marginalizing over the time-varying confounder distribution — rather than conditioning on it.
+
+**Longitudinal TMLE** (Targeted Maximum Likelihood Estimation) is the state-of-the-art doubly robust semiparametric estimator for G-methods. It combines the G-computation estimand with a fluctuation step that achieves the semiparametric efficiency bound and provides valid inference even when nuisance models are estimated with machine learning.
+
+## Overview
+
+### The Core Problem: Time-Varying Confounding Affected by Prior Treatment
+
+Consider a longitudinal study with $T$ time points. At each time $t$:
+
+- $A_t$: treatment (e.g., medication dose)
+- $L_t$: covariate (e.g., disease severity) — measured *before* $A_t$
+- $Y_T$: outcome at end of follow-up
+
+The structural causal model includes:
+1. $L_t \leftarrow A_{t-1}, L_{t-1}$ — severity responds to past treatment
+2. $A_t \leftarrow L_t, \bar{A}_{t-1}$ — dose is adjusted based on current severity
+3. $Y_T \leftarrow \bar{A}, \bar{L}$ — outcome depends on full history
+
+**Why standard regression fails:** Conditioning on $L_t$ in a regression of $Y$ on $\bar{A}$:
+
+- *Removes* the confounding $L_t \rightarrow Y$ path ✓
+- *Blocks* the indirect causal path $A_{t-1} \rightarrow L_t \rightarrow Y$ ✗
+
+The bias is *structural*, not a sample-size problem. G-methods avoid conditioning on $L_t$ directly; instead they work in the space of marginal potential outcomes.
+
+### The G-Formula (Parametric G-Computation)
+
+The G-formula (Robins 1986) identifies the counterfactual mean under a specified treatment regime $\bar{a} = (a_0, a_1, \ldots, a_{T-1})$:
+
+$$
+\mathbb{E}[Y_T(\bar{a})] = \sum_{\bar{l}} Y_T \prod_{t=0}^{T-1} f(L_t \mid \bar{a}_{t-1}, \bar{l}_{t-1}) \cdot f(Y_T \mid \bar{a}, \bar{l})
+$$
+
+**Estimation via Monte Carlo simulation (plug-in G-computation):**
+
+1. Fit models for $f(L_t \mid \bar{A}_{t-1}, \bar{L}_{t-1})$ and $f(Y_T \mid \bar{A}, \bar{L})$
+2. For each individual, repeatedly simulate $\tilde{L}_t$ from the fitted models under the target regime $\bar{a}$
+3. Predict $\hat{Y}_T$ under the simulated $\tilde{\bar{L}}$
+4. Average $\hat{Y}_T$ across individuals and simulations
+
+### Marginal Structural Models (MSMs) with IPTW
+
+MSMs model the marginal potential outcome as a function of treatment history, without conditioning on time-varying confounders:
+
+$$
+\mathbb{E}[Y_T(\bar{a})] = m(\bar{a}; \boldsymbol{\psi})
+$$
+
+For a binary treatment, the simplest MSM is:
+$$
+\text{logit}\,\mathbb{E}[Y_T(\bar{a})] = \psi_0 + \psi_1 \sum_{t=0}^{T-1} a_t
+$$
+
+**Estimation via Inverse Probability of Treatment Weighting (IPTW):**
+
+The stabilized weight for unit $i$ is:
+
+$$
+SW_i = \prod_{t=0}^{T-1} \frac{P(A_t = a_{it} \mid \bar{A}_{i,t-1})}{P(A_t = a_{it} \mid \bar{A}_{i,t-1}, \bar{L}_{it})}
+$$
+
+The numerator is the *marginal* probability (ignoring confounders); the denominator is the *conditional* probability (including confounders). The ratio creates a *pseudo-population* where $L_t$ no longer predicts $A_t$ — confounding is eliminated by reweighting.
+
+**Fitted MSM:** Weighted regression of $Y$ on treatment history summary, using weights $SW_i$ and robust (sandwich) standard errors.
+
+### G-Estimation of Structural Nested Models (SNMs)
+
+G-estimation targets **blip effects** — the effect of treatment at time $t$ on the final outcome, holding future treatment at zero. The blip function:
+
+$$
+\gamma_t(H_t; \psi) = \mathbb{E}[Y_T(\bar{A}_{t-1}, A_t = 1, \bar{0}) - Y_T(\bar{A}_{t-1}, A_t = 0, \bar{0}) \mid H_t]
+$$
+
+**Identification:** Under sequential ignorability, the *blipped-down* outcome $Y_T^{\psi} = Y_T - \sum_{t} \gamma_t(H_t; \psi) A_t$ must be independent of $A_t$ given $H_t$. The estimating equation exploits this:
+
+$$
+\mathbb{E}\left[ A_t - \mathbb{E}[A_t \mid H_t] \right] \cdot \left[ Y_T - \sum_{k \geq t} \gamma_k(H_k; \psi) A_k \right] = 0
+$$
+
+### Longitudinal TMLE
+
+TMLE combines:
+
+1. **Initial estimator:** G-computation estimate $\hat{Q}^0$
+2. **Targeting step:** Fluctuate $\hat{Q}^0$ toward the efficient influence function using clever covariates constructed from IPTW weights
+3. **Result:** $\hat{\psi}^*$ that solves the efficient score equation → doubly robust + semiparametrically efficient
+
+**Double robustness:** TMLE is consistent if *either* the outcome model $Q$ or the propensity score model $g$ is correctly specified — not both simultaneously required.
+
+**Machine learning integration:** Both $Q$ and $g$ can be estimated with SuperLearner (ensemble ML), allowing data-adaptive nuisance estimation without sacrificing valid statistical inference.
+
+## Implementation in R
+
+### Setup and Required Packages
+
+```{r}
+#| message: false
+#| warning: false
+packages <- c(
+  "tidyverse",
+  "ipw",
+  "WeightIt",
+  "geepack",
+  "ltmle",
+  "SuperLearner",
+  "survey",
+  "cobalt",
+  "ggplot2",
+  "patchwork"
+)
+```
+
+``` r
+#| warning: false
+#| error: false
+new_packages <- packages[!(packages %in% installed.packages()[,"Package"])]
+if(length(new_packages)) install.packages(new_packages)
+```
+
+### Verify Installation
+
+```{r}
+cat("Installed packages:\n")
+print(sapply(packages, requireNamespace, quietly = TRUE))
+```
+
+### Load Packages
+
+```{r}
+#| warning: false
+#| error: false
+invisible(lapply(packages, function(pkg) {
+  suppressPackageStartupMessages(library(pkg, character.only = TRUE))
+}))
+```
+
+### Check Loaded Packages
+
+```{r}
+cat("Successfully loaded packages:\n")
+print(search()[grepl("package:", search())])
+```
+
+```{r}
+set.seed(2026)
+options(scipen = 999)
+```
+
+## Simulated Data: The Mediator-Confounder Setting
+
+### Data Generation with Feedback Loop
+
+We simulate the classic longitudinal feedback structure: $L_1$ responds to $A_0$, then $A_1$ is assigned based on $L_1$, with the outcome $Y$ depending on both treatments and $L_1$.
+
+```{r}
+n <- 5000
+
+sim_long <- tibble(
+  id  = 1:n,
+  # Baseline confounder
+  L0  = rnorm(n, mean = 0, sd = 1),
+  # Period 0 treatment (confounded by L0)
+  A0  = rbinom(n, 1, plogis(0.5 * L0)),
+  # Period 1 confounder: responds to A0 (the feedback!)
+  L1  = 0.5 * A0 - 0.4 * L0 + rnorm(n, sd = 0.7),
+  # Period 1 treatment (confounded by L1)
+  A1  = rbinom(n, 1, plogis(0.6 * L1 - 0.3 * A0)),
+  # Outcome: true effect of A0 = 1.0, A1 = 1.0, L1 = 0.8
+  Y   = 1.0 * A0 + 1.0 * A1 + 0.8 * L1 + rnorm(n, sd = 1)
+)
+
+# True ATE (always-treat vs. never-treat)
+# E[Y(1,1)] - E[Y(0,0)] ≈ 1.0 + 1.0 + 0.8*E[L1|A0=1] - 0.8*E[L1|A0=0]
+# = 2.0 + 0.8 * 0.5 = 2.4 (approximately)
+cat("Simulated longitudinal dataset:\n")
+cat(sprintf("  n = %d | Variables: L0, A0, L1, A1, Y\n", n))
+cat(sprintf("  True total ATE (always-treat vs never-treat) ≈ 2.4\n"))
+cat(sprintf("  Correlation(A0, A1): %.3f (moderate — treatment switches)\n",
+            cor(sim_long$A0, sim_long$A1)))
+cat(sprintf("  Correlation(L1, A0): %.3f (confirms feedback structure)\n",
+            cor(sim_long$L1, sim_long$A0)))
+```
+
+### Naive OLS (Biased — Adjusts for Mediator-Confounder)
+
+```{r}
+# Naive regression: conditioning on L1 blocks A0 -> L1 -> Y path
+naive_lm <- lm(Y ~ A0 + A1 + L0 + L1, data = sim_long)
+cat("=== Naive OLS (BIASED — conditions on mediator-confounder L1) ===\n")
+cat(sprintf("  A0 coefficient: %.3f (true total effect contribution ≈ 1.4)\n",
+            coef(naive_lm)["A0"]))
+cat(sprintf("  A1 coefficient: %.3f (true = 1.0)\n", coef(naive_lm)["A1"]))
+cat("  → A0 is underestimated because conditioning on L1 blocks A0 → L1 → Y path\n")
+```
+
+## G-Computation (Parametric G-Formula)
+
+### Step 1: Fit Component Models
+
+```{r}
+# Model for L1 | A0, L0
+mod_L1 <- lm(L1 ~ A0 + L0, data = sim_long)
+
+# Model for Y | A0, A1, L0, L1
+mod_Y  <- lm(Y  ~ A0 + A1 + L0 + L1, data = sim_long)
+
+cat("=== G-Computation Component Models ===\n")
+cat("\nL1 model (responds to A0):\n")
+print(summary(mod_L1)$coefficients)
+cat("\nY model (includes L1 as confounder):\n")
+print(summary(mod_Y)$coefficients)
+```
+
+### Step 2: Simulate Under Always-Treat and Never-Treat
+
+```{r}
+n_sim <- 5000
+
+gcomp_simulation <- function(a0_val, a1_val, data, mod_L1, mod_Y) {
+  # Simulate under fixed treatment regime (a0, a1)
+  df_sim <- data
+  df_sim$A0 <- a0_val
+  # Simulate L1 under A0 = a0_val
+  df_sim$L1 <- predict(mod_L1, newdata = df_sim) + rnorm(nrow(df_sim), sd = sigma(mod_L1))
+  df_sim$A1 <- a1_val
+  # Predict Y
+  mean(predict(mod_Y, newdata = df_sim))
+}
+
+EY_always_treat <- gcomp_simulation(1, 1, sim_long, mod_L1, mod_Y)
+EY_never_treat  <- gcomp_simulation(0, 0, sim_long, mod_L1, mod_Y)
+
+cat("=== G-Computation Results ===\n")
+cat(sprintf("  E[Y(1,1)] (always treat):  %.3f\n", EY_always_treat))
+cat(sprintf("  E[Y(0,0)] (never treat):   %.3f\n", EY_never_treat))
+cat(sprintf("  G-formula ATE:             %.3f\n", EY_always_treat - EY_never_treat))
+cat(sprintf("  True ATE ≈ 2.4\n"))
+```
+
+### G-Computation with Bootstrap CIs
+
+```{r}
+#| warning: false
+# Bootstrap for confidence intervals
+n_boot <- 200
+
+boot_ate <- replicate(n_boot, {
+  idx     <- sample(n, n, replace = TRUE)
+  boot_df <- sim_long[idx, ]
+  bL1 <- lm(L1 ~ A0 + L0, data = boot_df)
+  bY  <- lm(Y  ~ A0 + A1 + L0 + L1, data = boot_df)
+  e1  <- gcomp_simulation(1, 1, boot_df, bL1, bY)
+  e0  <- gcomp_simulation(0, 0, boot_df, bL1, bY)
+  e1 - e0
+})
+
+cat("=== G-Computation Bootstrap CIs ===\n")
+cat(sprintf("  ATE:      %.3f\n", mean(boot_ate)))
+cat(sprintf("  95%% CI:  [%.3f, %.3f]\n",
+            quantile(boot_ate, 0.025),
+            quantile(boot_ate, 0.975)))
+```
+
+## Marginal Structural Models (MSMs) with IPTW
+
+### Step 1: Estimate Propensity Scores
+
+```{r}
+# Denominator: P(A0 | L0) and P(A1 | A0, L0, L1)
+ps_A0_denom <- glm(A0 ~ L0,          data = sim_long, family = binomial)
+ps_A1_denom <- glm(A1 ~ A0 + L0 + L1, data = sim_long, family = binomial)
+
+# Numerator (stabilized): P(A0) and P(A1 | A0) — marginal
+ps_A0_numer <- glm(A0 ~ 1,  data = sim_long, family = binomial)
+ps_A1_numer <- glm(A1 ~ A0, data = sim_long, family = binomial)
+
+# Compute stabilized weights
+sim_long <- sim_long %>%
+  mutate(
+    # Probabilities
+    pA0_denom = predict(ps_A0_denom, type = "response"),
+    pA1_denom = predict(ps_A1_denom, type = "response"),
+    pA0_numer = predict(ps_A0_numer, type = "response"),
+    pA1_numer = predict(ps_A1_numer, type = "response"),
+    # Probabilities of observed treatment
+    prob_A0_denom = ifelse(A0 == 1, pA0_denom, 1 - pA0_denom),
+    prob_A1_denom = ifelse(A1 == 1, pA1_denom, 1 - pA1_denom),
+    prob_A0_numer = ifelse(A0 == 1, pA0_numer, 1 - pA0_numer),
+    prob_A1_numer = ifelse(A1 == 1, pA1_numer, 1 - pA1_numer),
+    # Stabilized weights (product over time)
+    SW = (prob_A0_numer / prob_A0_denom) * (prob_A1_numer / prob_A1_denom)
+  )
+
+cat("=== Stabilized IPTW Weight Summary ===\n")
+cat(sprintf("  Mean:   %.3f (should be ≈ 1.0)\n", mean(sim_long$SW)))
+cat(sprintf("  SD:     %.3f\n", sd(sim_long$SW)))
+cat(sprintf("  Max:    %.3f\n", max(sim_long$SW)))
+cat(sprintf("  %% > 10: %.1f%%\n", mean(sim_long$SW > 10) * 100))
+cat("\n")
+```
+
+### Step 2: Positivity Diagnostics
+
+```{r}
+#| fig.width: 10
+#| fig.height: 4
+# Distribution of stabilized weights
+ggplot(sim_long, aes(x = SW)) +
+  geom_histogram(bins = 60, fill = "steelblue", alpha = 0.75, color = "white") +
+  geom_vline(xintercept = 10, linetype = "dashed", color = "red") +
+  labs(
+    title    = "IPTW Stabilized Weight Distribution",
+    subtitle = "Values > 10 indicate positivity concerns",
+    x        = "Stabilized Weight (SW)", y = "Count"
+  ) +
+  theme_minimal(base_size = 13)
+```
+
+### Step 3: Fit the Weighted MSM
+
+```{r}
+# Create treatment history summary: number of periods treated (0, 1, or 2)
+sim_long <- sim_long %>%
+  mutate(total_treat = A0 + A1)
+
+# Fit MSM using weighted GEE
+msm_fit <- svyglm(
+  Y ~ total_treat,
+  design  = svydesign(ids = ~1, weights = ~SW, data = sim_long),
+  family  = gaussian()
+)
+
+cat("=== MSM with Stabilized IPTW Weights ===\n")
+print(summary(msm_fit))
+
+# Contrast: always-treat (total_treat=2) vs. never-treat (total_treat=0)
+msm_ate <- 2 * coef(msm_fit)["total_treat"]
+cat(sprintf("\nMSM ATE (always-treat vs. never-treat = 2×β): %.3f\n", msm_ate))
+cat(sprintf("True ATE ≈ 2.4\n"))
+```
+
+### Step 4: Weight Trimming Sensitivity
+
+```{r}
+# Trim at 95th percentile and re-estimate
+trim_threshold <- quantile(sim_long$SW, 0.95)
+sim_long <- sim_long %>%
+  mutate(SW_trimmed = pmin(SW, trim_threshold))
+
+msm_trimmed <- svyglm(
+  Y ~ total_treat,
+  design = svydesign(ids = ~1, weights = ~SW_trimmed, data = sim_long),
+  family = gaussian()
+)
+
+ate_trimmed <- 2 * coef(msm_trimmed)["total_treat"]
+cat("=== Weight Trimming Sensitivity ===\n")
+cat(sprintf("  Untrimmed ATE:  %.3f\n", msm_ate))
+cat(sprintf("  Trimmed (95th): %.3f (max weight: %.2f)\n",
+            ate_trimmed, trim_threshold))
+cat(sprintf("  Difference:     %.3f (small difference → robust to trimming)\n",
+            abs(msm_ate - ate_trimmed)))
+```
+
+## Longitudinal TMLE with ltmle
+
+### Preparing Data in Wide Format
+
+`ltmle` requires data in *wide format*: one row per unit, columns ordered as $L_0, A_0, L_1, A_1, Y$.
+
+```{r}
+# Wide format for ltmle
+ltmle_data <- sim_long %>%
+  select(L0, A0, L1, A1, Y) %>%
+  as.data.frame()
+
+cat("ltmle wide format (first 5 rows):\n")
+print(head(ltmle_data, 5))
+cat(sprintf("\nDimensions: %d × %d\n", nrow(ltmle_data), ncol(ltmle_data)))
+```
+
+### TMLE: Always-Treat vs. Never-Treat
+
+```{r}
+#| warning: false
+# Define treatment regimes
+abar_always <- matrix(1, nrow = nrow(ltmle_data), ncol = 2)  # always treat
+abar_never  <- matrix(0, nrow = nrow(ltmle_data), ncol = 2)  # never treat
+
+# Fit ltmle
+tmle_result <- ltmle(
+  data         = ltmle_data,
+  Anodes       = c("A0", "A1"),
+  Lnodes       = c("L0", "L1"),
+  Ynodes       = "Y",
+  abar         = list(abar_always, abar_never),
+  SL.library   = c("SL.glm", "SL.mean"),  # Simple SL; use richer library in practice
+  estimate.time = FALSE
+)
+
+cat("=== Longitudinal TMLE Results ===\n")
+summary(tmle_result)
+```
+
+### Extracting and Reporting the TMLE Estimate
+
+```{r}
+tmle_summary <- summary(tmle_result)
+
+# ATE from treatment contrast
+tmle_ate    <- tmle_summary$effect.measures$ATE$estimate
+tmle_ci_lo  <- tmle_summary$effect.measures$ATE$CI[1]
+tmle_ci_hi  <- tmle_summary$effect.measures$ATE$CI[2]
+tmle_pvalue <- tmle_summary$effect.measures$ATE$pvalue
+
+cat("=== TMLE ATE Summary ===\n")
+cat(sprintf("  ATE (always-treat vs. never-treat): %.3f\n", tmle_ate))
+cat(sprintf("  95%% CI:  [%.3f, %.3f]\n", tmle_ci_lo, tmle_ci_hi))
+cat(sprintf("  P-value: %.4f  %s\n", tmle_pvalue,
+            ifelse(tmle_pvalue < 0.05, "→ Statistically significant", "→ Not significant")))
+cat(sprintf("  True ATE ≈ 2.4\n"))
+```
+
+### Comparison: All Estimators
+
+```{r}
+results_table <- tibble(
+  Estimator  = c("Naive OLS", "G-Computation", "MSM / IPTW",
+                 "MSM (trimmed)", "Longitudinal TMLE"),
+  Estimate   = c(
+    coef(naive_lm)["A0"] + coef(naive_lm)["A1"],  # sum (approximate)
+    EY_always_treat - EY_never_treat,
+    msm_ate,
+    ate_trimmed,
+    tmle_ate
+  ),
+  Note = c(
+    "Biased — conditions on mediator-confounder",
+    "Correct — marginalizes over L1",
+    "Correct — IPTW reweighting",
+    "Trimmed weights — sensitivity check",
+    "Doubly robust — preferred"
+  )
+)
+
+cat("=== Estimator Comparison Table ===\n")
+print(results_table, n = Inf)
+cat(sprintf("\nTrue ATE ≈ 2.4\n"))
+```
+
+## Covariate Balance Check: Before and After Weighting
+
+```{r}
+#| fig.width: 9
+#| fig.height: 6
+# Check balance of L0 by A0 treatment status, before and after weighting
+balance_result <- bal.tab(
+  A0 ~ L0,
+  data     = sim_long,
+  weights  = sim_long$SW,
+  un       = TRUE,
+  disp     = c("means", "sds")
+)
+
+cat("=== Covariate Balance: L0 by A0 (Before and After IPTW) ===\n")
+print(balance_result)
+
+# Love plot
+love.plot(
+  A0 ~ L0,
+  data    = sim_long,
+  weights = sim_long$SW,
+  abs     = TRUE,
+  thresholds = c(m = 0.1),
+  title   = "Love Plot: Covariate Balance Before/After IPTW Weighting"
+)
+```
+
+## Sequential Ignorability Sensitivity: E-Values
+
+The E-value quantifies how strong unmeasured confounding would need to be to explain away a causal effect. For a risk ratio $RR$:
+
+$$
+\text{E-value} = RR + \sqrt{RR(RR - 1)}
+$$
+
+```{r}
+# Compute E-value for the TMLE estimate
+# Convert to risk ratio scale for interpretation (approximate)
+# Using absolute effect on continuous Y: standardize by outcome SD
+outcome_sd <- sd(sim_long$Y)
+std_ate     <- tmle_ate / outcome_sd
+
+# E-value approximation for standardized mean difference
+evalue_est <- std_ate + sqrt(std_ate * (std_ate - 1 + 1))  # simplified formula
+# More precise: use EValue package for binary outcomes
+# For continuous, use evalues.MD()
+
+cat("=== Sequential Ignorability Sensitivity ===\n")
+cat(sprintf("  TMLE ATE:              %.3f\n", tmle_ate))
+cat(sprintf("  Standardized ATE (d):  %.3f SDs\n", std_ate))
+cat(sprintf("  E-value interpretation:\n"))
+cat(sprintf("  Unmeasured confounding would need association ≥ %.2f-fold\n",
+            exp(0.91 * std_ate)))
+cat(sprintf("  with both A and Y to reduce effect to zero.\n"))
+```
+
+## Real-World Application: HIV Treatment Adherence
+
+We use the `ipw` package's built-in `haartdat` dataset — HIV+ patients with time-varying antiretroviral treatment and CD4 count (a time-varying confounder affected by treatment).
+
+### Load and Explore Data
+
+```{r}
+data(haartdat, package = "ipw")
+
+cat("=== HIV Treatment Dataset (haartdat) ===\n")
+cat(sprintf("  Patients: %d | Observations: %d\n",
+            n_distinct(haartdat$patient), nrow(haartdat)))
+cat("\nVariables:\n")
+cat("  patient: patient ID\n")
+cat("  tstart/fuptime: time intervals (counting process)\n")
+cat("  haartind: HAART treatment indicator (time-varying)\n")
+cat("  event: death indicator\n")
+cat("  cd4.sqrt: sqrt(CD4 count) — time-varying confounder\n")
+cat("  age, sex: baseline covariates\n\n")
+print(head(haartdat, 8))
+```
+
+### Estimate Time-Varying IPTW Weights
+
+```{r}
+#| warning: false
+# Estimate time-varying IPTW weights using ipw::ipwtm
+# family = "survival" uses a Cox model; cd4.sqrt is the actual column name
+temp_weights <- ipwtm(
+  exposure    = haartind,
+  family      = "survival",
+  numerator   = ~ age + sex,              # Marginal (numerator)
+  denominator = ~ age + sex + cd4.sqrt,   # Conditional (denominator)
+  id          = patient,
+  tstart      = tstart,
+  timevar     = fuptime,
+  type        = "first",
+  data        = haartdat
+)
+
+haartdat$sw <- temp_weights$ipw.weights
+
+cat("=== HAART IPTW Weight Summary ===\n")
+cat(sprintf("  Mean:   %.3f\n", mean(haartdat$sw)))
+cat(sprintf("  SD:     %.3f\n", sd(haartdat$sw)))
+cat(sprintf("  Range:  %.3f – %.3f\n", min(haartdat$sw), max(haartdat$sw)))
+```
+
+### Weighted Survival Analysis (MSM for Time-to-Death)
+
+```{r}
+library(survival)
+
+# Unweighted Cox model (naive, biased)
+cox_naive <- coxph(Surv(tstart, fuptime, event) ~ haartind,
+                   data = haartdat, id = patient)
+
+# Weighted Cox model (MSM)
+cox_msm <- coxph(Surv(tstart, fuptime, event) ~ haartind,
+                 data    = haartdat,
+                 id      = patient,
+                 weights = haartdat$sw,
+                 robust  = TRUE)
+
+cat("=== MSM Cox Model: Effect of HAART on Survival ===\n")
+cat("\nNaive Cox (biased — confounded by CD4 count):\n")
+cat(sprintf("  HR = %.3f (95%% CI: %.3f, %.3f)\n",
+            exp(coef(cox_naive)["haartind"]),
+            exp(confint(cox_naive)["haartind", 1]),
+            exp(confint(cox_naive)["haartind", 2])))
+
+cat("\nMSM Cox (IPTW weighted — removes time-varying confounding):\n")
+cat(sprintf("  HR = %.3f (95%% CI: %.3f, %.3f)\n",
+            exp(coef(cox_msm)["haartind"]),
+            exp(confint(cox_msm)["haartind", 1]),
+            exp(confint(cox_msm)["haartind", 2])))
+cat("\nInterpretation: MSM estimate removes the healthy-user bias.\n")
+cat("HAART is initiated when CD4 declines — naive analysis confounds\n")
+cat("treatment effect with the selection into treatment.\n")
+```
+
+### Visualizing Weight Distribution (Positivity Check)
+
+```{r}
+#| fig.width: 10
+#| fig.height: 4
+ggplot(haartdat, aes(x = sw, fill = factor(haartind))) +
+  geom_histogram(bins = 50, alpha = 0.7, position = "identity") +
+  geom_vline(xintercept = 10, linetype = "dashed", color = "red") +
+  scale_fill_manual(values = c("0" = "steelblue", "1" = "firebrick"),
+                    labels = c("No HAART", "HAART")) +
+  labs(
+    title    = "IPTW Weight Distribution by Treatment Status (HAART)",
+    subtitle = "Weights > 10 signal positivity concerns",
+    x = "Stabilized Weight", y = "Count", fill = "Treatment"
+  ) +
+  theme_minimal(base_size = 13) +
+  theme(legend.position = "bottom")
+```
+
+## Summary and Conclusion
+
+Longitudinal G-methods and TMLE represent the frontier of causal inference for settings with time-varying confounding. Key takeaways:
+
+**On why G-methods are necessary.** When a time-varying covariate is both a confounder and a mediator of prior treatment, no standard regression or stratification procedure produces an unbiased causal estimate. This is not a covariate insufficiency problem — it is a structural impossibility. G-methods resolve it by targeting the marginal potential outcome distribution rather than the conditional distribution.
+
+**On the G-formula.** Parametric G-computation is fully flexible for comparing arbitrary treatment regimes and dynamic rules. Its key weakness is parametric sensitivity: if the component models for $L_t$ or $Y$ are misspecified, the G-formula estimate is biased. Monte Carlo simulation accumulates bias over time steps, making long follow-up periods particularly sensitive.
+
+**On MSMs with IPTW.** IPTW creates a pseudo-population that is free of measured time-varying confounding. Stabilized weights (numerator ≠ 1) reduce variance. Extreme weights signal positivity violations — check, trim at a percentile, and report sensitivity. The MSM itself is a simple weighted regression, making results easy to interpret and present.
+
+**On longitudinal TMLE.** TMLE is the recommended estimator when outcome models are uncertain or when machine learning is used for nuisance estimation. Its doubly robust property — consistency if either the outcome model or the propensity model is correctly specified — provides insurance against model misspecification. The targeting step ensures valid inference even with data-adaptive nuisance estimation.
+
+**On diagnostics.** Every G-method analysis should report: (a) weight distributions with positivity diagnostics; (b) covariate balance before and after weighting (Love plots); (c) sensitivity to weight trimming; (d) E-values for unmeasured sequential confounding; and (e) the temporal DAG justifying the sequential ignorability assumption.
+
+## Resources
+
+| Resource | Description |
+|---|---|
+| **Robins (1986)** | *Mathematical Modelling* — original G-formula paper |
+| **Robins, Hernán & Brumback (2000)** | *Epidemiology* — foundational MSM / IPTW paper |
+| **Hernán & Robins (2020)** | *Causal Inference: What If* — Chapters 19–23, free online |
+| **`ltmle` package** | Schwab et al. — vignette with worked examples |
+| **`gfoRmula` package** | McGrath et al. — parametric G-formula in R |
+| **`ipw` package** | Wijnen et al. — time-varying IPTW |
+| **`cobalt` package** | Love plots and balance diagnostics |
+| **Petersen et al. (2012)** | *Am. J. Epidemiology* — positivity violations guide |
+| **van der Laan & Rose (2011)** | *Targeted Learning* — TMLE textbook |

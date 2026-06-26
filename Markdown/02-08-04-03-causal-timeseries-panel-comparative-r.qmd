@@ -1,0 +1,528 @@
+[![](Image/open_colab.png){fig-align="left" width="150"}](https://github.com/zia207/Causal_Inference_R/blob/main/Notebook/02_08_04_03_causal_timeseries_panel_comparative_r.ipynb)
+
+![](Image/banner_Causal_Inference_temporal_CI_R.png){fig-align="left" width="1400"}
+
+# 4.3 Panel and Quasi-Experimental Comparative Methods: DiD, Fixed Effects, and Synthetic Control {.unnumbered}
+
+The most powerful quasi-experimental designs in applied causal inference exploit variation across *multiple* units and *multiple* time periods simultaneously. When some units are exposed to an intervention and others are not — and when we can observe both groups before and after the intervention — the control units provide a direct empirical estimate of what would have happened to the treated units in the absence of treatment. This comparative logic underlies three families of methods covered in this chapter.
+
+**Difference-in-Differences (DiD)** with modern staggered-adoption estimators addresses settings where treatment timing varies across units. **Two-way fixed effects (TWFE)** is the workhorse panel regression, but recent econometric work (Callaway & Sant'Anna 2021; Sun & Abraham 2021; Goodman-Bacon 2021) has shown that naive TWFE produces biased estimates under heterogeneous treatment effects — cohort-based estimators are now the recommended standard. **Synthetic Control** addresses the single treated unit setting: a weighted combination of control units is constructed to match the treated unit's pre-intervention trajectory, providing a more transparent and assumption-explicit counterfactual than DiD.
+
+## Overview
+
+### Difference-in-Differences: Classical and Modern
+
+The classical 2×2 DiD estimator compares the change in outcomes over time for a treated group vs. a control group:
+
+$$
+\hat{\tau}^{\text{DiD}} = \underbrace{(\bar{Y}^T_{\text{post}} - \bar{Y}^T_{\text{pre}})}_{\text{treatment group change}} - \underbrace{(\bar{Y}^C_{\text{post}} - \bar{Y}^C_{\text{pre}})}_{\text{control group change}}
+$$
+
+**Two-Way Fixed Effects (TWFE) regression:**
+
+$$
+Y_{it} = \alpha_i + \lambda_t + \tau D_{it} + \mathbf{X}_{it}^\top \boldsymbol{\beta} + \varepsilon_{it}
+$$
+
+where $\alpha_i$ are unit FEs (absorb time-invariant heterogeneity) and $\lambda_t$ are time FEs (absorb common shocks).
+
+**The staggered adoption problem.** When units adopt treatment at different times (staggered rollout), the TWFE coefficient $\hat{\tau}$ is a weighted average of all possible 2×2 DiD comparisons — including *forbidden* comparisons where early-treated units serve as controls for later-treated units. Under heterogeneous treatment effects, these negative weights can cause $\hat{\tau}$ to be biased or even sign-reversed.
+
+**Callaway & Sant'Anna (2021) solution.** Estimate group-time average treatment effects $ATT(g, t)$ separately for each cohort $g$ (units first treated at the same time) and time period $t$:
+
+$$
+ATT(g, t) = \mathbb{E}[Y_t(g) - Y_t(\infty) \mid G_g = 1]
+$$
+
+where $Y_t(\infty)$ is the counterfactual outcome for cohort $g$ in period $t$ had they never been treated. These are then aggregated to overall ATT using user-specified weights.
+
+**Parallel trends assumption (modern form):**
+
+$$
+\mathbb{E}[Y_t(\infty) - Y_{t-1}(\infty) \mid G_g = 1] = \mathbb{E}[Y_t(\infty) - Y_{t-1}(\infty) \mid C = 1]
+$$
+
+for all $g > t$ (pre-treatment periods), where $C$ denotes the never-treated comparison group.
+
+### Fixed Effects Models
+
+| Model | Formula | Controls for | When to use |
+|---|---|---|---|
+| One-way FE (unit) | $Y_{it} = \alpha_i + \tau D_{it} + \varepsilon_{it}$ | Time-invariant unit heterogeneity | When key confounders are time-stable |
+| Two-way FE | $Y_{it} = \alpha_i + \lambda_t + \tau D_{it} + \varepsilon_{it}$ | Unit heterogeneity + common time shocks | Standard DiD baseline |
+| Dynamic FE (GMM) | $Y_{it} = \rho Y_{i,t-1} + \alpha_i + \tau D_{it} + \varepsilon_{it}$ | Above + lagged outcomes | When $Y_{t-1}$ is a predictor (Nickell bias requires Arellano-Bond) |
+
+### Synthetic Control Method (Abadie et al. 2010)
+
+For settings with one treated unit and $J$ potential donor controls, the synthetic control $\hat{Y}_{1t}^N = \sum_{j=2}^{J+1} w_j^* Y_{jt}$ is constructed by choosing weights $w_j^* \geq 0$, $\sum w_j^* = 1$ to minimize the pre-intervention fit:
+
+$$
+\min_{\mathbf{w}} \sum_{t=1}^{T_0} \left( Y_{1t} - \sum_{j=2}^{J+1} w_j Y_{jt} \right)^2 \quad \text{s.t.} \quad w_j \geq 0, \sum_j w_j = 1
+$$
+
+The causal effect at time $t > T_0$ (post-intervention) is:
+
+$$
+\hat{\alpha}_{1t} = Y_{1t} - \hat{Y}_{1t}^N = Y_{1t} - \sum_{j=2}^{J+1} w_j^* Y_{jt}
+$$
+
+**Inference via permutation:** There is no asymptotic theory (only one treated unit). Significance is assessed by computing synthetic controls for every donor unit and asking: how large is the treated unit's post-intervention gap relative to the distribution of placebo gaps?
+
+## Implementation in R
+
+### Setup and Required Packages
+
+```{r}
+#| message: false
+#| warning: false
+packages <- c(
+  "tidyverse",
+  "fixest",
+  "did",
+  "DRDID",
+  "bacondecomp",
+  "Synth",
+  "ggplot2",
+  "patchwork",
+  "modelsummary"
+)
+```
+
+``` r
+#| warning: false
+#| error: false
+new_packages <- packages[!(packages %in% installed.packages()[,"Package"])]
+if(length(new_packages)) install.packages(new_packages)
+```
+
+### Verify Installation
+
+```{r}
+cat("Installed packages:\n")
+print(sapply(packages, requireNamespace, quietly = TRUE))
+```
+
+### Load Packages
+
+```{r}
+#| warning: false
+#| error: false
+invisible(lapply(packages, function(pkg) {
+  suppressPackageStartupMessages(library(pkg, character.only = TRUE))
+}))
+```
+
+### Check Loaded Packages
+
+```{r}
+cat("Successfully loaded packages:\n")
+print(search()[grepl("package:", search())])
+```
+
+```{r}
+set.seed(2026)
+options(scipen = 999)
+```
+
+## Simulated Data: Staggered DiD
+
+### Data Generation with Heterogeneous Treatment Effects
+
+We simulate a staggered adoption panel: 300 units across 10 periods, with three treatment cohorts adopting in periods 4, 6, and 8. Treatment effects grow over time (dynamic heterogeneity), which will cause naive TWFE to be biased.
+
+```{r}
+N_units   <- 300
+N_periods <- 10
+
+# Treatment cohorts: periods 4, 6, 8 (100 units each) + 100 never-treated
+cohort_timing <- c(rep(4, 100), rep(6, 100), rep(8, 100), rep(Inf, 100))
+
+panel_df <- expand_grid(
+  unit   = 1:N_units,
+  period = 1:N_periods
+) %>%
+  mutate(
+    cohort = cohort_timing[unit],
+    # Unit and time fixed effects
+    unit_fe = rnorm(N_units, sd = 2)[unit],
+    time_fe = 0.2 * period,
+    # Treatment indicator
+    treated = as.integer(period >= cohort),
+    # Heterogeneous dynamic treatment effect: grows with time since treatment
+    treat_duration = pmax(period - cohort, 0),
+    tau_true = case_when(
+      cohort == 4   ~ 2.0 + 0.5 * treat_duration,   # Early adopters: large growing effect
+      cohort == 6   ~ 1.5 + 0.3 * treat_duration,   # Mid adopters: moderate effect
+      cohort == 8   ~ 1.0 + 0.2 * treat_duration,   # Late adopters: smaller effect
+      TRUE          ~ 0
+    ),
+    Y = unit_fe + time_fe + tau_true * treated + rnorm(N_units * N_periods, sd = 1.5)
+  )
+
+cat("Panel dataset summary:\n")
+cat(sprintf("  Units: %d | Periods: %d | Observations: %d\n",
+            N_units, N_periods, nrow(panel_df)))
+cat("  Cohort distribution:\n")
+print(table(unique(panel_df[, c("unit", "cohort")])$cohort))
+```
+
+### Naive TWFE Estimation (Biased Baseline)
+
+```{r}
+# Naive TWFE: treatment indicator
+twfe_naive <- feols(Y ~ treated | unit + period,
+                    data    = panel_df,
+                    cluster = ~unit)
+
+cat("=== Naive TWFE Estimate ===\n")
+print(summary(twfe_naive))
+cat(sprintf("\nNaive TWFE: %.3f\n", coef(twfe_naive)["treated"]))
+cat("(True average ATT varies by cohort and duration — single number misleads)\n")
+```
+
+### Bacon Decomposition
+
+The Bacon decomposition decomposes the TWFE coefficient into its constituent 2×2 DiD comparisons, revealing the weights assigned to each comparison — including potentially negative weights.
+
+```{r}
+# Bacon decomposition requires a binary treatment timing variable
+# Create first-treatment-period variable (NA for never-treated)
+panel_bacon <- panel_df %>%
+  mutate(
+    first_treat = ifelse(is.infinite(cohort), 0, cohort),
+    id          = unit
+  )
+
+bacon_out <- bacon(Y ~ treated,
+                   data           = panel_bacon,
+                   id_var         = "id",
+                   time_var       = "period")
+
+cat("=== Bacon Decomposition ===\n")
+print(bacon_out)
+```
+
+### Callaway-Sant'Anna Estimator (Correct Approach)
+
+```{r}
+# CS estimator: group-time ATTs
+cs_est <- att_gt(
+  yname         = "Y",
+  tname         = "period",
+  idname        = "unit",
+  gname         = "cohort",     # first treatment period (Inf → 0 for never-treated)
+  data          = panel_df %>% mutate(cohort = ifelse(is.infinite(cohort), 0, cohort)),
+  control_group = "nevertreated",
+  est_method    = "reg"
+)
+
+cat("=== Group-Time ATT(g,t) Summary ===\n")
+summary(cs_est)
+```
+
+### Aggregating to Overall ATT
+
+```{r}
+# Simple overall ATT (weighted average of all ATT(g,t))
+cs_overall <- aggte(cs_est, type = "simple")
+cat("=== CS Overall ATT ===\n")
+print(cs_overall)
+
+# Dynamic aggregation (by periods since treatment)
+cs_dynamic <- aggte(cs_est, type = "dynamic")
+cat("\n=== CS Dynamic ATT (by periods since treatment) ===\n")
+print(cs_dynamic)
+```
+
+### Event Study Plot
+
+```{r}
+#| fig.width: 10
+#| fig.height: 6
+ggdid(cs_dynamic,
+      title = "Callaway-Sant'Anna Event Study: Dynamic ATT by Periods Since Treatment",
+      ylab  = "Average Treatment Effect on Treated",
+      xlab  = "Periods Since First Treatment")
+```
+
+### Sun-Abraham Estimator (via fixest)
+
+The Sun-Abraham estimator uses interaction-weighted (IW) regression, also robust to heterogeneous treatment effects.
+
+```{r}
+# Sun-Abraham via fixest sunab() function
+panel_sa <- panel_df %>%
+  mutate(
+    cohort_sa = ifelse(is.infinite(cohort), 0, as.integer(cohort))
+  )
+
+sa_est <- feols(
+  Y ~ sunab(cohort_sa, period) | unit + period,
+  data    = panel_sa,
+  cluster = ~unit
+)
+
+cat("=== Sun-Abraham Estimator Summary ===\n")
+print(summary(sa_est))
+```
+
+### Comparison Table: TWFE vs. CS vs. SA
+
+```{r}
+#| fig.width: 10
+#| fig.height: 5
+# Aggregate Sun-Abraham to overall ATT
+sa_agg <- aggregate(sa_est, agg = "ATT")
+
+cat("=== Estimator Comparison ===\n")
+cat(sprintf("Naive TWFE:         %.3f\n", coef(twfe_naive)["treated"]))
+cat(sprintf("Callaway-Sant'Anna: %.3f (SE: %.3f)\n",
+            cs_overall$overall.att, cs_overall$overall.se))
+cat(sprintf("Sun-Abraham:        %.3f\n", sa_agg["ATT"]))
+cat("\nNaive TWFE underestimates because of negative weighting from forbidden comparisons.\n")
+```
+
+## Real-World Application: Minimum Wage and Employment (loedata)
+
+We replicate a staggered DiD analysis using employment data from the `loedata` package (Card & Krueger FastFood dataset).
+
+### Load and Prepare Data
+
+```{r}
+#| warning: false
+library(loedata)
+data("Fastfood")
+
+# Prepare for CS estimator
+ff_did <- Fastfood %>%
+  mutate(
+    id         = as.integer(factor(id)),
+    period_num = ifelse(after == 0, 1, 2),
+    first_treat = ifelse(nj == 1, 2, 0),  # NJ treated in period 2
+    treat_indicator = nj * after
+  ) %>%
+  filter(!is.na(fte))
+
+cat("Dataset for DiD:\n")
+cat(sprintf("  Restaurants: %d | Periods: 2 | NJ (treated): %d | PA (control): %d\n",
+            n_distinct(ff_did$id),
+            sum(ff_did$nj[ff_did$period_num == 1]),
+            sum(1 - ff_did$nj[ff_did$period_num == 1])))
+```
+
+### TWFE and CS Estimation on Fastfood Data
+
+```{r}
+# TWFE
+ff_twfe <- feols(fte ~ treat_indicator | id + period_num,
+                 data = ff_did, cluster = ~id)
+
+# CS (2-period setting, equivalent to 2x2 DiD)
+ff_cs <- att_gt(
+  yname         = "fte",
+  tname         = "period_num",
+  idname        = "id",
+  gname         = "first_treat",
+  data          = ff_did,
+  control_group = "nevertreated",
+  est_method    = "ipw"
+)
+ff_cs_agg <- aggte(ff_cs, type = "simple")
+
+cat("=== Fastfood Employment DiD Results ===\n")
+cat(sprintf("TWFE estimate:         %.3f (SE: %.3f)\n",
+            coef(ff_twfe)["treat_indicator"],
+            se(ff_twfe)["treat_indicator"]))
+cat(sprintf("Callaway-Sant'Anna:    %.3f (SE: %.3f)\n",
+            ff_cs_agg$overall.att, ff_cs_agg$overall.se))
+cat("\nCard & Krueger original estimate: +2.75 FTE\n")
+```
+
+## Synthetic Control: Single Treated Unit
+
+### Simulated Synthetic Control
+
+```{r}
+# Parameters: 1 treated + 20 donors, 30 pre + 15 post periods
+J       <- 20    # donor units
+T_sc    <- 45    # total periods
+T0_sc   <- 30    # pre-intervention periods
+
+# Shared factors + idiosyncratic noise
+factors <- matrix(rnorm(T_sc * 3, sd = 1), nrow = T_sc)
+
+# Donor weights (synthetic control will try to match these)
+true_w <- c(0.35, 0.30, 0.20, rep(0.15 / (J - 3), J - 3))
+
+# Generate donor series
+donors <- sapply(1:J, function(j) {
+  loadings <- rnorm(3, mean = true_w[j], sd = 0.1)
+  factors %*% loadings + rnorm(T_sc, sd = 0.5)
+})
+
+# Generate treated unit: matches donors pre, has effect of 3 units post
+treated_loadings <- rnorm(3, mean = 0.3, sd = 0.05)
+y_treated <- factors %*% treated_loadings + rnorm(T_sc, sd = 0.5)
+y_treated[(T0_sc + 1):T_sc] <- y_treated[(T0_sc + 1):T_sc] + 3.0  # True effect = 3
+
+# Combine
+sc_df <- as_tibble(donors) %>%
+  set_names(paste0("unit_", 2:(J + 1))) %>%
+  mutate(
+    unit_1 = as.numeric(y_treated),
+    time   = 1:T_sc
+  ) %>%
+  pivot_longer(cols = -time, names_to = "unit", values_to = "Y") %>%
+  mutate(unit_id = as.integer(str_extract(unit, "\\d+")))
+
+cat("Synthetic Control dataset:\n")
+cat(sprintf("  Units: %d (1 treated + %d donors)\n", J + 1, J))
+cat(sprintf("  Periods: %d (pre: %d, post: %d)\n", T_sc, T0_sc, T_sc - T0_sc))
+```
+
+### Fitting with Synth Package
+
+```{r}
+#| warning: false
+# Prepare data for Synth
+sc_wide <- sc_df %>%
+  pivot_wider(id_cols = time, names_from = unit_id, values_from = Y,
+              names_prefix = "Y") %>%
+  as.data.frame()
+
+dataprep_out <- dataprep(
+  foo             = sc_df %>% rename(unit.num = unit_id, year = time) %>% as.data.frame(),
+  predictors      = "Y",
+  predictors.op   = "mean",
+  time.predictors.prior = 1:T0_sc,
+  dependent       = "Y",
+  unit.variable   = "unit.num",
+  time.variable   = "year",
+  treatment.identifier  = 1,
+  controls.identifier   = 2:(J + 1),
+  time.optimize.ssr     = 1:T0_sc,
+  time.plot             = 1:T_sc
+)
+
+synth_out <- synth(dataprep_out)
+```
+
+### Synthetic Control Path Plot
+
+```{r}
+#| fig.width: 10
+#| fig.height: 5
+path.plot(synth.res    = synth_out,
+          dataprep.res = dataprep_out,
+          Ylab         = "Outcome",
+          Xlab         = "Time",
+          Legend       = c("Treated Unit", "Synthetic Control"),
+          Legend.position = "bottomleft",
+          Main = "Synthetic Control: Treated vs. Synthetic Counterfactual")
+abline(v = T0_sc + 0.5, lty = 2, col = "red")
+```
+
+### Gaps Plot and Placebo Inference
+
+```{r}
+#| fig.width: 10
+#| fig.height: 5
+gaps.plot(synth.res    = synth_out,
+          dataprep.res = dataprep_out,
+          Ylab         = "Gap (Treated - Synthetic)",
+          Xlab         = "Time",
+          Main = "Synthetic Control: Gap Plot (Treatment Effect Over Time)")
+abline(v = T0_sc + 0.5, lty = 2, col = "red")
+abline(h = 0, lty = 3, col = "gray50")
+```
+
+```{r}
+# Extract synthetic control weights
+synth_weights <- synth_out$solution.w
+top_donors <- sort(synth_weights[synth_weights > 0.01],
+                   decreasing = TRUE)[1:5]
+cat("=== Top Synthetic Control Donor Weights ===\n")
+print(round(top_donors, 3))
+
+# Post-period gap (treatment effect estimate)
+Y_treated_post  <- as.numeric(dataprep_out$Y1plot[(T0_sc + 1):T_sc])
+Y_synthetic_post <- as.numeric(dataprep_out$Y0plot[(T0_sc + 1):T_sc,] %*%
+                                 synth_out$solution.w)
+gap_post <- Y_treated_post - Y_synthetic_post
+cat(sprintf("\nAverage synthetic control effect (true = 3.0): %.3f\n", mean(gap_post)))
+```
+
+## Validity Diagnostics for Panel Methods
+
+### Parallel Trends Pre-Test (Event Study)
+
+```{r}
+#| fig.width: 10
+#| fig.height: 5
+# Pre-trends test: all pre-treatment CS estimates should be near zero
+cs_pretest <- att_gt(
+  yname         = "Y",
+  tname         = "period",
+  idname        = "unit",
+  gname         = "cohort",
+  data          = panel_df %>% mutate(cohort = ifelse(is.infinite(cohort), 0, cohort)),
+  control_group = "nevertreated",
+  est_method    = "reg"
+)
+
+# Plot pre-period estimates (should cluster around 0)
+ggdid(aggte(cs_pretest, type = "dynamic"),
+      title = "Pre-Trend Test: ATT by Periods Since Treatment (Pre = 0 validates parallel trends)",
+      xlab  = "Periods Since Treatment (negative = pre-treatment)")
+```
+
+### Covariate Balance Check
+
+```{r}
+# Check balance of pre-treatment Y across cohorts
+balance_check <- panel_df %>%
+  filter(period < cohort | is.infinite(cohort)) %>%
+  mutate(cohort_lab = case_when(
+    cohort == 4 ~ "Early (t=4)",
+    cohort == 6 ~ "Mid (t=6)",
+    cohort == 8 ~ "Late (t=8)",
+    TRUE        ~ "Never Treated"
+  )) %>%
+  group_by(cohort_lab, period) %>%
+  summarise(Y_mean = mean(Y), .groups = "drop")
+
+ggplot(balance_check, aes(x = period, y = Y_mean, color = cohort_lab)) +
+  geom_line(linewidth = 1.1) +
+  geom_point(size = 2) +
+  labs(
+    title    = "Pre-Treatment Outcome Trends by Cohort",
+    subtitle = "Parallel trends require similar trajectories before each cohort's treatment date",
+    x = "Period", y = "Mean Outcome",
+    color = "Cohort"
+  ) +
+  theme_minimal(base_size = 13) +
+  theme(legend.position = "bottom")
+```
+
+## Summary and Conclusion
+
+Panel and quasi-experimental comparative methods offer the strongest observational causal identification available without randomization — provided their key assumptions hold. Key takeaways:
+
+**On TWFE and its limits.** Two-way fixed effects regression is the workhorse of panel causal inference but is biased under heterogeneous treatment effects in staggered adoption settings. The Goodman-Bacon decomposition reveals the source of bias: forbidden comparisons where already-treated units serve as controls. The Callaway-Sant'Anna and Sun-Abraham estimators fix this by aggregating clean group-time effects.
+
+**On synthetic control.** For single treated unit settings, synthetic control provides a more transparent and verifiable counterfactual than regression adjustment. The pre-intervention fit quality is directly observable — unlike the parallel trends assumption in DiD, which is only partially testable. Inference via permutation placebo tests is the correct approach; there is no asymptotic theory for the standard synthetic control.
+
+**On diagnostics.** Every comparative panel study should report: (a) an event study plot showing pre-treatment coefficients near zero; (b) a Bacon decomposition for TWFE (to show negative weights are absent or minimal); (c) a balance table on pre-treatment covariates; and (d) sensitivity to the choice of comparison group (never-treated vs. not-yet-treated).
+
+## Resources
+
+| Resource | Description |
+|---|---|
+| **Callaway & Sant'Anna (2021)** | *J. Econometrics* — group-time ATT estimator |
+| **Sun & Abraham (2021)** | *J. Econometrics* — interaction-weighted DiD |
+| **Goodman-Bacon (2021)** | *J. Econometrics* — TWFE decomposition |
+| **Abadie et al. (2010)** | *JASA* — synthetic control method |
+| **`did` package** | Callaway & Sant'Anna R implementation |
+| **`fixest` package** | Bergé — high-performance FE regression |
+| **`Synth` package** | Abadie, Diamond, Hainmueller — synthetic control in R |
+| **Roth et al. (2023)** | *JEL* — "What's Trending in DiD?" review |

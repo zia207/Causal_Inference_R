@@ -1,0 +1,269 @@
+project:
+  type: website
+  output-dir: docs
+
+website:
+  title: "Causal Inference in R"
+  description: "A comprehensive guide to causal inference methods implemented in R"
+  page-navigation: true
+  back-to-top-navigation: true
+  search:
+    location: sidebar
+    type: textbox
+  page-footer:
+    right: "This page is built with [Quarto](https://quarto.org/)."
+    left: "&copy; CC-By Zia Ahmed, Upatta Analytics, 2026"
+  navbar:
+    background: primary
+    left:
+      - icon: house
+        href: https://sites.google.com/view/r-data-sci-env/home
+        aria-label: Home
+    right:
+      - icon: github
+        href: https://github.com/zia207/Causal_Inference_R/
+        aria-label: GitHub
+      - icon: linkedin
+        href: https://www.linkedin.com/in/zia-ahmed207
+        aria-label: LinkedIn
+      - icon: envelope
+        href: mailto:zia207@gmail.com
+        aria-label: Email
+
+  sidebar:
+    logo: "Image/chapter_logo_causal_inference_r.png"
+    pinned: true
+    border: true
+    align: center
+    search: true
+    style: "docked"
+    collapse-level: 1
+    contents:
+      - section: "**Causal Inference**"
+        contents:
+          - href: index.qmd
+            text: "Introduction"
+      - section: "**Randomized Controlled Trials (RCTs)**"
+        contents:
+          - href: 02-08-01-00-randomized-controlled-trials-introduction-r.qmd
+            text: "Introduction to Randomized Controlled Trials (RCTs)"
+          - href: 02-08-01-01-randomized-controlled-trials-design-r.qmd
+            text: "Design Phase of RCTs"
+          - href: 02-08-01-02-randomized-controlled-trials-randomization-r.qmd
+            text: "Randomization of RCTs"
+          - href: 02-08-01-03-randomized-controlled-trials-implementation-phase-r.qmd
+            text: "Implementation Phase of RCTs"
+      - section: "**Directed Acyclic Graphs (DAGs)**"
+        contents:
+          - href: 02-08-02-00-graphical-models-introduction-r.qmd
+            text: "Introduction to Directed Acyclic Graphs (DAGs)"
+          - href: 02-08-02-01-graphical-models-basic-work-example-r.qmd
+            text: "Basic Worked Example of DAGs"
+          - href: 02-08-02-02-graphical-models-advanced-work-example-r.qmd
+            text: "DAGs – Frontdoor Criterion and Time-Varying Confounding"
+      - section: "**Potential Outcomes Framework (Neyman–Rubin Causal Model)**"
+        contents:
+          - href: 02-08-03-00-potential-outcomes-framework-introduction-r.qmd
+            text: "Introduction to Potential Outcomes Framework"
+          - href: 02-08-03-01-potential-outcomes-framework-causal-estimands-r.qmd
+            text: "Causal Estimands (Average Causal Effect)"
+          - href: 02-08-03-02-potential-outcomes-framework-regression-adjustment-r.qmd
+            text: "Regression Adjustment"
+          - href: 02-08-03-03-potential-outcomes-framework-propensity-score-matching-r.qmd
+            text: "Propensity Score Matching"
+          - href: 02-08-03-04-potential-outcomes-framework-doubly-robust-estimators-r.qmd
+            text: "Doubly Robust Estimators"
+          - href: 02-08-03-05-potential-outcomes-framework-difference-in-differences-r.qmd
+            text: "Difference-in-Differences (DiD)"
+          - href: 02-08-03-06-potential-outcomes-framework-instrumental-variable-r.qmd
+            text: "Instrumental Variable (IV) Analysis"
+          - href: 02-08-03-07-potential-outcomes-framework-regression-discontinuity-design-r.qmd
+            text: "Regression Discontinuity Design (RDD)"
+          - href: 02-08-03-08-potential-outcomes-framework-g-methods-r.qmd
+            text: "Generalized Methods (G-Methods)"
+      - section: "**Temporal Causal Inference**"
+        contents:
+          - href: 02-08-04-00-causal-timeseries-introduction-r.qmd
+            text: "Introduction to Temporal Causal Inference"
+          - href: 02-08-04-01-causal-timeseries-var-granger-r.qmd
+            text: "Time-Series Causal Models: VAR, Granger Causality, SVAR, and ECM"
+          - href: 02-08-04-02-causal-timeseries-its-bsts-r.qmd
+            text: "Interrupted Time Series and Bayesian Structural Time Series"
+          - href: 02-08-04-03-causal-timeseries-panel-comparative-r.qmd
+            text: "Panel and Quasi-Experimental Comparative Methods"
+          - href: 02-08-04-04-causal-timeseries-gmethods-tmle-r.qmd
+            text: "Longitudinal G-Methods and TMLE"
+      - section: "**Causal Machine Learning (CausalML)**"
+        contents:
+          - href: 02-08-05-00-casual-ml-introduction-r.qmd
+            text: "Machine Learning for Causal Inference"
+          - section: "**Tree-Based Models**"
+            contents:
+              - href: 02-08-05-01-00-casual-tree-introduction-r.qmd
+                text: "Introduction to Tree-Based Models"
+              - href: 02-08-05-01-01-causal-tree-r.qmd
+                text: "Causal Tree – Single Tree for Heterogeneous Treatment Effect"
+              - href: 02-08-05-01-02-causal-forest-r.qmd
+                text: "Causal Forest (CF)"
+              - href: 02-08-05-01-03-causal-survival-forest-r.qmd
+                text: "Causal Survival Forest (CSF)"
+              - href: 02-08-05-01-04-instrumental-causal-forest-r.qmd
+                text: "Instrumental Forest"
+              - href: 02-08-05-01-05-multi-arm-causal-forest-r.qmd
+                text: "Multi-arm/multi-outcome Causal Forest"
+              - href: 02-08-05-01-06-causal-xgboost-r.qmd
+                text: "The Boosted Model of Causal Inference (Causal XGBoost)"
+              - href: 02-08-05-01-07-instrumental-causal-xgboost-r.qmd
+                text: "Instrumental Causal XGBoost"
+              - href: 02-08-05-01-08-multi-arm-causal-boost-r.qmd
+                text: "Boosted Multi-Arm Causal Model"
+          - section: "**Meta-Learners**"
+            contents:
+              - href: 02-08-05-02-00-meta-learners-introduction-r.qmd
+                text: "Introduction to Meta-Learners"
+              - href: 02-08-05-02-01-meta-learners-binary-treatments-r.qmd
+                text: "Meta-Learner with Binary Treatments"
+              - href: 02-08-05-02-02-meta-learners-multiple-discrete-treatment-r.qmd
+                text: "Meta-Learners with Multiple Discrete Treatments"
+              - href: 02-08-05-02-03-meta-learners-continuous-treatment-r.qmd
+                text: "Meta Learner with Continuous Treatments"
+              - href: 02-08-05-02-04-tmle-model-r.qmd
+                text: "Causal ML with Targeted Maximum Likelihood Estimation"
+              - href: 02-08-05-02-05-meta-learners-domain-adaptation-learner-r.qmd
+                text: "Domain Adaptation Learner"
+              - href: 02-08-05-02-06--meta-learners-doubly-robust-learners-r.qmd
+                text: "Doubly Robust Learners"
+          - section: "**Uplift-Learners**"
+            contents:
+              - href: 02-08-05-03-00-uplift-trees-introduction-r.qmd
+                text: "Introduction to Uplift-Learners"
+              - href: 02-08-05-03-01-uplift-trees-classification-r.qmd
+                text: "Uplift Tree-Classification"
+              - href: 02-08-05-03-02-uplift-trees-regression-r.qmd
+                text: "Uplift Tree-Regression"
+              - href: 02-08-05-03-03-uplift-randomForest-r.qmd
+                text: "Uplift Random Forest Regression"
+              - href: 02-08-05-03-04-uplift-xgboost-r.qmd
+                text: "Uplift XGBoost Regression"
+          - section: "**Double/Debiased Machine Learning**"
+            contents:
+              - href: 02-08-05-04-00-double-ml-introduction-r.qmd
+                text: "Introduction to Double/Debiased Machine Learning"
+              - href: 02-08-05-04-01-double-ml-from-basics-to-application-r.qmd
+                text: "Double ML- Bias, Orthogonalization "
+              - href: 02-08-05-04-02-double-ml- single-multiple-treatment-r.qmd
+                text: "Double ML - Single/multiple Treatment"
+              - href: 02-08-05-04-03-double-ml-did-r.qmd
+                text: "DoubleML for Difference-in-Differences (Did)"
+              - href: 02-08-05-04-04-double-ml-iv-r.qmd
+                text: "Double ML with Instrumental Variables (IV)"
+              - href: 02-08-05-04-05-double-ml-dynamic-ml.qmd
+                text: "Dynamic Double Machine Learning"
+              - href: 02-08-05-04-06-double-ml-weighted-double-ml-r.qmd
+                text: "Weighted Double Machine Learning"
+              - href: 02-08-05-04-07-double-ml-cluster-robust-r.qmd
+                text: "Cluster Robust Double Machine Learning"
+              - href: 02-08-05-04-08-double-ml-ensemble-learners-r
+                text: "Double ML with Ensemble Learners"
+          - section: "**Deep Causal Learning**"
+            contents:
+              - href: 02-08-05-05-00-DeepCausalML-introduction-r.qmd
+                text: "Introduction to Deep Causal Learning"
+              - section: "**Treatment Effect Estimators**"
+                contents:
+                  - href: 02-08-05-05-01-00-DeepCausalML-treatment-effect-estimators-introduction-r.qmd
+                    text: "Introduction to Treatment Effect Estimators"
+                  - href: 02-08-05-05-01-01-DeepCausalML-TARNET-r.qmd
+                    text: "TARNet: Treatment-Agnostic Representation Network"
+                  - href: 02-08-05-05-01-02-DeepCausalML-CFRTNet-r.qmd
+                    text: "CFRNet: Counterfactual Regression Network"
+                  - href: 02-08-05-05-01-03-DeepCausalML-DragonNet-r.qmd
+                    text: "DragonNet: Propensity-Adjusted Networks for Causal Inference"
+                  - href: 02-08-05-05-01-04-DeepCausalML-GANITE-r.qmd
+                    text: "GANITE: Generative Adversarial Network for Inference of Treatment Effects"
+              - section: "**Generative Latent-Variable Causal Models (GLVCMs)**"
+                contents:
+                  - href: 02-08-05-05-02-00-DeepCausalML-generative-latent-variable-causal-models-introduction-r.qmd
+                    text: "Introduction to GLVCMs"
+                  - href: 02-08-05-05-02-01-DeepCausalML-counterfactual-variational-autoencoder-CEVAE-r.qmd
+                    text: "CEVAE:Generative Model with Latent Confounders"
+                  - href: 02-08-05-05-02-02-DeepCausalML-variational-autoencoder-causalVAE.qmd
+                    text: "CausalVAE: Causal Variational Autoencoder"
+                  - href: 02-08-05-05-02-03-DeepCausalML-identifiable-variational-autoencoders-CausaliVAEs.qmd
+                    text: "CausaliVAEs:Identifiable Variational Autoencoders"
+                  - href: 02-08-05-05-02-04-DeepCausalML-causaldiscrepancyVAE-r.qmd
+                    text: "CausalDiscrepancyVAE: Discrepancy-Regularized Causal Representation Learning"
+                  - href: 02-08-05-05-02-05-DeepCausalML-causalGAN-r.qmd
+                    text: "CausalGAN:Causal Generative Network"
+                  - href: 02-08-05-05-02-06-DeepCausalML-deep-structural-causal-model-DSCM-r.qmd
+                    text: "Deep Structural Causal Models (DSCMs)"
+                  - href: 02-08-05-05-02-07-DeepCausalML-causal-encoding-generative-EGN-r.qmd
+                    text: "CausalEGM: Causal Encoding Generative Modeling"
+              - section: "**Causal Structural Learning**"
+                contents:
+                  - href: 02-08-05-05-03-00-DeepCausalML-structural-learnering-introduction-r.qmd
+                    text: "Introduction to Causal Structural Learning"
+                  - href: 02-08-05-05-03-01-DeepCausalML-continuous-optimization-models-NOTEARS-r.qmd
+                    text: "NOTEARs: Continuous Optimization Models NOTEARS"
+                  - href: 02-08-05-05-03-02-DeepCausalML-dag-structure-learning-graph-neural-networks-DagGNN-r.qmd
+                    text: "DAG-GNN: DAG Structure Learning with Graph Neural Networks"
+                  - href: 02-08-05-05-03-03-DeepCausalML-gradient-based-neural-learning-GranDag-r.qmd
+                    text: "GraN-DAG: Gradient-Based Neural DAG Learning"
+                  - href: 02-08-05-05-03-04-DeepCausalML-DAGMA-NoCurl-r.qmd
+                    text: "DAGMA and DAG-NoCurl for Causal Discovery"
+                  - href: 02-08-05-05-03-04-DeepCausalML-DAGMA-NoCurl-r.qmd
+                    text: "DeepCausalML-causal-structural-learning-regularization-CASTLE-r.qmd"
+              - section: "**Temporal Deep Causal ML**"
+                contents:
+                  - href: 02-08-05-05-04-00-DeepCuasalML-timesseries-introduction-r.qmd
+                    text: "Introduction to Temporal Deep Causal ML"
+                  - href: 02-08-05-05-04-01-DeepCausalML-timeseries-neural-granger-cusuality-r.qmd
+                    text: "Neural Granger Causality Models"
+                  - href: 02-08-05-05-04-02-DeepCausalML-timeseries-structural-causal-model-SMC-r.qmd
+                    text: "Structural Causal Models (SCMs) with Deep Components"
+                  - href: 02-08-05-05-04-03-DeepCausalML-attension-transformer-r.qmd
+                    text: "Attention-Based/Transformer Causal Models"
+                  - href: 02-08-05-05-04-04-DeepCausalML-timeseries-RNN-LSTM-causaML-r.qmd
+                    text: "RNN/LSTM-Based Causal Models"
+                  - href: 02-08-05-05-04-05-DeepCausalML-timeseries-graph-nn-r.qmd
+                    text: "Graph Neural Network (GNN) Causal Models"
+                  - href: 02-08-05-05-04-06-DeepCausalML-timeseries-counterfactual-potential-causalML-r.qmd
+                    text: "Counterfactual / Potential Outcomes Models"
+          - section: "**Terminiology**"
+            contents:
+              - href: 00-scientific-terminology-glossary.qmd
+                text: "A complete A–Z reference for causal inference and machine learning terminology"
+
+tbl-cap-location: top
+title-block-banner: true
+
+execute:
+  echo: true
+  warning: false
+  message: false
+  freeze: auto
+
+format:
+  html:
+    theme:
+      light: cosmo
+      dark: darkly
+    highlight-style: github
+    fontsize: 1.1em
+    linestretch: 1.6
+    code-fold: show
+    code-tools: false
+    code-copy: true
+    code-link: true
+    smooth-scroll: true
+    toc: true
+    toc-depth: 4
+    toc-title: "On This Page"
+    number-sections: false
+    fig-align: center
+    df-print: paged
+    grid:
+      sidebar-width: 350px
+      body-width: 1200px
+      margin-width: 250px
+      gutter-width: 1.5rem
