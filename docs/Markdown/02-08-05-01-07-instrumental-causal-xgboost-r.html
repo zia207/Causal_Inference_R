@@ -1,0 +1,1935 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.8.27">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+<title>instrumental-causal-xgboost-r – Causal Inference in R</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+<script src="../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../">
+<script src="../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../site_libs/quarto-html/axe/axe-check.js" type="module"></script>
+<script src="../site_libs/quarto-html/popper.min.js"></script>
+<script src="../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-8b4baf804e461d9b72633f0de59a0cac.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-dark-f1aadacce99040138bbb613f9330654f.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-8b4baf804e461d9b72633f0de59a0cac.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<script src="../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../site_libs/bootstrap/bootstrap-bf6de5ccb156a65fc439966d4053cafd.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../site_libs/bootstrap/bootstrap-dark-c3ddef8e9936373b1ee063945a43a984.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../site_libs/bootstrap/bootstrap-bf6de5ccb156a65fc439966d4053cafd.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light"><script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script><style>html{ scroll-behavior: smooth; }</style>
+<link href="../site_libs/pagedtable-1.1/css/pagedtable.css" rel="stylesheet">
+<script src="../site_libs/pagedtable-1.1/js/pagedtable.js"></script><script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script><script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script><script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+</head>
+<body class="nav-sidebar docked nav-fixed quarto-light"><script id="quarto-html-before-body" type="application/javascript">
+    const toggleBodyColorMode = (bsSheetEl) => {
+      const mode = bsSheetEl.getAttribute("data-mode");
+      const bodyEl = window.document.querySelector("body");
+      if (mode === "dark") {
+        bodyEl.classList.add("quarto-dark");
+        bodyEl.classList.remove("quarto-light");
+      } else {
+        bodyEl.classList.add("quarto-light");
+        bodyEl.classList.remove("quarto-dark");
+      }
+    }
+    const toggleBodyColorPrimary = () => {
+      const bsSheetEl = window.document.querySelector("link#quarto-bootstrap:not([rel=disabled-stylesheet])");
+      if (bsSheetEl) {
+        toggleBodyColorMode(bsSheetEl);
+      }
+    }
+    const setColorSchemeToggle = (alternate) => {
+      const toggles = window.document.querySelectorAll('.quarto-color-scheme-toggle');
+      for (let i=0; i < toggles.length; i++) {
+        const toggle = toggles[i];
+        if (toggle) {
+          if (alternate) {
+            toggle.classList.add("alternate");
+          } else {
+            toggle.classList.remove("alternate");
+          }
+        }
+      }
+    };
+    const toggleColorMode = (alternate) => {
+      // Switch the stylesheets
+      const primaryStylesheets = window.document.querySelectorAll('link.quarto-color-scheme:not(.quarto-color-alternate)');
+      const alternateStylesheets = window.document.querySelectorAll('link.quarto-color-scheme.quarto-color-alternate');
+      manageTransitions('#quarto-margin-sidebar .nav-link', false);
+      if (alternate) {
+        // note: dark is layered on light, we don't disable primary!
+        enableStylesheet(alternateStylesheets);
+        for (const sheetNode of alternateStylesheets) {
+          if (sheetNode.id === "quarto-bootstrap") {
+            toggleBodyColorMode(sheetNode);
+          }
+        }
+      } else {
+        disableStylesheet(alternateStylesheets);
+        enableStylesheet(primaryStylesheets)
+        toggleBodyColorPrimary();
+      }
+      manageTransitions('#quarto-margin-sidebar .nav-link', true);
+      // Switch the toggles
+      setColorSchemeToggle(alternate)
+      // Hack to workaround the fact that safari doesn't
+      // properly recolor the scrollbar when toggling (#1455)
+      if (navigator.userAgent.indexOf('Safari') > 0 && navigator.userAgent.indexOf('Chrome') == -1) {
+        manageTransitions("body", false);
+        window.scrollTo(0, 1);
+        setTimeout(() => {
+          window.scrollTo(0, 0);
+          manageTransitions("body", true);
+        }, 40);
+      }
+    }
+    const disableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        stylesheet.rel = 'disabled-stylesheet';
+      }
+    }
+    const enableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        if(stylesheet.rel !== 'stylesheet') { // for Chrome, which will still FOUC without this check
+          stylesheet.rel = 'stylesheet';
+        }
+      }
+    }
+    const manageTransitions = (selector, allowTransitions) => {
+      const els = window.document.querySelectorAll(selector);
+      for (let i=0; i < els.length; i++) {
+        const el = els[i];
+        if (allowTransitions) {
+          el.classList.remove('notransition');
+        } else {
+          el.classList.add('notransition');
+        }
+      }
+    }
+    const isFileUrl = () => {
+      return window.location.protocol === 'file:';
+    }
+    const hasAlternateSentinel = () => {
+      let styleSentinel = getColorSchemeSentinel();
+      if (styleSentinel !== null) {
+        return styleSentinel === "alternate";
+      } else {
+        return false;
+      }
+    }
+    const setStyleSentinel = (alternate) => {
+      const value = alternate ? "alternate" : "default";
+      if (!isFileUrl()) {
+        window.localStorage.setItem("quarto-color-scheme", value);
+      } else {
+        localAlternateSentinel = value;
+      }
+    }
+    const getColorSchemeSentinel = () => {
+      if (!isFileUrl()) {
+        const storageValue = window.localStorage.getItem("quarto-color-scheme");
+        return storageValue != null ? storageValue : localAlternateSentinel;
+      } else {
+        return localAlternateSentinel;
+      }
+    }
+    const toggleGiscusIfUsed = (isAlternate, darkModeDefault) => {
+      const baseTheme = document.querySelector('#giscus-base-theme')?.value ?? 'light';
+      const alternateTheme = document.querySelector('#giscus-alt-theme')?.value ?? 'dark';
+      let newTheme = '';
+      if(authorPrefersDark) {
+        newTheme = isAlternate ? baseTheme : alternateTheme;
+      } else {
+        newTheme = isAlternate ? alternateTheme : baseTheme;
+      }
+      const changeGiscusTheme = () => {
+        // From: https://github.com/giscus/giscus/issues/336
+        const sendMessage = (message) => {
+          const iframe = document.querySelector('iframe.giscus-frame');
+          if (!iframe) return;
+          iframe.contentWindow.postMessage({ giscus: message }, 'https://giscus.app');
+        }
+        sendMessage({
+          setConfig: {
+            theme: newTheme
+          }
+        });
+      }
+      const isGiscussLoaded = window.document.querySelector('iframe.giscus-frame') !== null;
+      if (isGiscussLoaded) {
+        changeGiscusTheme();
+      }
+    };
+    const authorPrefersDark = false;
+    const darkModeDefault = authorPrefersDark;
+      document.querySelector('link#quarto-text-highlighting-styles.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+      document.querySelector('link#quarto-bootstrap.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+    let localAlternateSentinel = darkModeDefault ? 'alternate' : 'default';
+    // Dark / light mode switch
+    window.quartoToggleColorScheme = () => {
+      // Read the current dark / light value
+      let toAlternate = !hasAlternateSentinel();
+      toggleColorMode(toAlternate);
+      setStyleSentinel(toAlternate);
+      toggleGiscusIfUsed(toAlternate, darkModeDefault);
+      window.dispatchEvent(new Event('resize'));
+    };
+    // Switch to dark mode if need be
+    if (hasAlternateSentinel()) {
+      toggleColorMode(true);
+    } else {
+      toggleColorMode(false);
+    }
+  </script>
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top quarto-banner"><nav class="navbar navbar-expand-lg " data-bs-theme="dark"><div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="../index.html">
+    <span class="navbar-title">Causal Inference in R</span>
+    </a>
+  </div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll me-auto">
+<li class="nav-item compact">
+    <a class="nav-link" href="https://sites.google.com/view/r-data-sci-env/home"> <i class="bi bi-house" role="img" aria-label="Home">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+</ul>
+<ul class="navbar-nav navbar-nav-scroll ms-auto">
+<li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/zia207/Causal_Inference_R/"> <i class="bi bi-github" role="img" aria-label="GitHub">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://www.linkedin.com/in/zia-ahmed207"> <i class="bi bi-linkedin" role="img" aria-label="LinkedIn">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="mailto:zia207@gmail.com"> <i class="bi bi-envelope" role="img" aria-label="Email">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+</ul>
+</div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+  <a href="" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="Toggle dark mode"><i class="bi"></i></a>
+</div>
+      </div> <!-- /container-fluid -->
+    </nav><nav class="quarto-secondary-nav"><div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav></header><!-- content --><header id="title-block-header" class="quarto-title-block"></header><div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation docked overflow-auto"><div class="pt-lg-2 mt-2 text-center sidebar-header">
+      <a href="../index.html" class="sidebar-logo-link">
+      <img src="../Image/chapter_logo_causal_inference_r.png" alt="" class="sidebar-logo light-content py-0 d-lg-inline d-none"><img src="../Image/chapter_logo_causal_inference_r.png" alt="" class="sidebar-logo dark-content py-0 d-lg-inline d-none"></a>
+      </div>
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Search"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+<li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="false">
+ <span class="menu-text"><strong>Causal Inference</strong></span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 ">
+<li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Introduction</span></a>
+  </div>
+</li>
+      </ul>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="false">
+ <span class="menu-text"><strong>Randomized Controlled Trials (RCTs)</strong></span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth1 ">
+<li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../02-08-01-00-randomized-controlled-trials-introduction-r.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Introduction to Randomized Controlled Trials (RCTs)</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../02-08-01-01-randomized-controlled-trials-design-r.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Design Phase of RCTs</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../02-08-01-02-randomized-controlled-trials-randomization-r.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Randomization of RCTs</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../02-08-01-03-randomized-controlled-trials-implementation-phase-r.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Implementation Phase of RCTs</span></a>
+  </div>
+</li>
+      </ul>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="false">
+ <span class="menu-text"><strong>Directed Acyclic Graphs (DAGs)</strong></span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-3" class="collapse list-unstyled sidebar-section depth1 ">
+<li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../02-08-02-00-graphical-models-introduction-r.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Introduction to Directed Acyclic Graphs (DAGs)</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../02-08-02-01-graphical-models-basic-work-example-r.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Basic Worked Example of DAGs</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../02-08-02-02-graphical-models-advanced-work-example-r.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">DAGs – Frontdoor Criterion and Time-Varying Confounding</span></a>
+  </div>
+</li>
+      </ul>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="false">
+ <span class="menu-text"><strong>Potential Outcomes Framework (Neyman–Rubin Causal Model)</strong></span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-4" class="collapse list-unstyled sidebar-section depth1 ">
+<li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../02-08-03-00-potential-outcomes-framework-introduction-r.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Introduction to Potential Outcomes Framework</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../02-08-03-01-potential-outcomes-framework-causal-estimands-r.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Causal Estimands (Average Causal Effect)</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../02-08-03-02-potential-outcomes-framework-regression-adjustment-r.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Regression Adjustment</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../02-08-03-03-potential-outcomes-framework-propensity-score-matching-r.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Propensity Score Matching</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../02-08-03-04-potential-outcomes-framework-doubly-robust-estimators-r.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Doubly Robust Estimators</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../02-08-03-05-potential-outcomes-framework-difference-in-differences-r.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Difference-in-Differences (DiD)</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../02-08-03-06-potential-outcomes-framework-instrumental-variable-r.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Instrumental Variable (IV) Analysis</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../02-08-03-07-potential-outcomes-framework-regression-discontinuity-design-r.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Regression Discontinuity Design (RDD)</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../02-08-03-08-potential-outcomes-framework-g-methods-r.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Generalized Methods (G-Methods)</span></a>
+  </div>
+</li>
+      </ul>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="false">
+ <span class="menu-text"><strong>Temporal Causal Inference</strong></span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-5" class="collapse list-unstyled sidebar-section depth1 ">
+<li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../02-08-04-00-causal-timeseries-introduction-r.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Introduction to Temporal Causal Inference</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../02-08-04-01-causal-timeseries-var-granger-r.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Time-Series Causal Models: VAR, Granger Causality, SVAR, and ECM</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../02-08-04-02-causal-timeseries-its-bsts-r.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Interrupted Time Series and Bayesian Structural Time Series</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../02-08-04-03-causal-timeseries-panel-comparative-r.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Panel and Quasi-Experimental Comparative Methods</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../02-08-04-04-causal-timeseries-gmethods-tmle-r.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Longitudinal G-Methods and TMLE</span></a>
+  </div>
+</li>
+      </ul>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" role="navigation" aria-expanded="false">
+ <span class="menu-text"><strong>Causal Machine Learning (CausalML)</strong></span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" role="navigation" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-6" class="collapse list-unstyled sidebar-section depth1 ">
+<li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../02-08-05-00-casual-ml-introduction-r.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Machine Learning for Causal Inference</span></a>
+  </div>
+</li>
+          <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-7" role="navigation" aria-expanded="false">
+ <span class="menu-text"><strong>Tree-Based Models</strong></span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-7" role="navigation" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-7" class="collapse list-unstyled sidebar-section depth2 ">
+<li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../02-08-05-01-00-casual-tree-introduction-r.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Introduction to Tree-Based Models</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../02-08-05-01-01-causal-tree-r.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Causal Tree – Single Tree for Heterogeneous Treatment Effect</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../02-08-05-01-02-causal-forest-r.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Causal Forest (CF)</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../02-08-05-01-03-causal-survival-forest-r.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Causal Survival Forest (CSF)</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../02-08-05-01-04-instrumental-causal-forest-r.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Instrumental Forest</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../02-08-05-01-05-multi-arm-causal-forest-r.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Multi-arm/multi-outcome Causal Forest</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../02-08-05-01-06-causal-xgboost-r.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">The Boosted Model of Causal Inference (Causal XGBoost)</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../02-08-05-01-07-instrumental-causal-xgboost-r.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Instrumental Causal XGBoost</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../02-08-05-01-08-multi-arm-causal-boost-r.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Boosted Multi-Arm Causal Model</span></a>
+  </div>
+</li>
+      </ul>
+</li>
+          <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-8" role="navigation" aria-expanded="false">
+ <span class="menu-text"><strong>Meta-Learners</strong></span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-8" role="navigation" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-8" class="collapse list-unstyled sidebar-section depth2 ">
+<li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../02-08-05-02-00-meta-learners-introduction-r.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Introduction to Meta-Learners</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../02-08-05-02-01-meta-learners-binary-treatments-r.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Meta-Learner with Binary Treatments</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../02-08-05-02-02-meta-learners-multiple-discrete-treatment-r.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Meta-Learners with Multiple Discrete Treatments</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../02-08-05-02-03-meta-learners-continuous-treatment-r.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Meta Learner with Continuous Treatments</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../02-08-05-02-04-tmle-model-r.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Causal ML with Targeted Maximum Likelihood Estimation</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../02-08-05-02-05-meta-learners-domain-adaptation-learner-r.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Domain Adaptation Learner</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../02-08-05-02-06--meta-learners-doubly-robust-learners-r.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Doubly Robust Learners</span></a>
+  </div>
+</li>
+      </ul>
+</li>
+          <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-9" role="navigation" aria-expanded="false">
+ <span class="menu-text"><strong>Uplift-Learners</strong></span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-9" role="navigation" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-9" class="collapse list-unstyled sidebar-section depth2 ">
+<li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../02-08-05-03-00-uplift-trees-introduction-r.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Introduction to Uplift-Learners</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../02-08-05-03-01-uplift-trees-classification-r.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Uplift Tree-Classification</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../02-08-05-03-02-uplift-trees-regression-r.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Uplift Tree-Regression</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../02-08-05-03-03-uplift-randomForest-r.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Uplift Random Forest Regression</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../02-08-05-03-04-uplift-xgboost-r.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Uplift XGBoost Regression</span></a>
+  </div>
+</li>
+      </ul>
+</li>
+          <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-10" role="navigation" aria-expanded="false">
+ <span class="menu-text"><strong>Double/Debiased Machine Learning</strong></span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-10" role="navigation" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-10" class="collapse list-unstyled sidebar-section depth2 ">
+<li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../02-08-05-04-00-double-ml-introduction-r.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Introduction to Double/Debiased Machine Learning</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../02-08-05-04-01-double-ml-from-basics-to-application-r.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Double ML- Bias, Orthogonalization</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../02-08-05-04-02-double-ml- single-multiple-treatment-r.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Double ML - Single/multiple Treatment</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../02-08-05-04-03-double-ml-did-r.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">DoubleML for Difference-in-Differences (Did)</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../02-08-05-04-04-double-ml-iv-r.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Double ML with Instrumental Variables (IV)</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../02-08-05-04-05-double-ml-dynamic-ml.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Dynamic Double Machine Learning</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../02-08-05-04-06-double-ml-weighted-double-ml-r.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Weighted Double Machine Learning</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../02-08-05-04-07-double-ml-cluster-robust-r.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Cluster Robust Double Machine Learning</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../02-08-05-04-08-double-ml-ensemble-learners-r" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Double ML with Ensemble Learners</span></a>
+  </div>
+</li>
+      </ul>
+</li>
+          <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-11" role="navigation" aria-expanded="false">
+ <span class="menu-text"><strong>Deep Causal Learning</strong></span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-11" role="navigation" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-11" class="collapse list-unstyled sidebar-section depth2 ">
+<li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../02-08-05-05-00-DeepCausalML-introduction-r.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Introduction to Deep Causal Learning</span></a>
+  </div>
+</li>
+          <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-12" role="navigation" aria-expanded="false">
+ <span class="menu-text"><strong>Treatment Effect Estimators</strong></span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-12" role="navigation" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-12" class="collapse list-unstyled sidebar-section depth3 ">
+<li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../02-08-05-05-01-00-DeepCausalML-treatment-effect-estimators-introduction-r.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Introduction to Treatment Effect Estimators</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../02-08-05-05-01-01-DeepCausalML-TARNET-r.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">TARNet: Treatment-Agnostic Representation Network</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../02-08-05-05-01-02-DeepCausalML-CFRTNet-r.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">CFRNet: Counterfactual Regression Network</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../02-08-05-05-01-03-DeepCausalML-DragonNet-r.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">DragonNet: Propensity-Adjusted Networks for Causal Inference</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../02-08-05-05-01-04-DeepCausalML-GANITE-r.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">GANITE: Generative Adversarial Network for Inference of Treatment Effects</span></a>
+  </div>
+</li>
+      </ul>
+</li>
+          <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-13" role="navigation" aria-expanded="false">
+ <span class="menu-text"><strong>Generative Latent-Variable Causal Models (GLVCMs)</strong></span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-13" role="navigation" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-13" class="collapse list-unstyled sidebar-section depth3 ">
+<li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../02-08-05-05-02-00-DeepCausalML-generative-latent-variable-causal-models-introduction-r.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Introduction to GLVCMs</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../02-08-05-05-02-01-DeepCausalML-counterfactual-variational-autoencoder-CEVAE-r.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">CEVAE:Generative Model with Latent Confounders</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../02-08-05-05-02-02-DeepCausalML-variational-autoencoder-causalVAE.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">CausalVAE: Causal Variational Autoencoder</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../02-08-05-05-02-03-DeepCausalML-identifiable-variational-autoencoders-CausaliVAEs.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">CausaliVAEs:Identifiable Variational Autoencoders</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../02-08-05-05-02-04-DeepCausalML-causaldiscrepancyVAE-r.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">CausalDiscrepancyVAE: Discrepancy-Regularized Causal Representation Learning</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../02-08-05-05-02-05-DeepCausalML-causalGAN-r.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">CausalGAN:Causal Generative Network</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../02-08-05-05-02-06-DeepCausalML-deep-structural-causal-model-DSCM-r.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Deep Structural Causal Models (DSCMs)</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../02-08-05-05-02-07-DeepCausalML-causal-encoding-generative-EGN-r.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">CausalEGM: Causal Encoding Generative Modeling</span></a>
+  </div>
+</li>
+      </ul>
+</li>
+          <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-14" role="navigation" aria-expanded="false">
+ <span class="menu-text"><strong>Causal Structural Learning</strong></span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-14" role="navigation" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-14" class="collapse list-unstyled sidebar-section depth3 ">
+<li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../02-08-05-05-03-00-DeepCausalML-structural-learnering-introduction-r.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Introduction to Causal Structural Learning</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../02-08-05-05-03-01-DeepCausalML-continuous-optimization-models-NOTEARS-r.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">NOTEARs: Continuous Optimization Models NOTEARS</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../02-08-05-05-03-02-DeepCausalML-dag-structure-learning-graph-neural-networks-DagGNN-r.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">DAG-GNN: DAG Structure Learning with Graph Neural Networks</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../02-08-05-05-03-03-DeepCausalML-gradient-based-neural-learning-GranDag-r.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">GraN-DAG: Gradient-Based Neural DAG Learning</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../02-08-05-05-03-04-DeepCausalML-DAGMA-NoCurl-r.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">DAGMA and DAG-NoCurl for Causal Discovery</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../02-08-05-05-03-04-DeepCausalML-DAGMA-NoCurl-r.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">DeepCausalML-causal-structural-learning-regularization-CASTLE-r.qmd</span></a>
+  </div>
+</li>
+      </ul>
+</li>
+          <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-15" role="navigation" aria-expanded="false">
+ <span class="menu-text"><strong>Temporal Deep Causal ML</strong></span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-15" role="navigation" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-15" class="collapse list-unstyled sidebar-section depth3 ">
+<li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../02-08-05-05-04-00-DeepCuasalML-timesseries-introduction-r.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Introduction to Temporal Deep Causal ML</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../02-08-05-05-04-01-DeepCausalML-timeseries-neural-granger-cusuality-r.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Neural Granger Causality Models</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../02-08-05-05-04-02-DeepCausalML-timeseries-structural-causal-model-SMC-r.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Structural Causal Models (SCMs) with Deep Components</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../02-08-05-05-04-03-DeepCausalML-attension-transformer-r.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Attention-Based/Transformer Causal Models</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../02-08-05-05-04-04-DeepCausalML-timeseries-RNN-LSTM-causaML-r.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">RNN/LSTM-Based Causal Models</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../02-08-05-05-04-05-DeepCausalML-timeseries-graph-nn-r.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Graph Neural Network (GNN) Causal Models</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../02-08-05-05-04-06-DeepCausalML-timeseries-counterfactual-potential-causalML-r.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Counterfactual / Potential Outcomes Models</span></a>
+  </div>
+</li>
+      </ul>
+</li>
+      </ul>
+</li>
+          <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-16" role="navigation" aria-expanded="false">
+ <span class="menu-text"><strong>Terminiology</strong></span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-16" role="navigation" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-16" class="collapse list-unstyled sidebar-section depth2 ">
+<li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../00-scientific-terminology-glossary.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">A complete A–Z reference for causal inference and machine learning terminology</span></a>
+  </div>
+</li>
+      </ul>
+</li>
+      </ul>
+</li>
+    </ul>
+</div>
+</nav><div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active"><h2 id="toc-title">On This Page</h2>
+   
+  <ul>
+<li>
+<a href="#instrumental-causal-xgboost-boosted-iv-forest" id="toc-instrumental-causal-xgboost-boosted-iv-forest" class="nav-link active" data-scroll-target="#instrumental-causal-xgboost-boosted-iv-forest">5.1.7 Instrumental Causal XGBoost (Boosted IV Forest)</a>
+  <ul>
+<li>
+<a href="#overview" id="toc-overview" class="nav-link" data-scroll-target="#overview">Overview</a>
+  <ul class="collapse">
+<li><a href="#the-conditional-late" id="toc-the-conditional-late" class="nav-link" data-scroll-target="#the-conditional-late">The Conditional LATE</a></li>
+  <li><a href="#why-boosted" id="toc-why-boosted" class="nav-link" data-scroll-target="#why-boosted">Why “Boosted”?</a></li>
+  <li><a href="#validity-conditions" id="toc-validity-conditions" class="nav-link" data-scroll-target="#validity-conditions">Validity Conditions</a></li>
+  <li><a href="#pipeline-five-steps" id="toc-pipeline-five-steps" class="nav-link" data-scroll-target="#pipeline-five-steps">Pipeline: Five Steps</a></li>
+  <li><a href="#key-features" id="toc-key-features" class="nav-link" data-scroll-target="#key-features">Key Features</a></li>
+  </ul>
+</li>
+  <li><a href="#boosted-iv-forest-with-r" id="toc-boosted-iv-forest-with-r" class="nav-link" data-scroll-target="#boosted-iv-forest-with-r">Boosted IV Forest with R</a></li>
+  <li>
+<a href="#set-up" id="toc-set-up" class="nav-link" data-scroll-target="#set-up">Set Up</a>
+  <ul class="collapse">
+<li><a href="#check-and-install-required-r-packages" id="toc-check-and-install-required-r-packages" class="nav-link" data-scroll-target="#check-and-install-required-r-packages">Check and Install Required R Packages</a></li>
+  <li><a href="#install-missing-packages" id="toc-install-missing-packages" class="nav-link" data-scroll-target="#install-missing-packages">Install Missing Packages</a></li>
+  <li><a href="#verify-installation" id="toc-verify-installation" class="nav-link" data-scroll-target="#verify-installation">Verify Installation</a></li>
+  <li><a href="#load-r-packages" id="toc-load-r-packages" class="nav-link" data-scroll-target="#load-r-packages">Load R Packages</a></li>
+  <li><a href="#check-loaded-packages" id="toc-check-loaded-packages" class="nav-link" data-scroll-target="#check-loaded-packages">Check Loaded Packages</a></li>
+  </ul>
+</li>
+  <li>
+<a href="#data-returns-to-education-card-dataset" id="toc-data-returns-to-education-card-dataset" class="nav-link" data-scroll-target="#data-returns-to-education-card-dataset">Data: Returns to Education (Card Dataset)</a>
+  <ul class="collapse">
+<li><a href="#load-and-prepare-data" id="toc-load-and-prepare-data" class="nav-link" data-scroll-target="#load-and-prepare-data">Load and Prepare Data</a></li>
+  <li><a href="#descriptive-statistics-and-first-stage-check" id="toc-descriptive-statistics-and-first-stage-check" class="nav-link" data-scroll-target="#descriptive-statistics-and-first-stage-check">Descriptive Statistics and First-Stage Check</a></li>
+  <li><a href="#training-a-boosted-iv-forest" id="toc-training-a-boosted-iv-forest" class="nav-link" data-scroll-target="#training-a-boosted-iv-forest">Training a Boosted IV Forest</a></li>
+  <li><a href="#model-summary" id="toc-model-summary" class="nav-link" data-scroll-target="#model-summary">Model Summary</a></li>
+  <li><a href="#predicting-treatment-effects" id="toc-predicting-treatment-effects" class="nav-link" data-scroll-target="#predicting-treatment-effects">Predicting Treatment Effects</a></li>
+  <li><a href="#visualizing-results" id="toc-visualizing-results" class="nav-link" data-scroll-target="#visualizing-results">Visualizing Results</a></li>
+  <li><a href="#cate-distribution-and-partial-dependence" id="toc-cate-distribution-and-partial-dependence" class="nav-link" data-scroll-target="#cate-distribution-and-partial-dependence">CATE Distribution and Partial Dependence</a></li>
+  <li><a href="#predicting-for-new-data" id="toc-predicting-for-new-data" class="nav-link" data-scroll-target="#predicting-for-new-data">Predicting for New Data</a></li>
+  <li><a href="#subgroup-analysis" id="toc-subgroup-analysis" class="nav-link" data-scroll-target="#subgroup-analysis">Subgroup Analysis</a></li>
+  <li><a href="#variable-importance" id="toc-variable-importance" class="nav-link" data-scroll-target="#variable-importance">Variable Importance</a></li>
+  <li><a href="#calibration-test" id="toc-calibration-test" class="nav-link" data-scroll-target="#calibration-test">Calibration Test</a></li>
+  <li><a href="#kernel-shap-for-cate" id="toc-kernel-shap-for-cate" class="nav-link" data-scroll-target="#kernel-shap-for-cate">Kernel SHAP for CATE</a></li>
+  </ul>
+</li>
+  <li><a href="#summary-and-conclusion" id="toc-summary-and-conclusion" class="nav-link" data-scroll-target="#summary-and-conclusion">Summary and Conclusion</a></li>
+  <li><a href="#resources" id="toc-resources" class="nav-link" data-scroll-target="#resources">Resources</a></li>
+  </ul>
+</li>
+  </ul></nav>
+    </div>
+<!-- main -->
+<main class="content quarto-banner-title-block" id="quarto-document-content"><p><a href="https://github.com/zia207/Causal_Inference_R/blob/main/Notebook/02_08_05_01_07_instrumental_causal_xgboost_r.ipynb"><img src="Image/open_colab.png" class="img-fluid quarto-figure quarto-figure-left" width="150"></a> <img src="Image/banner_Causal_Inference_Tree_Based.png" class="img-fluid quarto-figure quarto-figure-left" width="1400"></p>
+<section id="instrumental-causal-xgboost-boosted-iv-forest" class="level1 unnumbered"><h1 class="unnumbered">5.1.7 Instrumental Causal XGBoost (Boosted IV Forest)</h1>
+<p><strong>Boosted IV Forest</strong> (Instrumental Causal XGBoost) is a machine learning method that combines <strong>cross-fitted C-XGBoost</strong> nuisance estimation with <strong>Generalized Random Forests (GRF)</strong> instrumental forest to estimate <strong>conditional local average treatment effects (LATE)</strong> in the presence of endogeneity. It uses XGBoost to flexibly estimate <span class="math inline">\(E[Y|X]\)</span>, <span class="math inline">\(E[W|X]\)</span>, and <span class="math inline">\(E[Z|X]\)</span>, residualises the outcome, treatment, and instrument, then fits an instrumental forest on the residuals—delivering robust, heterogeneous LATE estimates when a valid instrument is available.</p>
+<section id="overview" class="level2"><h2 class="anchored" data-anchor-id="overview">Overview</h2>
+<p>A <strong>Boosted IV Forest</strong> estimates heterogeneous treatment effects in settings where treatment assignment is endogenous — that is, correlated with unobserved factors that also affect the outcome. Like a standard Instrumental Forest, it exploits an <strong>instrumental variable</strong> <span class="math inline">\(Z\)</span> that shifts treatment <span class="math inline">\(W\)</span> without directly affecting the outcome <span class="math inline">\(Y\)</span>. The “boosted” part refers to how nuisance functions are estimated: rather than using regression forests in the first stage, it uses <strong>C-XGBoost</strong> (two-head XGBoost) inside a <strong>cross-fitting</strong> pipeline, enabling more flexible capture of nonlinearities and interactions. The second stage remains a standard <code><a href="https://rdrr.io/pkg/grf/man/instrumental_forest.html">grf::instrumental_forest</a></code>, preserving GRF’s interpretability, honest estimation, and asymptotically valid confidence intervals.</p>
+<p>The result is a two-stage estimator that combines the best of both worlds: XGBoost’s strength on tabular data in the first stage, and GRF’s principled causal inference machinery in the second.</p>
+<section id="the-conditional-late" class="level3"><h3 class="anchored" data-anchor-id="the-conditional-late">The Conditional LATE</h3>
+<p>The quantity of interest is the <strong>Conditional Local Average Treatment Effect (LATE)</strong> — the treatment effect for <em>compliers</em> (units whose treatment status changes because of <span class="math inline">\(Z\)</span>), allowed to vary with covariates:</p>
+<p><span class="math display">\[\tau(X) = \frac{\text{Cov}[Y - \hat{m}(X),\; Z - \hat{p}(X) \mid X]}{\text{Cov}[W - \hat{e}(X),\; Z - \hat{p}(X) \mid X]}\]</span></p>
+<p>where the three nuisance functions are:</p>
+<ul>
+<li>
+<span class="math inline">\(\hat{m}(X) = E[Y \mid X]\)</span> — the conditional mean outcome, estimated to partial out baseline variation in <span class="math inline">\(Y\)</span>;</li>
+<li>
+<span class="math inline">\(\hat{e}(X) = E[W \mid X]\)</span> — the treatment propensity, estimated to partial out selection into treatment;</li>
+<li>
+<span class="math inline">\(\hat{p}(X) = E[Z \mid X]\)</span> — the instrument propensity, estimated to partial out any covariate-driven variation in <span class="math inline">\(Z\)</span>.</li>
+</ul>
+<p>After residualizing, the numerator <span class="math inline">\(\text{Cov}[\tilde{Y}, \tilde{Z} \mid X]\)</span> captures how much the instrument moves the outcome; the denominator <span class="math inline">\(\text{Cov}[\tilde{W}, \tilde{Z} \mid X]\)</span> captures how much the instrument moves the treatment. Their ratio isolates the local causal effect of <span class="math inline">\(W\)</span> on <span class="math inline">\(Y\)</span> — purged of confounding — for the complier subpopulation with covariates <span class="math inline">\(X = x\)</span>.</p>
+</section><section id="why-boosted" class="level3"><h3 class="anchored" data-anchor-id="why-boosted">Why “Boosted”?</h3>
+<p>A standard instrumental forest estimates <span class="math inline">\(\hat{m}\)</span>, <span class="math inline">\(\hat{e}\)</span>, and <span class="math inline">\(\hat{p}\)</span> using regression forests (or skips nuisance estimation entirely if the instrument is assumed randomized). This works well when nuisance functions are smooth and additive, but can underfit when outcomes and treatments depend on complex interactions between covariates.</p>
+<p>Replacing the first stage with <strong>cross-fitted C-XGBoost</strong> addresses this directly:</p>
+<ul>
+<li>XGBoost captures irregular boundaries, high-order interactions, and nonlinear feature effects that regression forests can miss.</li>
+<li>
+<strong>Cross-fitting</strong> (k-fold out-of-sample prediction) prevents the nuisance estimates from overfitting to the training data, which would otherwise inflate the apparent signal in the residuals and bias the second-stage LATE estimates.</li>
+<li>The second stage remains unchanged — <code><a href="https://rdrr.io/pkg/grf/man/instrumental_forest.html">grf::instrumental_forest</a></code> on residualized <span class="math inline">\((\tilde{Y}, \tilde{W}, \tilde{Z}, X)\)</span> — so the improvement is surgical: better nuisances, same inference.</li>
+</ul>
+<p>The theoretical justification is the <strong>Neyman orthogonality</strong> of the GRF moment condition: the LATE estimator is locally insensitive to small errors in nuisance estimation, meaning flexible first-stage models improve finite-sample performance without introducing asymptotic bias, as long as nuisances converge at a reasonable rate.</p>
+</section><section id="validity-conditions" class="level3"><h3 class="anchored" data-anchor-id="validity-conditions">Validity Conditions</h3>
+<p>The Boosted IV Forest inherits the standard IV assumptions:</p>
+<ul>
+<li>
+<strong>Relevance</strong> — <span class="math inline">\(Z\)</span> must be a strong predictor of <span class="math inline">\(W\)</span> conditional on <span class="math inline">\(X\)</span>. Weak instruments inflate the variance of <span class="math inline">\(\tau(X)\)</span> and can cause severe bias; the implementation reports a first-stage F-statistic and issues weak-instrument warnings.</li>
+<li>
+<strong>Exclusion restriction</strong> — <span class="math inline">\(Z\)</span> affects <span class="math inline">\(Y\)</span> only through <span class="math inline">\(W\)</span>, with no direct path. This is not testable from data and must be justified by domain knowledge.</li>
+<li>
+<strong>Independence</strong> — <span class="math inline">\(Z\)</span> is as good as randomly assigned conditional on <span class="math inline">\(X\)</span> (no unmeasured confounders of the <span class="math inline">\(Z \to Y\)</span> path).</li>
+</ul></section><section id="pipeline-five-steps" class="level3"><h3 class="anchored" data-anchor-id="pipeline-five-steps">Pipeline: Five Steps</h3>
+<p><img src="Image/boosted_IV_forest.png" class="img-fluid"></p>
+<p>A few things worth highlighting from the pipeline:</p>
+<p><strong>Step 2 (cross-fitting) is the critical upgrade over a standard instrumental forest.</strong> Fitting nuisance models on the full training set and then predicting on the same data induces overfitting into the residuals — the residuals appear smaller than they should be, which inflates the apparent signal in the IV covariance. K-fold cross-fitting breaks this feedback loop by ensuring every nuisance prediction is made out-of-sample. The theoretical grounding is <strong>Neyman orthogonality</strong>: the IV moment condition is locally insensitive to small errors in <span class="math inline">\(\hat{m}\)</span>, <span class="math inline">\(\hat{e}\)</span>, and <span class="math inline">\(\hat{p}\)</span>, so cross-fitted nuisances at a moderate convergence rate are sufficient for root-<span class="math inline">\(n\)</span> inference on <span class="math inline">\(\tau(X)\)</span>.</p>
+<p><strong>Step 3 is where the two methods meet.</strong> The residuals <span class="math inline">\((\tilde{Y}, \tilde{W}, \tilde{Z})\)</span> carry only the variation attributable to treatment effect heterogeneity — all confounding signal that could be explained by <span class="math inline">\(X\)</span> has been subtracted. GRF then operates on clean data, splitting the covariate space to find where <span class="math inline">\(\text{Cov}[\tilde{Y}, \tilde{Z}] / \text{Cov}[\tilde{W}, \tilde{Z}]\)</span> differs most across subgroups.</p>
+<p><strong>The first-stage F-statistic in step 4 is not optional.</strong> A weak instrument (<span class="math inline">\(F &lt; 10\)</span> is a common rule of thumb) means <span class="math inline">\(Z\)</span> explains little variation in <span class="math inline">\(W\)</span> after partialling out <span class="math inline">\(X\)</span>, which causes the denominator <span class="math inline">\(\text{Cov}[\tilde{W}, \tilde{Z} \mid X]\)</span> to be near zero. The resulting LATE estimates become extremely noisy and potentially severely biased — the XGBoost first stage cannot rescue a fundamentally weak instrument.</p>
+</section><section id="key-features" class="level3"><h3 class="anchored" data-anchor-id="key-features">Key Features</h3>
+<ul>
+<li>
+<strong>Endogeneity correction</strong>: Instrument <span class="math inline">\(Z\)</span> isolates exogenous variation in <span class="math inline">\(W\)</span>.</li>
+<li>
+<strong>Heterogeneous effects</strong>: LATE <span class="math inline">\(\tau(X)\)</span> varies with covariates.</li>
+<li>
+<strong>Flexible first stage</strong>: XGBoost nuisances can capture nonlinearities; cross-fitting avoids overfitting.</li>
+<li>
+<strong>Instrument diagnostics</strong>: First-stage F-statistic and weak-instrument warnings.</li>
+<li>
+<strong>Subgroup analysis</strong>, <strong>variable importance</strong>, and <strong>calibration tests</strong> via the underlying GRF object.</li>
+</ul></section></section><section id="boosted-iv-forest-with-r" class="level2"><h2 class="anchored" data-anchor-id="boosted-iv-forest-with-r">Boosted IV Forest with R</h2>
+<p>This tutorial uses the <strong>Card (1995)</strong> dataset to estimate <strong>returns to education</strong> (effect of education on log wages) using <strong>proximity to a 4-year college</strong> as an instrument, implemented with the <code>BoostedIVForest</code> class from the RCausalML package (see <code>R/causalBoosted_IV.R</code>).</p>
+</section><section id="set-up" class="level2"><h2 class="anchored" data-anchor-id="set-up">Set Up</h2>
+<section id="check-and-install-required-r-packages" class="level3"><h3 class="anchored" data-anchor-id="check-and-install-required-r-packages">Check and Install Required R Packages</h3>
+<p>Following R packages are required to run this notebook. If any of these packages are not installed, you can install them using the code below:</p>
+<p><code>tidyverse</code>, <code>plyr</code>, <code>RCausalML</code>, <code>haven</code>, <code>car</code>, <code>kernelshap</code>, <code>shapviz</code>, <code>Metrics</code>, <code>future</code>, <code>future.apply</code></p>
+<div class="cell">
+<details open="" class="code-fold"><summary>Code</summary><div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1" data-lst-cap="Required R package names used throughout the notebook."><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">packages</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span></span>
+<span>  <span class="st">"tidyverse"</span>,</span>
+<span>  <span class="st">"plyr"</span>,</span>
+<span>  <span class="st">"RCausalML"</span>,</span>
+<span>  <span class="st">"haven"</span>,</span>
+<span>  <span class="st">"car"</span>,</span>
+<span>  <span class="st">"kernelshap"</span>,</span>
+<span>  <span class="st">"shapviz"</span>,</span>
+<span>  <span class="st">"Metrics"</span>,</span>
+<span>  <span class="st">"future"</span>,</span>
+<span>  <span class="st">"future.apply"</span></span>
+<span><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+</div>
+</section><section id="install-missing-packages" class="level3"><h3 class="anchored" data-anchor-id="install-missing-packages">Install Missing Packages</h3>
+<div class="cell">
+<details open="" class="code-fold"><summary>Code</summary><div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2" data-lst-cap="Optional commands to install missing CRAN/GitHub dependencies (commented by default)."><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co"># Install missing packages</span></span>
+<span><span class="co"># new_packages &lt;- packages[!(packages %in% installed.packages()[, "Package"])]</span></span>
+<span><span class="co"># if (length(new_packages)) install.packages(new_packages)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+</div>
+</section><section id="verify-installation" class="level3"><h3 class="anchored" data-anchor-id="verify-installation">Verify Installation</h3>
+<div class="cell">
+<details open="" class="code-fold"><summary>Code</summary><div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3" data-lst-cap="Check that each required package namespace is available."><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co"># Verify installation</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html">cat</a></span><span class="op">(</span><span class="st">"Installed packages:\n"</span><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details><div class="cell-output cell-output-stdout">
+<pre><code>Installed packages:</code></pre>
+</div>
+<details open="" class="code-fold"><summary>Code</summary><div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5" data-lst-cap="Check that each required package namespace is available."><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/print.html">print</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/lapply.html">sapply</a></span><span class="op">(</span><span class="va">packages</span>, <span class="va">requireNamespace</span>, quietly <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details><div class="cell-output cell-output-stdout">
+<pre><code>   tidyverse         plyr    RCausalML        haven          car   kernelshap 
+        TRUE         TRUE         TRUE         TRUE         TRUE         TRUE 
+     shapviz      Metrics       future future.apply 
+        TRUE         TRUE         TRUE         TRUE </code></pre>
+</div>
+</div>
+</section><section id="load-r-packages" class="level3"><h3 class="anchored" data-anchor-id="load-r-packages">Load R Packages</h3>
+<div class="cell">
+<details open="" class="code-fold"><summary>Code</summary><div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co"># Load packages with suppressed messages</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/invisible.html">invisible</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/lapply.html">lapply</a></span><span class="op">(</span><span class="va">packages</span>, <span class="kw">function</span><span class="op">(</span><span class="va">pkg</span><span class="op">)</span> <span class="op">{</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/message.html">suppressPackageStartupMessages</a></span><span class="op">(</span><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va">pkg</span>, character.only <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="op">}</span><span class="op">)</span><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+</div>
+</section><section id="check-loaded-packages" class="level3"><h3 class="anchored" data-anchor-id="check-loaded-packages">Check Loaded Packages</h3>
+<div class="cell">
+<details open="" class="code-fold"><summary>Code</summary><div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8" data-lst-cap="Confirm which package environments are attached on the search path."><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co"># Check loaded packages</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html">cat</a></span><span class="op">(</span><span class="st">"Successfully loaded packages:\n"</span><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details><div class="cell-output cell-output-stdout">
+<pre><code>Successfully loaded packages:</code></pre>
+</div>
+<details open="" class="code-fold"><summary>Code</summary><div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10" data-lst-cap="Confirm which package environments are attached on the search path."><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/print.html">print</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/search.html">search</a></span><span class="op">(</span><span class="op">)</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/grep.html">grepl</a></span><span class="op">(</span><span class="st">"package:"</span>, <span class="fu"><a href="https://rdrr.io/r/base/search.html">search</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span><span class="op">]</span><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details><div class="cell-output cell-output-stdout">
+<pre><code> [1] "package:future.apply" "package:future"       "package:Metrics"     
+ [4] "package:shapviz"      "package:kernelshap"   "package:car"         
+ [7] "package:carData"      "package:haven"        "package:RCausalML"   
+[10] "package:plyr"         "package:lubridate"    "package:forcats"     
+[13] "package:stringr"      "package:dplyr"        "package:purrr"       
+[16] "package:readr"        "package:tidyr"        "package:tibble"      
+[19] "package:ggplot2"      "package:tidyverse"    "package:stats"       
+[22] "package:graphics"     "package:grDevices"    "package:utils"       
+[25] "package:datasets"     "package:methods"      "package:base"        </code></pre>
+</div>
+</div>
+</section></section><section id="data-returns-to-education-card-dataset" class="level2"><h2 class="anchored" data-anchor-id="data-returns-to-education-card-dataset">Data: Returns to Education (Card Dataset)</h2>
+<p>We estimate the causal effect of <strong>education on wages</strong> using <strong>proximity to a 4-year college</strong> as an instrument (Card, 1995).</p>
+<ul>
+<li>
+<code>lwage</code> = log(wage) — outcome (Y)</li>
+<li>
+<code>educ</code> = years of education — endogenous treatment (W)</li>
+<li>
+<code>nearc4</code> = grew up near 4-year college — instrument (Z)</li>
+<li>
+<code>exper</code>, <code>expersq</code>, <code>black</code>, <code>smsa</code>, <code>south</code> — covariates (X)</li>
+</ul>
+<section id="load-and-prepare-data" class="level3"><h3 class="anchored" data-anchor-id="load-and-prepare-data">Load and Prepare Data</h3>
+<div class="cell">
+<details open="" class="code-fold"><summary>Code</summary><div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb12"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">card_url</span> <span class="op">&lt;-</span> <span class="st">"https://storage.googleapis.com/causal-inference-mixtape.appspot.com/card.dta"</span></span>
+<span><span class="va">card</span> <span class="op">&lt;-</span> <span class="fu">read_dta</span><span class="op">(</span><span class="va">card_url</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">card</span> <span class="op">&lt;-</span> <span class="va">card</span> <span class="op">%&gt;%</span></span>
+<span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html">mutate</a></span><span class="op">(</span>expersq <span class="op">=</span> <span class="va">exper</span><span class="op">^</span><span class="fl">2</span><span class="op">)</span> <span class="op">%&gt;%</span></span>
+<span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html">select</a></span><span class="op">(</span><span class="va">lwage</span>, <span class="va">educ</span>, <span class="va">nearc4</span>, <span class="va">exper</span>, <span class="va">expersq</span>, <span class="va">black</span>, <span class="va">smsa</span>, <span class="va">south</span><span class="op">)</span> <span class="op">%&gt;%</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/stats/na.fail.html">na.omit</a></span><span class="op">(</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">X</span> <span class="op">&lt;-</span> <span class="va">card</span> <span class="op">%&gt;%</span></span>
+<span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html">select</a></span><span class="op">(</span><span class="va">exper</span>, <span class="va">expersq</span>, <span class="va">black</span>, <span class="va">smsa</span>, <span class="va">south</span><span class="op">)</span> <span class="op">%&gt;%</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/matrix.html">as.matrix</a></span><span class="op">(</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">Y</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/numeric.html">as.numeric</a></span><span class="op">(</span><span class="va">card</span><span class="op">$</span><span class="va">lwage</span><span class="op">)</span></span>
+<span><span class="va">W</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/numeric.html">as.numeric</a></span><span class="op">(</span><span class="va">card</span><span class="op">$</span><span class="va">educ</span><span class="op">)</span></span>
+<span><span class="va">Z</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/numeric.html">as.numeric</a></span><span class="op">(</span><span class="va">card</span><span class="op">$</span><span class="va">nearc4</span><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+</div>
+</section><section id="descriptive-statistics-and-first-stage-check" class="level3"><h3 class="anchored" data-anchor-id="descriptive-statistics-and-first-stage-check">Descriptive Statistics and First-Stage Check</h3>
+<div class="cell">
+<details open="" class="code-fold"><summary>Code</summary><div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb13"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">first_stage</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/lm.html">lm</a></span><span class="op">(</span><span class="va">educ</span> <span class="op">~</span> <span class="va">nearc4</span> <span class="op">+</span> <span class="va">exper</span> <span class="op">+</span> <span class="va">expersq</span> <span class="op">+</span> <span class="va">black</span> <span class="op">+</span> <span class="va">smsa</span> <span class="op">+</span> <span class="va">south</span>, data <span class="op">=</span> <span class="va">card</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/summary.html">summary</a></span><span class="op">(</span><span class="va">first_stage</span><span class="op">)</span><span class="op">$</span><span class="va">coefficients</span><span class="op">[</span><span class="st">"nearc4"</span>, <span class="fl">1</span><span class="op">:</span><span class="fl">4</span><span class="op">]</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details><div class="cell-output cell-output-stdout">
+<pre><code>    Estimate   Std. Error      t value     Pr(&gt;|t|) 
+3.373208e-01 8.250044e-02 4.088715e+00 4.451508e-05 </code></pre>
+</div>
+<details open="" class="code-fold"><summary>Code</summary><div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb15"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu">linearHypothesis</span><span class="op">(</span><span class="va">first_stage</span>, <span class="st">"nearc4 = 0"</span><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details><div class="cell-output-display">
+<div data-pagedtable="false">
+  <script data-pagedtable-source="" type="application/json">
+{"columns":[{"label":[""],"name":["_rn_"],"type":[""],"align":["left"]},{"label":["Res.Df"],"name":[1],"type":["dbl"],"align":["right"]},{"label":["RSS"],"name":[2],"type":["dbl"],"align":["right"]},{"label":["Df"],"name":[3],"type":["dbl"],"align":["right"]},{"label":["Sum of Sq"],"name":[4],"type":["dbl"],"align":["right"]},{"label":["F"],"name":[5],"type":["dbl"],"align":["right"]},{"label":["Pr(>F)"],"name":[6],"type":["dbl"],"align":["right"]}],"data":[{"1":"3004","2":"11394.68","3":"NA","4":"NA","5":"NA","6":"NA","_rn_":"1"},{"1":"3003","2":"11331.60","3":"1","4":"63.08258","5":"16.71759","6":"4.451508e-05","_rn_":"2"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
+  </script>
+</div>
+</div>
+</div>
+<div class="cell">
+<details open="" class="code-fold"><summary>Code</summary><div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb16"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu">ggplot</span><span class="op">(</span><span class="va">card</span>, <span class="fu">aes</span><span class="op">(</span>x <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/factor.html">factor</a></span><span class="op">(</span><span class="va">nearc4</span><span class="op">)</span>, y <span class="op">=</span> <span class="va">educ</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu">geom_boxplot</span><span class="op">(</span>fill <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">"#E69F00"</span>, <span class="st">"#56B4E9"</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu">labs</span><span class="op">(</span>title <span class="op">=</span> <span class="st">"First Stage: College Proximity and Years of Education"</span>,</span>
+<span>       x <span class="op">=</span> <span class="st">"Grew up near 4-year college (nearc4)"</span>, y <span class="op">=</span> <span class="st">"Years of Education (educ)"</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu">theme_minimal</span><span class="op">(</span><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details><div class="cell-output-display">
+<div>
+<figure class="figure"><p><img src="02-08-05-01-07-instrumental-causal-xgboost-r_files/figure-html/first-stage-boxplot-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+</section><section id="training-a-boosted-iv-forest" class="level3"><h3 class="anchored" data-anchor-id="training-a-boosted-iv-forest">Training a Boosted IV Forest</h3>
+<p>We use <code>BoostedIVForest</code> with cross-fitting and optional parallelisation. Set <code>future::plan(multisession, workers = K)</code> before <code>$fit()</code> to speed up cross-fitting.</p>
+<div class="cell">
+<details open="" class="code-fold"><summary>Code</summary><div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb17"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co"># Ensure xgboost is both installed and attached, so that xgb.DMatrix is available in the workspace</span></span>
+<span><span class="kw">if</span> <span class="op">(</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/ns-load.html">requireNamespace</a></span><span class="op">(</span><span class="st">"xgboost"</span>, quietly <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html">install.packages</a></span><span class="op">(</span><span class="st">"xgboost"</span><span class="op">)</span></span>
+<span><span class="op">}</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/message.html">suppressPackageStartupMessages</a></span><span class="op">(</span><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/dmlc/xgboost">xgboost</a></span><span class="op">)</span><span class="op">)</span> <span class="co"># Ensures exported functions like xgb.DMatrix are attached</span></span>
+<span></span>
+<span><span class="co"># Optional: parallel cross-fitting (recommended for larger data)</span></span>
+<span><span class="kw">if</span> <span class="op">(</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/ns-load.html">requireNamespace</a></span><span class="op">(</span><span class="st">"future"</span>, quietly <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html">install.packages</a></span><span class="op">(</span><span class="st">"future"</span><span class="op">)</span></span>
+<span><span class="op">}</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/message.html">suppressPackageStartupMessages</a></span><span class="op">(</span><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="https://future.futureverse.org">future</a></span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="fu">future</span><span class="fu">::</span><span class="fu"><a href="https://future.futureverse.org/reference/plan.html">plan</a></span><span class="op">(</span><span class="fu">future</span><span class="fu">::</span><span class="va"><a href="https://future.futureverse.org/reference/multisession.html">multisession</a></span>, workers <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html">min</a></span><span class="op">(</span><span class="fl">4L</span>, <span class="fu">future</span><span class="fu">::</span><span class="fu"><a href="https://parallelly.futureverse.org/reference/availableCores.html">availableCores</a></span><span class="op">(</span><span class="op">)</span> <span class="op">-</span> <span class="fl">1L</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/on.exit.html">on.exit</a></span><span class="op">(</span><span class="fu">future</span><span class="fu">::</span><span class="fu"><a href="https://future.futureverse.org/reference/plan.html">plan</a></span><span class="op">(</span><span class="fu">future</span><span class="fu">::</span><span class="va"><a href="https://future.futureverse.org/reference/sequential.html">sequential</a></span><span class="op">)</span>, add <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">model</span> <span class="op">&lt;-</span> <span class="va">BoostedIVForest</span><span class="op">$</span><span class="fu">new</span><span class="op">(</span></span>
+<span>  n_folds     <span class="op">=</span> <span class="fl">5L</span>,</span>
+<span>  nrounds     <span class="op">=</span> <span class="fl">100L</span>,</span>
+<span>  forest_args <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html">list</a></span><span class="op">(</span>num.trees <span class="op">=</span> <span class="fl">1000L</span>, honesty <span class="op">=</span> <span class="cn">TRUE</span>, tune.parameters <span class="op">=</span> <span class="st">"all"</span><span class="op">)</span></span>
+<span><span class="op">)</span></span>
+<span><span class="va">model</span><span class="op">$</span><span class="fu">fit</span><span class="op">(</span><span class="va">X</span>, <span class="va">Y</span>, <span class="va">W</span>, <span class="va">Z</span>, verbose <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details><div class="cell-output cell-output-stdout">
+<pre><code>[BoostedIVForest] Running instrument diagnostics...
+[BoostedIVForest] Stage 1a: Cross-fitting E[Y|X]...
+[BoostedIVForest] Stage 1b: Cross-fitting E[W|X]...
+[BoostedIVForest] Stage 1c: Cross-fitting E[Z|X]...
+[BoostedIVForest] Stage 2: Residualising Y, W, Z...
+[BoostedIVForest] Stage 3: Fitting instrumental_forest...
+[BoostedIVForest] Fitting complete.</code></pre>
+</div>
+</div>
+</section><section id="model-summary" class="level3"><h3 class="anchored" data-anchor-id="model-summary">Model Summary</h3>
+<div class="cell">
+<details open="" class="code-fold"><summary>Code</summary><div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb19"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">model</span><span class="op">$</span><span class="fu">summary</span><span class="op">(</span><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details><div class="cell-output cell-output-stdout">
+<pre><code>
+  BoostedIVForest  Model Summary
+
+
+ Configuration 
+  Cross-fitting folds : 5
+  XGBoost rounds      : 100
+  Forest trees        : 0
+  Training obs        : 3010
+  Covariates (p)      : 5
+
+ Instrument Diagnostics 
+  cor(Z, W)           : +0.1442
+  First-stage F-stat  : 16.72  [strong]
+  Partial R2(ZW)     : 0.0055
+
+ Average Treatment Effect 
+  ATE     : +0.1587
+  Std.Err : 0.0013
+  p-value : 0.0000  [significant]
+
+ CATE Distribution 
+  Min / Max   : +0.111 / +0.234
+  Mean / SD   : +0.159 / 0.024
+  Q5 / Q95    : +0.122 / +0.205
+
+ Top 5 Variables by Importance 
+  expersq      0.3297  
+  exper        0.3009  
+  south        0.1462  
+  smsa         0.1271  
+  black        0.0960  
+
+ Calibration Test 
+  (Calibration test not supported for this forest type.)</code></pre>
+</div>
+</div>
+</section><section id="predicting-treatment-effects" class="level3"><h3 class="anchored" data-anchor-id="predicting-treatment-effects">Predicting Treatment Effects</h3>
+<div class="cell">
+<details open="" class="code-fold"><summary>Code</summary><div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb21"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co"># Out-of-sample (training) CATE predictions</span></span>
+<span><span class="va">iv_pred</span>   <span class="op">&lt;-</span> <span class="va">model</span><span class="op">$</span><span class="fu">predict</span><span class="op">(</span><span class="op">)</span></span>
+<span><span class="va">tau_hat</span>   <span class="op">&lt;-</span> <span class="va">iv_pred</span><span class="op">$</span><span class="va">predictions</span></span>
+<span></span>
+<span><span class="va">ate</span> <span class="op">&lt;-</span> <span class="va">model</span><span class="op">$</span><span class="fu">average_treatment_effect</span><span class="op">(</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html">cat</a></span><span class="op">(</span><span class="st">"Average Treatment Effect (LATE):"</span>, <span class="fu"><a href="https://rdrr.io/r/base/Round.html">round</a></span><span class="op">(</span><span class="va">ate</span><span class="op">[</span><span class="st">"estimate"</span><span class="op">]</span>, <span class="fl">3</span><span class="op">)</span>,</span>
+<span>    <span class="st">"+/-"</span>, <span class="fu"><a href="https://rdrr.io/r/base/Round.html">round</a></span><span class="op">(</span><span class="fl">1.96</span> <span class="op">*</span> <span class="va">ate</span><span class="op">[</span><span class="st">"std.err"</span><span class="op">]</span>, <span class="fl">3</span><span class="op">)</span>, <span class="st">"\n"</span><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details><div class="cell-output cell-output-stdout">
+<pre><code>Average Treatment Effect (LATE): 0.159 +/- 0.002 </code></pre>
+</div>
+</div>
+</section><section id="visualizing-results" class="level3"><h3 class="anchored" data-anchor-id="visualizing-results">Visualizing Results</h3>
+<div class="cell">
+<details open="" class="code-fold"><summary>Code</summary><div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb23"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html">plot</a></span><span class="op">(</span><span class="va">card</span><span class="op">$</span><span class="va">exper</span>, <span class="va">tau_hat</span>, pch <span class="op">=</span> <span class="fl">16</span>, col <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/grDevices/rgb.html">rgb</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">0</span>, <span class="fl">0</span>, <span class="fl">0.3</span><span class="op">)</span>,</span>
+<span>     xlab <span class="op">=</span> <span class="st">"Potential Experience (exper)"</span>, ylab <span class="op">=</span> <span class="st">"Estimated Return to Education (τ(X))"</span>,</span>
+<span>     main <span class="op">=</span> <span class="st">"Heterogeneous Returns to Schooling by Experience (Boosted IV Forest)"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/abline.html">abline</a></span><span class="op">(</span>h <span class="op">=</span> <span class="va">ate</span><span class="op">[</span><span class="st">"estimate"</span><span class="op">]</span>, col <span class="op">=</span> <span class="st">"red"</span>, lwd <span class="op">=</span> <span class="fl">2</span>, lty <span class="op">=</span> <span class="fl">2</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/legend.html">legend</a></span><span class="op">(</span><span class="st">"topright"</span>, legend <span class="op">=</span> <span class="st">"Average LATE"</span>, col <span class="op">=</span> <span class="st">"red"</span>, lwd <span class="op">=</span> <span class="fl">2</span>, lty <span class="op">=</span> <span class="fl">2</span><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details><div class="cell-output-display">
+<div>
+<figure class="figure"><p><img src="02-08-05-01-07-instrumental-causal-xgboost-r_files/figure-html/plot-tau-by-experience-1.png" class="img-fluid figure-img" width="576"></p>
+</figure>
+</div>
+</div>
+</div>
+</section><section id="cate-distribution-and-partial-dependence" class="level3"><h3 class="anchored" data-anchor-id="cate-distribution-and-partial-dependence">CATE Distribution and Partial Dependence</h3>
+<div class="cell">
+<details open="" class="code-fold"><summary>Code</summary><div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb24"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/ns-load.html">requireNamespace</a></span><span class="op">(</span><span class="st">"ggplot2"</span>, quietly <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span>
+<span>  <span class="va">model</span><span class="op">$</span><span class="fu">plot_cate</span><span class="op">(</span>top_var <span class="op">=</span> <span class="st">"exper"</span><span class="op">)</span></span>
+<span><span class="op">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details><div class="cell-output-display">
+<div>
+<figure class="figure"><p><img src="02-08-05-01-07-instrumental-causal-xgboost-r_files/figure-html/plot-cate-partial-dependence-1.png" class="img-fluid figure-img" width="768"></p>
+</figure>
+</div>
+</div>
+</div>
+</section><section id="predicting-for-new-data" class="level3"><h3 class="anchored" data-anchor-id="predicting-for-new-data">Predicting for New Data</h3>
+<div class="cell">
+<details open="" class="code-fold"><summary>Code</summary><div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb25"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">new_data</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html">data.frame</a></span><span class="op">(</span></span>
+<span>  exper   <span class="op">=</span> <span class="fl">10</span>,</span>
+<span>  expersq <span class="op">=</span> <span class="fl">10</span><span class="op">^</span><span class="fl">2</span>,</span>
+<span>  black   <span class="op">=</span> <span class="fl">0</span>,</span>
+<span>  smsa    <span class="op">=</span> <span class="fl">1</span>,</span>
+<span>  south   <span class="op">=</span> <span class="fl">0</span></span>
+<span><span class="op">)</span></span>
+<span><span class="va">new_X</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html">as.matrix</a></span><span class="op">(</span><span class="va">new_data</span><span class="op">)</span></span>
+<span><span class="va">new_pred</span> <span class="op">&lt;-</span> <span class="va">model</span><span class="op">$</span><span class="fu">predict</span><span class="op">(</span>X_new <span class="op">=</span> <span class="va">new_X</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html">cat</a></span><span class="op">(</span><span class="st">"Predicted return to education (LATE) for this profile:"</span>, <span class="fu"><a href="https://rdrr.io/r/base/Round.html">round</a></span><span class="op">(</span><span class="va">new_pred</span><span class="op">$</span><span class="va">predictions</span>, <span class="fl">3</span><span class="op">)</span>, <span class="st">"\n"</span><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details><div class="cell-output cell-output-stdout">
+<pre><code>Predicted return to education (LATE) for this profile: 0.136 </code></pre>
+</div>
+</div>
+</section><section id="subgroup-analysis" class="level3"><h3 class="anchored" data-anchor-id="subgroup-analysis">Subgroup Analysis</h3>
+<div class="cell">
+<details open="" class="code-fold"><summary>Code</summary><div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb27"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">model</span><span class="op">$</span><span class="fu">subgroup_analysis</span><span class="op">(</span>quantile <span class="op">=</span> <span class="fl">0.5</span><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details><div class="cell-output cell-output-stdout">
+<pre><code> Subgroup Analysis 
+  Threshold (Q50) : +0.1566
+  High group  n   : 1505   ATE = +0.1782 (SE 0.0021)
+  Low  group  n   : 1505   ATE = +0.1392 (SE 0.0014)</code></pre>
+</div>
+</div>
+</section><section id="variable-importance" class="level3"><h3 class="anchored" data-anchor-id="variable-importance">Variable Importance</h3>
+<div class="cell">
+<details open="" class="code-fold"><summary>Code</summary><div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb29"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">vi</span> <span class="op">&lt;-</span> <span class="va">model</span><span class="op">$</span><span class="fu">variable_importance</span><span class="op">(</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/print.html">print</a></span><span class="op">(</span><span class="va">vi</span><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details><div class="cell-output cell-output-stdout">
+<pre><code>   expersq      exper      south       smsa      black 
+0.32968571 0.30093388 0.14620394 0.12713469 0.09604177 </code></pre>
+</div>
+</div>
+</section><section id="calibration-test" class="level3"><h3 class="anchored" data-anchor-id="calibration-test">Calibration Test</h3>
+<div class="cell">
+<details open="" class="code-fold"><summary>Code</summary><div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb31"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">cal</span> <span class="op">&lt;-</span> <span class="va">model</span><span class="op">$</span><span class="fu">test_calibration</span><span class="op">(</span><span class="op">)</span></span>
+<span><span class="kw">if</span> <span class="op">(</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/NULL.html">is.null</a></span><span class="op">(</span><span class="va">cal</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/print.html">print</a></span><span class="op">(</span><span class="va">cal</span><span class="op">$</span><span class="va">coefficients</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">"Estimate"</span>, <span class="st">"Std. Error"</span>, <span class="st">"Pr(&gt;|t|)"</span><span class="op">)</span><span class="op">]</span><span class="op">)</span></span>
+<span><span class="op">}</span> <span class="kw">else</span> <span class="op">{</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/cat.html">cat</a></span><span class="op">(</span><span class="st">"Calibration test not supported for instrumental forest (grf).\n"</span><span class="op">)</span></span>
+<span><span class="op">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details><div class="cell-output cell-output-stdout">
+<pre><code>Calibration test not supported for instrumental forest (grf).</code></pre>
+</div>
+</div>
+</section><section id="kernel-shap-for-cate" class="level3"><h3 class="anchored" data-anchor-id="kernel-shap-for-cate">Kernel SHAP for CATE</h3>
+<div class="cell">
+<details open="" class="code-fold"><summary>Code</summary><div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb33"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/ModelOriented/kernelshap">kernelshap</a></span><span class="op">)</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/ModelOriented/shapviz">shapviz</a></span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">pred_tau</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">object</span>, <span class="va">newdata</span><span class="op">)</span> <span class="op">{</span></span>
+<span>  <span class="va">p</span> <span class="op">&lt;-</span> <span class="va">object</span><span class="op">$</span><span class="fu">predict</span><span class="op">(</span>X_new <span class="op">=</span> <span class="va">newdata</span><span class="op">)</span></span>
+<span>  <span class="va">p</span><span class="op">$</span><span class="va">predictions</span></span>
+<span><span class="op">}</span></span>
+<span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/Random.html">set.seed</a></span><span class="op">(</span><span class="fl">42</span><span class="op">)</span></span>
+<span><span class="va">n_bg</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html">min</a></span><span class="op">(</span><span class="fl">50</span>, <span class="fu"><a href="https://rdrr.io/r/base/nrow.html">nrow</a></span><span class="op">(</span><span class="va">X</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">bg_idx</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/sample.html">sample</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html">nrow</a></span><span class="op">(</span><span class="va">X</span><span class="op">)</span>, <span class="va">n_bg</span><span class="op">)</span></span>
+<span><span class="va">bg_small</span> <span class="op">&lt;-</span> <span class="va">X</span><span class="op">[</span><span class="va">bg_idx</span>, , drop <span class="op">=</span> <span class="cn">FALSE</span><span class="op">]</span></span>
+<span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/invisible.html">invisible</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/utils/capture.output.html">capture.output</a></span><span class="op">(</span><span class="op">{</span></span>
+<span>  <span class="va">shap_iv</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/kernelshap/man/kernelshap.html">kernelshap</a></span><span class="op">(</span></span>
+<span>    object   <span class="op">=</span> <span class="va">model</span>,</span>
+<span>    X        <span class="op">=</span> <span class="va">X</span>,</span>
+<span>    bg_X     <span class="op">=</span> <span class="va">bg_small</span>,</span>
+<span>    pred_fun <span class="op">=</span> <span class="va">pred_tau</span>,</span>
+<span>    verbose  <span class="op">=</span> <span class="cn">FALSE</span></span>
+<span>  <span class="op">)</span></span>
+<span><span class="op">}</span>, type <span class="op">=</span> <span class="st">"output"</span><span class="op">)</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">shp_iv</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://modeloriented.github.io/shapviz/reference/shapviz.html">shapviz</a></span><span class="op">(</span><span class="va">shap_iv</span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu"><a href="https://modeloriented.github.io/shapviz/reference/sv_importance.html">sv_importance</a></span><span class="op">(</span><span class="va">shp_iv</span>, kind <span class="op">=</span> <span class="st">"both"</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu">ggtitle</span><span class="op">(</span><span class="st">"Kernel SHAP: What Drives Heterogeneous Returns to Education? (Boosted IV Forest)"</span><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details><div class="cell-output-display">
+<div>
+<figure class="figure"><p><img src="02-08-05-01-07-instrumental-causal-xgboost-r_files/figure-html/compute-kernel-shap-boosted-iv-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+<details open="" class="code-fold"><summary>Code</summary><div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb34"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://modeloriented.github.io/shapviz/reference/sv_dependence.html">sv_dependence</a></span><span class="op">(</span><span class="va">shp_iv</span>, v <span class="op">=</span> <span class="st">"exper"</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu">ggtitle</span><span class="op">(</span><span class="st">"SHAP Dependence: Experience"</span><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details><div class="cell-output-display">
+<div>
+<figure class="figure"><p><img src="02-08-05-01-07-instrumental-causal-xgboost-r_files/figure-html/compute-kernel-shap-boosted-iv-2.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+<details open="" class="code-fold"><summary>Code</summary><div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb35"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://modeloriented.github.io/shapviz/reference/sv_dependence.html">sv_dependence</a></span><span class="op">(</span><span class="va">shp_iv</span>, v <span class="op">=</span> <span class="st">"smsa"</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu">ggtitle</span><span class="op">(</span><span class="st">"SHAP Dependence: Metropolitan Area"</span><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details><div class="cell-output-display">
+<div>
+<figure class="figure"><p><img src="02-08-05-01-07-instrumental-causal-xgboost-r_files/figure-html/compute-kernel-shap-boosted-iv-3.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Note
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<ul>
+<li>Check first-stage F-statistic &gt; 10 (strong instrument).</li>
+<li>Verify instrument validity (relevance and exclusion restriction) in your application.</li>
+<li>Increase <code>n_folds</code>, <code>nrounds</code>, and <code>num.trees</code> for production use.</li>
+<li>Use <code>future::plan(multisession, workers = K)</code> before <code>$fit()</code> to parallelise cross-fitting.</li>
+</ul>
+</div>
+</div>
+</section></section><section id="summary-and-conclusion" class="level2"><h2 class="anchored" data-anchor-id="summary-and-conclusion">Summary and Conclusion</h2>
+<p><strong>Boosted IV Forest</strong> (Instrumental Causal XGBoost) combines cross-fitted C-XGBoost nuisance estimation with GRF instrumental forest to estimate heterogeneous LATE in the presence of endogeneity. This tutorial used the Card dataset and proximity to college as an instrument to estimate returns to education, demonstrated <code>BoostedIVForest</code> fit, summary, predictions, subgroup analysis, variable importance, calibration, and optional SHAP explanations. The same workflow applies to other IV settings with a valid instrument and covariates.</p>
+</section><section id="resources" class="level2"><h2 class="anchored" data-anchor-id="resources">Resources</h2>
+<ol type="1">
+<li>Athey, Susan, Julie Tibshirani, and Stefan Wager. “Generalized Random Forests.” <em>Annals of Statistics</em>, 47(2), 2019.</li>
+<li>Card, David (1995). “Using Geographic Variation in College Proximity to Estimate the Return to Schooling.” In <em>Aspects of Labour Market Behaviour: Essays in Honour of John Vanderkamp</em>.</li>
+<li>Wang, Guihua, et al.&nbsp;“An Instrumental Variable Forest Approach for Detecting Heterogeneous Treatment Effects in Observational Studies.” <em>Management Science</em>, 2021.</li>
+<li>RCausalML: <code>R/causalBoosted_IV.R</code> — BoostedIVForest implementation.</li>
+</ol>
+
+
+</section></section><a onclick="window.scrollTo(0, 0); return false;" role="button" id="quarto-back-to-top"><i class="bi bi-arrow-up"></i> Back to top</a></main><!-- /main --><script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    // Ensure there is a toggle, if there isn't float one in the top right
+    if (window.document.querySelector('.quarto-color-scheme-toggle') === null) {
+      const a = window.document.createElement('a');
+      a.classList.add('top-right');
+      a.classList.add('quarto-color-scheme-toggle');
+      a.href = "";
+      a.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
+      const i = window.document.createElement("i");
+      i.classList.add('bi');
+      a.appendChild(i);
+      window.document.body.appendChild(a);
+    }
+    setColorSchemeToggle(hasAlternateSentinel())
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+<footer class="footer"><div class="nav-footer">
+    <div class="nav-footer-left">
+<p>© CC-By Zia Ahmed, Upatta Analytics, 2026</p>
+</div>   
+    <div class="nav-footer-center">
+      &nbsp;
+    </div>
+    <div class="nav-footer-right">
+<p>This page is built with <a href="https://quarto.org/">Quarto</a>.</p>
+</div>
+  </div>
+</footer>
+
+
+<script src="../site_libs/quarto-html/zenscroll-min.js"></script>
+</body></html>

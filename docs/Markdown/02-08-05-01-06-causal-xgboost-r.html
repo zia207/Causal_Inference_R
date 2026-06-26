@@ -1,0 +1,2346 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.8.27">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+<title>causal-xgboost-r – Causal Inference in R</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+<script src="../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../">
+<script src="../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../site_libs/quarto-html/axe/axe-check.js" type="module"></script>
+<script src="../site_libs/quarto-html/popper.min.js"></script>
+<script src="../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-8b4baf804e461d9b72633f0de59a0cac.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-dark-f1aadacce99040138bbb613f9330654f.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-8b4baf804e461d9b72633f0de59a0cac.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<script src="../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../site_libs/bootstrap/bootstrap-bf6de5ccb156a65fc439966d4053cafd.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../site_libs/bootstrap/bootstrap-dark-c3ddef8e9936373b1ee063945a43a984.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../site_libs/bootstrap/bootstrap-bf6de5ccb156a65fc439966d4053cafd.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light"><script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script><style>html{ scroll-behavior: smooth; }</style>
+<link href="../site_libs/pagedtable-1.1/css/pagedtable.css" rel="stylesheet">
+<script src="../site_libs/pagedtable-1.1/js/pagedtable.js"></script><script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script><script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script><script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+</head>
+<body class="nav-sidebar docked nav-fixed quarto-light"><script id="quarto-html-before-body" type="application/javascript">
+    const toggleBodyColorMode = (bsSheetEl) => {
+      const mode = bsSheetEl.getAttribute("data-mode");
+      const bodyEl = window.document.querySelector("body");
+      if (mode === "dark") {
+        bodyEl.classList.add("quarto-dark");
+        bodyEl.classList.remove("quarto-light");
+      } else {
+        bodyEl.classList.add("quarto-light");
+        bodyEl.classList.remove("quarto-dark");
+      }
+    }
+    const toggleBodyColorPrimary = () => {
+      const bsSheetEl = window.document.querySelector("link#quarto-bootstrap:not([rel=disabled-stylesheet])");
+      if (bsSheetEl) {
+        toggleBodyColorMode(bsSheetEl);
+      }
+    }
+    const setColorSchemeToggle = (alternate) => {
+      const toggles = window.document.querySelectorAll('.quarto-color-scheme-toggle');
+      for (let i=0; i < toggles.length; i++) {
+        const toggle = toggles[i];
+        if (toggle) {
+          if (alternate) {
+            toggle.classList.add("alternate");
+          } else {
+            toggle.classList.remove("alternate");
+          }
+        }
+      }
+    };
+    const toggleColorMode = (alternate) => {
+      // Switch the stylesheets
+      const primaryStylesheets = window.document.querySelectorAll('link.quarto-color-scheme:not(.quarto-color-alternate)');
+      const alternateStylesheets = window.document.querySelectorAll('link.quarto-color-scheme.quarto-color-alternate');
+      manageTransitions('#quarto-margin-sidebar .nav-link', false);
+      if (alternate) {
+        // note: dark is layered on light, we don't disable primary!
+        enableStylesheet(alternateStylesheets);
+        for (const sheetNode of alternateStylesheets) {
+          if (sheetNode.id === "quarto-bootstrap") {
+            toggleBodyColorMode(sheetNode);
+          }
+        }
+      } else {
+        disableStylesheet(alternateStylesheets);
+        enableStylesheet(primaryStylesheets)
+        toggleBodyColorPrimary();
+      }
+      manageTransitions('#quarto-margin-sidebar .nav-link', true);
+      // Switch the toggles
+      setColorSchemeToggle(alternate)
+      // Hack to workaround the fact that safari doesn't
+      // properly recolor the scrollbar when toggling (#1455)
+      if (navigator.userAgent.indexOf('Safari') > 0 && navigator.userAgent.indexOf('Chrome') == -1) {
+        manageTransitions("body", false);
+        window.scrollTo(0, 1);
+        setTimeout(() => {
+          window.scrollTo(0, 0);
+          manageTransitions("body", true);
+        }, 40);
+      }
+    }
+    const disableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        stylesheet.rel = 'disabled-stylesheet';
+      }
+    }
+    const enableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        if(stylesheet.rel !== 'stylesheet') { // for Chrome, which will still FOUC without this check
+          stylesheet.rel = 'stylesheet';
+        }
+      }
+    }
+    const manageTransitions = (selector, allowTransitions) => {
+      const els = window.document.querySelectorAll(selector);
+      for (let i=0; i < els.length; i++) {
+        const el = els[i];
+        if (allowTransitions) {
+          el.classList.remove('notransition');
+        } else {
+          el.classList.add('notransition');
+        }
+      }
+    }
+    const isFileUrl = () => {
+      return window.location.protocol === 'file:';
+    }
+    const hasAlternateSentinel = () => {
+      let styleSentinel = getColorSchemeSentinel();
+      if (styleSentinel !== null) {
+        return styleSentinel === "alternate";
+      } else {
+        return false;
+      }
+    }
+    const setStyleSentinel = (alternate) => {
+      const value = alternate ? "alternate" : "default";
+      if (!isFileUrl()) {
+        window.localStorage.setItem("quarto-color-scheme", value);
+      } else {
+        localAlternateSentinel = value;
+      }
+    }
+    const getColorSchemeSentinel = () => {
+      if (!isFileUrl()) {
+        const storageValue = window.localStorage.getItem("quarto-color-scheme");
+        return storageValue != null ? storageValue : localAlternateSentinel;
+      } else {
+        return localAlternateSentinel;
+      }
+    }
+    const toggleGiscusIfUsed = (isAlternate, darkModeDefault) => {
+      const baseTheme = document.querySelector('#giscus-base-theme')?.value ?? 'light';
+      const alternateTheme = document.querySelector('#giscus-alt-theme')?.value ?? 'dark';
+      let newTheme = '';
+      if(authorPrefersDark) {
+        newTheme = isAlternate ? baseTheme : alternateTheme;
+      } else {
+        newTheme = isAlternate ? alternateTheme : baseTheme;
+      }
+      const changeGiscusTheme = () => {
+        // From: https://github.com/giscus/giscus/issues/336
+        const sendMessage = (message) => {
+          const iframe = document.querySelector('iframe.giscus-frame');
+          if (!iframe) return;
+          iframe.contentWindow.postMessage({ giscus: message }, 'https://giscus.app');
+        }
+        sendMessage({
+          setConfig: {
+            theme: newTheme
+          }
+        });
+      }
+      const isGiscussLoaded = window.document.querySelector('iframe.giscus-frame') !== null;
+      if (isGiscussLoaded) {
+        changeGiscusTheme();
+      }
+    };
+    const authorPrefersDark = false;
+    const darkModeDefault = authorPrefersDark;
+      document.querySelector('link#quarto-text-highlighting-styles.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+      document.querySelector('link#quarto-bootstrap.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+    let localAlternateSentinel = darkModeDefault ? 'alternate' : 'default';
+    // Dark / light mode switch
+    window.quartoToggleColorScheme = () => {
+      // Read the current dark / light value
+      let toAlternate = !hasAlternateSentinel();
+      toggleColorMode(toAlternate);
+      setStyleSentinel(toAlternate);
+      toggleGiscusIfUsed(toAlternate, darkModeDefault);
+      window.dispatchEvent(new Event('resize'));
+    };
+    // Switch to dark mode if need be
+    if (hasAlternateSentinel()) {
+      toggleColorMode(true);
+    } else {
+      toggleColorMode(false);
+    }
+  </script>
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top quarto-banner"><nav class="navbar navbar-expand-lg " data-bs-theme="dark"><div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="../index.html">
+    <span class="navbar-title">Causal Inference in R</span>
+    </a>
+  </div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll me-auto">
+<li class="nav-item compact">
+    <a class="nav-link" href="https://sites.google.com/view/r-data-sci-env/home"> <i class="bi bi-house" role="img" aria-label="Home">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+</ul>
+<ul class="navbar-nav navbar-nav-scroll ms-auto">
+<li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/zia207/Causal_Inference_R/"> <i class="bi bi-github" role="img" aria-label="GitHub">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://www.linkedin.com/in/zia-ahmed207"> <i class="bi bi-linkedin" role="img" aria-label="LinkedIn">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="mailto:zia207@gmail.com"> <i class="bi bi-envelope" role="img" aria-label="Email">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+</ul>
+</div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+  <a href="" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="Toggle dark mode"><i class="bi"></i></a>
+</div>
+      </div> <!-- /container-fluid -->
+    </nav><nav class="quarto-secondary-nav"><div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav></header><!-- content --><header id="title-block-header" class="quarto-title-block"></header><div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation docked overflow-auto"><div class="pt-lg-2 mt-2 text-center sidebar-header">
+      <a href="../index.html" class="sidebar-logo-link">
+      <img src="../Image/chapter_logo_causal_inference_r.png" alt="" class="sidebar-logo light-content py-0 d-lg-inline d-none"><img src="../Image/chapter_logo_causal_inference_r.png" alt="" class="sidebar-logo dark-content py-0 d-lg-inline d-none"></a>
+      </div>
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Search"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+<li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="false">
+ <span class="menu-text"><strong>Causal Inference</strong></span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 ">
+<li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Introduction</span></a>
+  </div>
+</li>
+      </ul>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="false">
+ <span class="menu-text"><strong>Randomized Controlled Trials (RCTs)</strong></span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth1 ">
+<li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../02-08-01-00-randomized-controlled-trials-introduction-r.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Introduction to Randomized Controlled Trials (RCTs)</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../02-08-01-01-randomized-controlled-trials-design-r.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Design Phase of RCTs</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../02-08-01-02-randomized-controlled-trials-randomization-r.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Randomization of RCTs</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../02-08-01-03-randomized-controlled-trials-implementation-phase-r.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Implementation Phase of RCTs</span></a>
+  </div>
+</li>
+      </ul>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="false">
+ <span class="menu-text"><strong>Directed Acyclic Graphs (DAGs)</strong></span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-3" class="collapse list-unstyled sidebar-section depth1 ">
+<li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../02-08-02-00-graphical-models-introduction-r.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Introduction to Directed Acyclic Graphs (DAGs)</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../02-08-02-01-graphical-models-basic-work-example-r.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Basic Worked Example of DAGs</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../02-08-02-02-graphical-models-advanced-work-example-r.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">DAGs – Frontdoor Criterion and Time-Varying Confounding</span></a>
+  </div>
+</li>
+      </ul>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="false">
+ <span class="menu-text"><strong>Potential Outcomes Framework (Neyman–Rubin Causal Model)</strong></span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-4" class="collapse list-unstyled sidebar-section depth1 ">
+<li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../02-08-03-00-potential-outcomes-framework-introduction-r.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Introduction to Potential Outcomes Framework</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../02-08-03-01-potential-outcomes-framework-causal-estimands-r.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Causal Estimands (Average Causal Effect)</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../02-08-03-02-potential-outcomes-framework-regression-adjustment-r.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Regression Adjustment</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../02-08-03-03-potential-outcomes-framework-propensity-score-matching-r.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Propensity Score Matching</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../02-08-03-04-potential-outcomes-framework-doubly-robust-estimators-r.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Doubly Robust Estimators</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../02-08-03-05-potential-outcomes-framework-difference-in-differences-r.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Difference-in-Differences (DiD)</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../02-08-03-06-potential-outcomes-framework-instrumental-variable-r.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Instrumental Variable (IV) Analysis</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../02-08-03-07-potential-outcomes-framework-regression-discontinuity-design-r.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Regression Discontinuity Design (RDD)</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../02-08-03-08-potential-outcomes-framework-g-methods-r.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Generalized Methods (G-Methods)</span></a>
+  </div>
+</li>
+      </ul>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="false">
+ <span class="menu-text"><strong>Temporal Causal Inference</strong></span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-5" class="collapse list-unstyled sidebar-section depth1 ">
+<li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../02-08-04-00-causal-timeseries-introduction-r.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Introduction to Temporal Causal Inference</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../02-08-04-01-causal-timeseries-var-granger-r.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Time-Series Causal Models: VAR, Granger Causality, SVAR, and ECM</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../02-08-04-02-causal-timeseries-its-bsts-r.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Interrupted Time Series and Bayesian Structural Time Series</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../02-08-04-03-causal-timeseries-panel-comparative-r.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Panel and Quasi-Experimental Comparative Methods</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../02-08-04-04-causal-timeseries-gmethods-tmle-r.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Longitudinal G-Methods and TMLE</span></a>
+  </div>
+</li>
+      </ul>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" role="navigation" aria-expanded="false">
+ <span class="menu-text"><strong>Causal Machine Learning (CausalML)</strong></span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" role="navigation" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-6" class="collapse list-unstyled sidebar-section depth1 ">
+<li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../02-08-05-00-casual-ml-introduction-r.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Machine Learning for Causal Inference</span></a>
+  </div>
+</li>
+          <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-7" role="navigation" aria-expanded="false">
+ <span class="menu-text"><strong>Tree-Based Models</strong></span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-7" role="navigation" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-7" class="collapse list-unstyled sidebar-section depth2 ">
+<li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../02-08-05-01-00-casual-tree-introduction-r.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Introduction to Tree-Based Models</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../02-08-05-01-01-causal-tree-r.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Causal Tree – Single Tree for Heterogeneous Treatment Effect</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../02-08-05-01-02-causal-forest-r.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Causal Forest (CF)</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../02-08-05-01-03-causal-survival-forest-r.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Causal Survival Forest (CSF)</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../02-08-05-01-04-instrumental-causal-forest-r.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Instrumental Forest</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../02-08-05-01-05-multi-arm-causal-forest-r.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Multi-arm/multi-outcome Causal Forest</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../02-08-05-01-06-causal-xgboost-r.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">The Boosted Model of Causal Inference (Causal XGBoost)</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../02-08-05-01-07-instrumental-causal-xgboost-r.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Instrumental Causal XGBoost</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../02-08-05-01-08-multi-arm-causal-boost-r.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Boosted Multi-Arm Causal Model</span></a>
+  </div>
+</li>
+      </ul>
+</li>
+          <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-8" role="navigation" aria-expanded="false">
+ <span class="menu-text"><strong>Meta-Learners</strong></span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-8" role="navigation" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-8" class="collapse list-unstyled sidebar-section depth2 ">
+<li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../02-08-05-02-00-meta-learners-introduction-r.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Introduction to Meta-Learners</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../02-08-05-02-01-meta-learners-binary-treatments-r.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Meta-Learner with Binary Treatments</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../02-08-05-02-02-meta-learners-multiple-discrete-treatment-r.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Meta-Learners with Multiple Discrete Treatments</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../02-08-05-02-03-meta-learners-continuous-treatment-r.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Meta Learner with Continuous Treatments</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../02-08-05-02-04-tmle-model-r.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Causal ML with Targeted Maximum Likelihood Estimation</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../02-08-05-02-05-meta-learners-domain-adaptation-learner-r.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Domain Adaptation Learner</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../02-08-05-02-06--meta-learners-doubly-robust-learners-r.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Doubly Robust Learners</span></a>
+  </div>
+</li>
+      </ul>
+</li>
+          <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-9" role="navigation" aria-expanded="false">
+ <span class="menu-text"><strong>Uplift-Learners</strong></span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-9" role="navigation" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-9" class="collapse list-unstyled sidebar-section depth2 ">
+<li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../02-08-05-03-00-uplift-trees-introduction-r.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Introduction to Uplift-Learners</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../02-08-05-03-01-uplift-trees-classification-r.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Uplift Tree-Classification</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../02-08-05-03-02-uplift-trees-regression-r.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Uplift Tree-Regression</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../02-08-05-03-03-uplift-randomForest-r.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Uplift Random Forest Regression</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../02-08-05-03-04-uplift-xgboost-r.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Uplift XGBoost Regression</span></a>
+  </div>
+</li>
+      </ul>
+</li>
+          <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-10" role="navigation" aria-expanded="false">
+ <span class="menu-text"><strong>Double/Debiased Machine Learning</strong></span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-10" role="navigation" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-10" class="collapse list-unstyled sidebar-section depth2 ">
+<li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../02-08-05-04-00-double-ml-introduction-r.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Introduction to Double/Debiased Machine Learning</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../02-08-05-04-01-double-ml-from-basics-to-application-r.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Double ML- Bias, Orthogonalization</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../02-08-05-04-02-double-ml- single-multiple-treatment-r.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Double ML - Single/multiple Treatment</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../02-08-05-04-03-double-ml-did-r.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">DoubleML for Difference-in-Differences (Did)</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../02-08-05-04-04-double-ml-iv-r.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Double ML with Instrumental Variables (IV)</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../02-08-05-04-05-double-ml-dynamic-ml.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Dynamic Double Machine Learning</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../02-08-05-04-06-double-ml-weighted-double-ml-r.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Weighted Double Machine Learning</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../02-08-05-04-07-double-ml-cluster-robust-r.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Cluster Robust Double Machine Learning</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../02-08-05-04-08-double-ml-ensemble-learners-r" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Double ML with Ensemble Learners</span></a>
+  </div>
+</li>
+      </ul>
+</li>
+          <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-11" role="navigation" aria-expanded="false">
+ <span class="menu-text"><strong>Deep Causal Learning</strong></span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-11" role="navigation" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-11" class="collapse list-unstyled sidebar-section depth2 ">
+<li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../02-08-05-05-00-DeepCausalML-introduction-r.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Introduction to Deep Causal Learning</span></a>
+  </div>
+</li>
+          <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-12" role="navigation" aria-expanded="false">
+ <span class="menu-text"><strong>Treatment Effect Estimators</strong></span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-12" role="navigation" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-12" class="collapse list-unstyled sidebar-section depth3 ">
+<li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../02-08-05-05-01-00-DeepCausalML-treatment-effect-estimators-introduction-r.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Introduction to Treatment Effect Estimators</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../02-08-05-05-01-01-DeepCausalML-TARNET-r.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">TARNet: Treatment-Agnostic Representation Network</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../02-08-05-05-01-02-DeepCausalML-CFRTNet-r.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">CFRNet: Counterfactual Regression Network</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../02-08-05-05-01-03-DeepCausalML-DragonNet-r.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">DragonNet: Propensity-Adjusted Networks for Causal Inference</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../02-08-05-05-01-04-DeepCausalML-GANITE-r.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">GANITE: Generative Adversarial Network for Inference of Treatment Effects</span></a>
+  </div>
+</li>
+      </ul>
+</li>
+          <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-13" role="navigation" aria-expanded="false">
+ <span class="menu-text"><strong>Generative Latent-Variable Causal Models (GLVCMs)</strong></span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-13" role="navigation" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-13" class="collapse list-unstyled sidebar-section depth3 ">
+<li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../02-08-05-05-02-00-DeepCausalML-generative-latent-variable-causal-models-introduction-r.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Introduction to GLVCMs</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../02-08-05-05-02-01-DeepCausalML-counterfactual-variational-autoencoder-CEVAE-r.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">CEVAE:Generative Model with Latent Confounders</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../02-08-05-05-02-02-DeepCausalML-variational-autoencoder-causalVAE.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">CausalVAE: Causal Variational Autoencoder</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../02-08-05-05-02-03-DeepCausalML-identifiable-variational-autoencoders-CausaliVAEs.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">CausaliVAEs:Identifiable Variational Autoencoders</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../02-08-05-05-02-04-DeepCausalML-causaldiscrepancyVAE-r.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">CausalDiscrepancyVAE: Discrepancy-Regularized Causal Representation Learning</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../02-08-05-05-02-05-DeepCausalML-causalGAN-r.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">CausalGAN:Causal Generative Network</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../02-08-05-05-02-06-DeepCausalML-deep-structural-causal-model-DSCM-r.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Deep Structural Causal Models (DSCMs)</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../02-08-05-05-02-07-DeepCausalML-causal-encoding-generative-EGN-r.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">CausalEGM: Causal Encoding Generative Modeling</span></a>
+  </div>
+</li>
+      </ul>
+</li>
+          <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-14" role="navigation" aria-expanded="false">
+ <span class="menu-text"><strong>Causal Structural Learning</strong></span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-14" role="navigation" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-14" class="collapse list-unstyled sidebar-section depth3 ">
+<li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../02-08-05-05-03-00-DeepCausalML-structural-learnering-introduction-r.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Introduction to Causal Structural Learning</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../02-08-05-05-03-01-DeepCausalML-continuous-optimization-models-NOTEARS-r.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">NOTEARs: Continuous Optimization Models NOTEARS</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../02-08-05-05-03-02-DeepCausalML-dag-structure-learning-graph-neural-networks-DagGNN-r.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">DAG-GNN: DAG Structure Learning with Graph Neural Networks</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../02-08-05-05-03-03-DeepCausalML-gradient-based-neural-learning-GranDag-r.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">GraN-DAG: Gradient-Based Neural DAG Learning</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../02-08-05-05-03-04-DeepCausalML-DAGMA-NoCurl-r.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">DAGMA and DAG-NoCurl for Causal Discovery</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../02-08-05-05-03-04-DeepCausalML-DAGMA-NoCurl-r.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">DeepCausalML-causal-structural-learning-regularization-CASTLE-r.qmd</span></a>
+  </div>
+</li>
+      </ul>
+</li>
+          <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-15" role="navigation" aria-expanded="false">
+ <span class="menu-text"><strong>Temporal Deep Causal ML</strong></span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-15" role="navigation" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-15" class="collapse list-unstyled sidebar-section depth3 ">
+<li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../02-08-05-05-04-00-DeepCuasalML-timesseries-introduction-r.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Introduction to Temporal Deep Causal ML</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../02-08-05-05-04-01-DeepCausalML-timeseries-neural-granger-cusuality-r.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Neural Granger Causality Models</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../02-08-05-05-04-02-DeepCausalML-timeseries-structural-causal-model-SMC-r.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Structural Causal Models (SCMs) with Deep Components</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../02-08-05-05-04-03-DeepCausalML-attension-transformer-r.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Attention-Based/Transformer Causal Models</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../02-08-05-05-04-04-DeepCausalML-timeseries-RNN-LSTM-causaML-r.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">RNN/LSTM-Based Causal Models</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../02-08-05-05-04-05-DeepCausalML-timeseries-graph-nn-r.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Graph Neural Network (GNN) Causal Models</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../02-08-05-05-04-06-DeepCausalML-timeseries-counterfactual-potential-causalML-r.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Counterfactual / Potential Outcomes Models</span></a>
+  </div>
+</li>
+      </ul>
+</li>
+      </ul>
+</li>
+          <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-16" role="navigation" aria-expanded="false">
+ <span class="menu-text"><strong>Terminiology</strong></span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-16" role="navigation" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-16" class="collapse list-unstyled sidebar-section depth2 ">
+<li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../00-scientific-terminology-glossary.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">A complete A–Z reference for causal inference and machine learning terminology</span></a>
+  </div>
+</li>
+      </ul>
+</li>
+      </ul>
+</li>
+    </ul>
+</div>
+</nav><div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active"><h2 id="toc-title">On This Page</h2>
+   
+  <ul>
+<li>
+<a href="#the-boosted-model-of-causal-inference-causalxgboost" id="toc-the-boosted-model-of-causal-inference-causalxgboost" class="nav-link active" data-scroll-target="#the-boosted-model-of-causal-inference-causalxgboost">5.1.6 The Boosted Model of Causal Inference (causalXGBoost)</a>
+  <ul>
+<li>
+<a href="#overview" id="toc-overview" class="nav-link" data-scroll-target="#overview">Overview</a>
+  <ul class="collapse">
+<li><a href="#causal-setup" id="toc-causal-setup" class="nav-link" data-scroll-target="#causal-setup">Causal Setup</a></li>
+  <li><a href="#the-two-head-architecture" id="toc-the-two-head-architecture" class="nav-link" data-scroll-target="#the-two-head-architecture">The Two-Head Architecture</a></li>
+  <li><a href="#the-masked-loss" id="toc-the-masked-loss" class="nav-link" data-scroll-target="#the-masked-loss">The Masked Loss</a></li>
+  <li><a href="#how-boosting-works" id="toc-how-boosting-works" class="nav-link" data-scroll-target="#how-boosting-works">How Boosting Works</a></li>
+  <li><a href="#propensity-score" id="toc-propensity-score" class="nav-link" data-scroll-target="#propensity-score">Propensity Score</a></li>
+  <li><a href="#prediction-and-evaluation" id="toc-prediction-and-evaluation" class="nav-link" data-scroll-target="#prediction-and-evaluation">Prediction and Evaluation</a></li>
+  <li><a href="#limitations" id="toc-limitations" class="nav-link" data-scroll-target="#limitations">Limitations</a></li>
+  <li><a href="#why-it-works-well-on-tabular-causal-data" id="toc-why-it-works-well-on-tabular-causal-data" class="nav-link" data-scroll-target="#why-it-works-well-on-tabular-causal-data">Why It Works Well on Tabular Causal Data</a></li>
+  </ul>
+</li>
+  <li><a href="#implementation-in-r" id="toc-implementation-in-r" class="nav-link" data-scroll-target="#implementation-in-r">Implementation in R</a></li>
+  <li>
+<a href="#set-up" id="toc-set-up" class="nav-link" data-scroll-target="#set-up">Set Up</a>
+  <ul class="collapse">
+<li><a href="#check-and-install-required-r-packages" id="toc-check-and-install-required-r-packages" class="nav-link" data-scroll-target="#check-and-install-required-r-packages">Check and Install Required R Packages</a></li>
+  <li><a href="#install-missing-packages" id="toc-install-missing-packages" class="nav-link" data-scroll-target="#install-missing-packages">Install Missing Packages</a></li>
+  <li><a href="#verify-installation" id="toc-verify-installation" class="nav-link" data-scroll-target="#verify-installation">Verify Installation</a></li>
+  <li><a href="#load-r-packages" id="toc-load-r-packages" class="nav-link" data-scroll-target="#load-r-packages">Load R Packages</a></li>
+  <li><a href="#check-loaded-packages" id="toc-check-loaded-packages" class="nav-link" data-scroll-target="#check-loaded-packages">Check Loaded Packages</a></li>
+  </ul>
+</li>
+  <li>
+<a href="#getting-started-with-causal-xgboost-in-r" id="toc-getting-started-with-causal-xgboost-in-r" class="nav-link" data-scroll-target="#getting-started-with-causal-xgboost-in-r">Getting Started with Causal XGBoost in R</a>
+  <ul class="collapse">
+<li><a href="#data-generation-and-traintest-split" id="toc-data-generation-and-traintest-split" class="nav-link" data-scroll-target="#data-generation-and-traintest-split">Data Generation and Train/Test Split</a></li>
+  <li><a href="#fit-causal-xgboost-on-synthetic-data" id="toc-fit-causal-xgboost-on-synthetic-data" class="nav-link" data-scroll-target="#fit-causal-xgboost-on-synthetic-data">Fit Causal XGBoost on Synthetic Data</a></li>
+  <li><a href="#predict-and-evaluate-synthetic-data" id="toc-predict-and-evaluate-synthetic-data" class="nav-link" data-scroll-target="#predict-and-evaluate-synthetic-data">Predict and evaluate (synthetic data)</a></li>
+  <li><a href="#model-summary-and-evaluation" id="toc-model-summary-and-evaluation" class="nav-link" data-scroll-target="#model-summary-and-evaluation">Model summary and evaluation</a></li>
+  </ul>
+</li>
+  <li>
+<a href="#use-case-causal-xgboost-on-the-abortion-dataset" id="toc-use-case-causal-xgboost-on-the-abortion-dataset" class="nav-link" data-scroll-target="#use-case-causal-xgboost-on-the-abortion-dataset">Use Case: Causal XGBoost on the Abortion Dataset</a>
+  <ul class="collapse">
+<li><a href="#data" id="toc-data" class="nav-link" data-scroll-target="#data">Data</a></li>
+  <li><a href="#load-data" id="toc-load-data" class="nav-link" data-scroll-target="#load-data">Load Data</a></li>
+  <li><a href="#data-processing" id="toc-data-processing" class="nav-link" data-scroll-target="#data-processing">Data Processing</a></li>
+  <li><a href="#split-data-into-training-and-test-sets" id="toc-split-data-into-training-and-test-sets" class="nav-link" data-scroll-target="#split-data-into-training-and-test-sets">Split Data into Training and Test Sets</a></li>
+  <li><a href="#train-causal-xgboost-on-training-data" id="toc-train-causal-xgboost-on-training-data" class="nav-link" data-scroll-target="#train-causal-xgboost-on-training-data">Train Causal XGBoost on Training Data</a></li>
+  <li><a href="#prediction" id="toc-prediction" class="nav-link" data-scroll-target="#prediction">Prediction</a></li>
+  <li><a href="#cate-summary-and-sample-ate" id="toc-cate-summary-and-sample-ate" class="nav-link" data-scroll-target="#cate-summary-and-sample-ate">CATE summary and sample ATE</a></li>
+  <li><a href="#evaluation" id="toc-evaluation" class="nav-link" data-scroll-target="#evaluation">Evaluation</a></li>
+  <li><a href="#variable-importance-xgboost" id="toc-variable-importance-xgboost" class="nav-link" data-scroll-target="#variable-importance-xgboost">Variable importance (XGBoost)</a></li>
+  <li>
+<a href="#shap-analysis" id="toc-shap-analysis" class="nav-link" data-scroll-target="#shap-analysis">SHAP analysis</a>
+  <ul class="collapse">
+<li><a href="#shap-estimation" id="toc-shap-estimation" class="nav-link" data-scroll-target="#shap-estimation">SHAP estimation</a></li>
+  <li><a href="#importance-plot-bar-beeswarm" id="toc-importance-plot-bar-beeswarm" class="nav-link" data-scroll-target="#importance-plot-bar-beeswarm">Importance plot (bar / beeswarm)</a></li>
+  <li><a href="#shap-dependence" id="toc-shap-dependence" class="nav-link" data-scroll-target="#shap-dependence">SHAP dependence</a></li>
+  <li><a href="#decompose-single-predictions" id="toc-decompose-single-predictions" class="nav-link" data-scroll-target="#decompose-single-predictions">Decompose single predictions</a></li>
+  <li><a href="#averaged-shap-values-importance-by-subgroup" id="toc-averaged-shap-values-importance-by-subgroup" class="nav-link" data-scroll-target="#averaged-shap-values-importance-by-subgroup">Averaged SHAP values (importance by subgroup)</a></li>
+  </ul>
+</li>
+  <li><a href="#propensity-scores" id="toc-propensity-scores" class="nav-link" data-scroll-target="#propensity-scores">Propensity scores</a></li>
+  </ul>
+</li>
+  <li><a href="#summary-and-conclusion" id="toc-summary-and-conclusion" class="nav-link" data-scroll-target="#summary-and-conclusion">Summary and Conclusion</a></li>
+  <li><a href="#resources" id="toc-resources" class="nav-link" data-scroll-target="#resources">Resources</a></li>
+  </ul>
+</li>
+  </ul></nav>
+    </div>
+<!-- main -->
+<main class="content quarto-banner-title-block" id="quarto-document-content"><div class="quarto-figure quarto-figure-left">
+<figure class="figure"><p><a href="https://github.com/zia207/Causal_Inference_R/blob/main/Notebook/02_08_05_01_06_causal_xgboost_r.ipynb"><img src="Image/open_colab.png" class="img-fluid quarto-figure quarto-figure-left figure-img" width="150"></a></p>
+</figure>
+</div>
+<div class="quarto-figure quarto-figure-left">
+<figure class="figure"><p><img src="Image/banner_Causal_Inference_Tree_Based.png" class="img-fluid quarto-figure quarto-figure-left figure-img" width="1400"></p>
+</figure>
+</div>
+<section id="the-boosted-model-of-causal-inference-causalxgboost" class="level1"><h1>5.1.6 The Boosted Model of Causal Inference (causalXGBoost)</h1>
+<section id="overview" class="level2"><h2 class="anchored" data-anchor-id="overview">Overview</h2>
+<p><strong>C-XGBoost</strong> is a tree-boosting method for estimating individual and average treatment effects from observational data. It belongs to the <em>outcome regression</em> family of causal inference methods — the same conceptual family as TARNet and DragonNet — but replaces neural networks with XGBoost. The result is a model that brings DragonNet-style causal masking to boosted trees, combining the counterfactual reasoning of neural causal models with XGBoost’s well-known strengths on tabular data: robustness to irregular boundaries, excellent calibration on medium-sized datasets, and minimal tuning overhead.</p>
+<p>The core idea is simple: train <strong>one</strong> XGBoost model with <strong>two output heads</strong> that simultaneously predict potential outcomes under control (<span class="math inline">\(\hat{Q}_0(x)\)</span>) and treatment (<span class="math inline">\(\hat{Q}_1(x)\)</span>). The individual treatment effect falls out as their difference.</p>
+<section id="causal-setup" class="level3"><h3 class="anchored" data-anchor-id="causal-setup">Causal Setup</h3>
+<p>C-XGBoost operates within the <strong>potential outcomes framework</strong>. For each unit <span class="math inline">\(i\)</span>, two potential outcomes exist — <span class="math inline">\(Y_i(0)\)</span> under control and <span class="math inline">\(Y_i(1)\)</span> under treatment — but only one is observed:</p>
+<p><span class="math display">\[Y_i = T_i\, Y_i(1) + (1 - T_i)\, Y_i(0)\]</span></p>
+<p>The quantities of interest are:</p>
+<p><span class="math display">\[\tau_i = Y_i(1) - Y_i(0) \quad \text{(ITE — individual treatment effect)}\]</span> <span class="math display">\[\tau(x) = E[Y(1) - Y(0) \mid X = x] \quad \text{(CATE — conditional average treatment effect)}\]</span> <span class="math display">\[\text{ATE} = E[Y(1) - Y(0)] \quad \text{(population average)}\]</span></p>
+<p>These are identifiable from observational data <span class="math inline">\((X, T, Y)\)</span> under three standard assumptions: <strong>consistency</strong> (SUTVA — no interference between units), <strong>ignorability</strong> (no unmeasured confounders: <span class="math inline">\((Y(0), Y(1)) \perp T \mid X\)</span>), and <strong>overlap</strong> (<span class="math inline">\(0 &lt; e(x) &lt; 1\)</span>, where <span class="math inline">\(e(x) = P(T=1 \mid X=x)\)</span>). If any of these fail — especially ignorability — the estimates break down.</p>
+</section><section id="the-two-head-architecture" class="level3"><h3 class="anchored" data-anchor-id="the-two-head-architecture">The Two-Head Architecture</h3>
+<p>C-XGBoost learns two conditional expectation functions inside a single model:</p>
+<p><span class="math display">\[\hat{Q}_0(x) \approx E[Y(0) \mid X = x], \qquad \hat{Q}_1(x) \approx E[Y(1) \mid X = x]\]</span></p>
+<p>The ITE estimate is then:</p>
+<p><span class="math display">\[\hat{\tau}(x) = \hat{Q}_1(x) - \hat{Q}_0(x)\]</span></p>
+<p>The heads <strong>share tree structure</strong> but have <strong>separate leaf values</strong>. This is the key design choice: shared splits mean the model learns a common feature-space partitioning that generalizes across both heads, so counterfactuals are borrowed from structurally similar units rather than extrapolated blindly.</p>
+</section><section id="the-masked-loss" class="level3"><h3 class="anchored" data-anchor-id="the-masked-loss">The Masked Loss</h3>
+<p>Each training unit contributes gradient signal to <em>only</em> the head that matches its observed treatment assignment:</p>
+<p><span class="math display">\[\mathcal{L}_i(\theta) = (1 - t_i)\bigl(\hat{Q}_0(x_i) - y_i\bigr)^2 + t_i\bigl(\hat{Q}_1(x_i) - y_i\bigr)^2\]</span></p>
+<p>In vector form, this is implemented as a masked squared error:</p>
+<p><span class="math display">\[\mathcal{L} = \frac{1}{n} \sum_i \| m_i \odot (\hat{q}(x_i) - \tilde{y}_i) \|_2^2, \qquad m_i = \begin{bmatrix} 1 - t_i \\ t_i \end{bmatrix}\]</span></p>
+<p>The intuition: control units (<span class="math inline">\(t_i = 0\)</span>) teach the <span class="math inline">\(\hat{Q}_0\)</span> head what <span class="math inline">\(Y(0)\)</span> looks like as a function of <span class="math inline">\(X\)</span>; treated units (<span class="math inline">\(t_i = 1\)</span>) teach the <span class="math inline">\(\hat{Q}_1\)</span> head what <span class="math inline">\(Y(1)\)</span> looks like. Because the splits are shared, information flows across both heads — a treated unit in region <span class="math inline">\(\mathcal{R}\)</span> of covariate space indirectly informs the <span class="math inline">\(\hat{Q}_0\)</span> prediction for control units in the same region, and vice versa.</p>
+</section><section id="how-boosting-works" class="level3"><h3 class="anchored" data-anchor-id="how-boosting-works">How Boosting Works</h3>
+<p>XGBoost builds the two-output predictor additively over <span class="math inline">\(M\)</span> rounds:</p>
+<p><span class="math display">\[\hat{q}^{(M)}(x) = \sum_{m=1}^M f_m(x)\]</span></p>
+<p>where each <span class="math inline">\(f_m\)</span> is a tree that outputs <strong>two numbers per leaf</strong> — one for each head. At each round <span class="math inline">\(m\)</span>:</p>
+<ol type="1">
+<li>Compute current predictions <span class="math inline">\(\hat{q}^{(m-1)}(x_i)\)</span> for all units.</li>
+<li>Compute <strong>masked gradients and Hessians</strong> — only the factual head gets non-zero curvature:</li>
+</ol>
+<p><span class="math display">\[g_{i0} = 2(1-t_i)(\hat{q}_{i0} - y_i), \quad g_{i1} = 2t_i(\hat{q}_{i1} - y_i)\]</span> <span class="math display">\[h_{i0} = 2(1-t_i), \quad h_{i1} = 2t_i\]</span></p>
+<ol start="3" type="1">
+<li>Fit a new tree <span class="math inline">\(f_m\)</span> that minimizes the standard XGBoost second-order objective jointly across both heads.</li>
+<li>Update predictions: <span class="math inline">\(\hat{q}^{(m)} = \hat{q}^{(m-1)} + \eta\, f_m(x)\)</span>, where <span class="math inline">\(\eta\)</span> is the learning rate.</li>
+</ol>
+<p>The shared structure + separate leaf values lets the model capture rich interactions while still learning distinct counterfactual surfaces.</p>
+</section><section id="propensity-score" class="level3"><h3 class="anchored" data-anchor-id="propensity-score">Propensity Score</h3>
+<p>C-XGBoost separately fits a propensity model <span class="math inline">\(\hat{e}(x) = \widehat{P}(T=1 \mid X=x)\)</span> — typically a random forest. Importantly, this propensity score is <strong>not</strong> integrated into the XGBoost training loss (unlike DragonNet), which means the model is <strong>not doubly robust</strong>: if the outcome model is misspecified, the propensity estimate provides no correction. The propensity is returned purely for downstream use — overlap diagnostics, inverse probability weighting, or subgroup analysis.</p>
+</section><section id="prediction-and-evaluation" class="level3"><h3 class="anchored" data-anchor-id="prediction-and-evaluation">Prediction and Evaluation</h3>
+<p>For a new unit <span class="math inline">\(x\)</span>, a single forward pass returns <span class="math inline">\(\hat{Q}_0(x)\)</span>, <span class="math inline">\(\hat{Q}_1(x)\)</span>, <span class="math inline">\(\hat{e}(x)\)</span>, and <span class="math inline">\(\hat{\tau}(x) = \hat{Q}_1(x) - \hat{Q}_0(x)\)</span>. Two standard evaluation metrics apply:</p>
+<p><strong>ATE error</strong> — absolute difference between the true and estimated population average effect.</p>
+<p><strong>PEHE</strong> (Precision in Estimation of Heterogeneous Effects) — mean squared error over individual effects:</p>
+<p><span class="math display">\[\varepsilon_\text{PEHE} = \frac{1}{n} \sum_i \bigl((Y_i(1) - Y_i(0)) - \hat{\tau}(x_i)\bigr)^2\]</span></p>
+<p>PEHE requires knowledge of both potential outcomes, so it can only be computed on semi-synthetic benchmarks (e.g., IHDP, Jobs). In real data, only indirect evaluation (e.g., policy learning, subgroup validation) is possible.</p>
+</section><section id="limitations" class="level3"><h3 class="anchored" data-anchor-id="limitations">Limitations</h3>
+<ul>
+<li>
+<strong>Not doubly robust.</strong> Propensity is estimated but not used in training, so the model has no safety net against outcome model misspecification.</li>
+<li>
+<strong>Binary outcome clipping.</strong> The regression loss does not constrain outputs to <span class="math inline">\([0, 1]\)</span>; post-hoc clipping or calibration may be needed.</li>
+<li>
+<strong>Classical assumptions required.</strong> Hidden confounding, SUTVA violations, or lack of overlap each break identification.</li>
+<li>
+<strong>Two heads only.</strong> The current architecture supports binary treatment. Multi-arm extensions would require additional heads and a revised masking scheme.</li>
+</ul>
+<p><img src="Image/causalboost.png" class="img-fluid"></p>
+<p>A few things worth emphasizing from the pipeline:</p>
+<p><strong>Step 3 is the architectural heart.</strong> The shared tree structure means splits are chosen to explain variation in <em>both</em> <span class="math inline">\(Y(0)\)</span> and <span class="math inline">\(Y(1)\)</span> simultaneously. A region of covariate space where treated and control units are interleaved will push the trees to carve boundaries that serve both heads — effectively using treated units to regularize the counterfactual surface of control units, and vice versa.</p>
+<p><strong>Step 4 (masked loss) is what makes this causal rather than predictive.</strong> A standard multi-output XGBoost regression would naively assign <span class="math inline">\(Y_i\)</span> to both heads, which would corrupt the counterfactual estimates. The mask <span class="math inline">\(m_i = (1-t_i,\, t_i)\)</span> ensures only the factual head receives gradient signal, keeping each head honest about what it actually observed.</p>
+<p><strong>Step 6’s propensity caveat matters practically.</strong> Because <span class="math inline">\(\hat{e}(x)\)</span> is not wired into the training objective, severe overlap violations — regions where nearly all units are treated or nearly all are control — will degrade the counterfactual head for the sparse group, and no propensity reweighting inside the loss will correct for it. Checking the propensity score distribution before trusting CATE estimates in low-overlap regions is essential.</p>
+</section><section id="why-it-works-well-on-tabular-causal-data" class="level3"><h3 class="anchored" data-anchor-id="why-it-works-well-on-tabular-causal-data">Why It Works Well on Tabular Causal Data</h3>
+<ul>
+<li>XGBoost excels at nonlinearities, interactions, and irregular boundaries (classic strengths on tabular data).</li>
+<li>The masking + shared splits give the same representational power as neural causal models but with far better calibration and robustness on medium-sized tabular datasets.</li>
+<li>Conceptually: “DragonNet-style causal masking, but with boosted trees instead of neural nets.”</li>
+</ul></section></section><section id="implementation-in-r" class="level2"><h2 class="anchored" data-anchor-id="implementation-in-r">Implementation in R</h2>
+<p>The RCausalML package provides an implementation of C-XGBoost in R via the R6 class <code>CXGBoost</code>. You create a model with <code>CXGBoost$new()</code>, optionally passing a list of XGBoost <code>parameters</code> (e.g.&nbsp;<code>eta</code>, <code>max_depth</code>) and an optional pre-fitted <code>propensity_model</code> (ranger). You then fit with <code>$fit(X, t, y, nrounds, verbose, eval_data)</code> and predict with <code>$predict(X)</code>, which returns a list with <code>y0_hat</code>, <code>y1_hat</code>, <code>tau_hat</code> (ITE), and <code>propensity_score</code>. The package also provides:</p>
+<ul>
+<li>
+<strong><code>$summary()</code></strong> — formatted print of model config, fit time, propensity OOB error, and top variable importance.</li>
+<li>
+<strong><code>$evaluate(y_true, X)</code></strong> — computes PEHE and ATE error against ground-truth (matrix <code>[Y(0), Y(1)]</code> or vector of true ITEs) and returns a list with <code>PEHE</code>, <code>ATE_error</code>, <code>tau_hat</code>, <code>y0_hat</code>, <code>y1_hat</code>.</li>
+<li>
+<strong><code>$plot_importance(top_n, metric)</code></strong> — ggplot2 variable importance chart (Gain, Cover, or Frequency).</li>
+<li>
+<strong><code>$save_model(path)</code></strong> and <strong><code>load_cxgboost(path)</code></strong> — save/load fitted models.</li>
+<li>
+<strong><code>$clone_reset()</code></strong> — return an unfitted copy with the same hyperparameters (e.g.&nbsp;for cross-validation).</li>
+</ul>
+<p>The package exports <strong><code>PEHE()</code></strong> and <strong><code>ATE()</code></strong> with two calling conventions: matrix form <code>(y, y_hat)</code> with columns <code>[Y(0), Y(1)]</code>, or vector form <code>(tau_true, tau_hat)</code> for ITEs.</p>
+</section><section id="set-up" class="level2"><h2 class="anchored" data-anchor-id="set-up">Set Up</h2>
+<section id="check-and-install-required-r-packages" class="level3"><h3 class="anchored" data-anchor-id="check-and-install-required-r-packages">Check and Install Required R Packages</h3>
+<p>Following R packages are required to run this notebook. If any of these packages are not installed, you can install them using the code below:</p>
+<p><code>tidyverse</code>, <code>plyr</code>, <code>RCausalML</code>, <code>causaldata</code>, <code>mlbench</code>, <code>xgboost</code></p>
+<div class="cell">
+<details open="" class="code-fold"><summary>Code</summary><div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1" data-lst-cap="Required R package names used throughout the notebook."><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">packages</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span></span>
+<span>  <span class="st">"tidyverse"</span>,</span>
+<span>  <span class="st">"plyr"</span>,</span>
+<span>  <span class="st">"RCausalML"</span>,</span>
+<span>  <span class="st">"causaldata"</span>,</span>
+<span>  <span class="st">"mlbench"</span>,</span>
+<span>  <span class="st">"xgboost"</span></span>
+<span><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+</div>
+</section><section id="install-missing-packages" class="level3"><h3 class="anchored" data-anchor-id="install-missing-packages">Install Missing Packages</h3>
+<div class="cell">
+<details open="" class="code-fold"><summary>Code</summary><div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2" data-lst-cap="Optional commands to install missing CRAN/GitHub dependencies (commented by default)."><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co"># Install missing packages</span></span>
+<span><span class="co"># new_packages &lt;- packages[!(packages %in% installed.packages()[, "Package"])]</span></span>
+<span><span class="co"># if (length(new_packages)) install.packages(new_packages)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+</div>
+</section><section id="verify-installation" class="level3"><h3 class="anchored" data-anchor-id="verify-installation">Verify Installation</h3>
+<div class="cell">
+<details open="" class="code-fold"><summary>Code</summary><div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3" data-lst-cap="Check that each required package namespace is available."><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co"># Verify installation</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html">cat</a></span><span class="op">(</span><span class="st">"Installed packages:\n"</span><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details><div class="cell-output cell-output-stdout">
+<pre><code>Installed packages:</code></pre>
+</div>
+<details open="" class="code-fold"><summary>Code</summary><div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5" data-lst-cap="Check that each required package namespace is available."><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/print.html">print</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/lapply.html">sapply</a></span><span class="op">(</span><span class="va">packages</span>, <span class="va">requireNamespace</span>, quietly <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details><div class="cell-output cell-output-stdout">
+<pre><code> tidyverse       plyr  RCausalML causaldata    mlbench    xgboost 
+      TRUE       TRUE       TRUE       TRUE       TRUE       TRUE </code></pre>
+</div>
+</div>
+</section><section id="load-r-packages" class="level3"><h3 class="anchored" data-anchor-id="load-r-packages">Load R Packages</h3>
+<div class="cell">
+<details open="" class="code-fold"><summary>Code</summary><div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co"># Load packages with suppressed messages</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/invisible.html">invisible</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/lapply.html">lapply</a></span><span class="op">(</span><span class="va">packages</span>, <span class="kw">function</span><span class="op">(</span><span class="va">pkg</span><span class="op">)</span> <span class="op">{</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/message.html">suppressPackageStartupMessages</a></span><span class="op">(</span><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va">pkg</span>, character.only <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="op">}</span><span class="op">)</span><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+</div>
+</section><section id="check-loaded-packages" class="level3"><h3 class="anchored" data-anchor-id="check-loaded-packages">Check Loaded Packages</h3>
+<div class="cell">
+<details open="" class="code-fold"><summary>Code</summary><div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8" data-lst-cap="Confirm which package environments are attached on the search path."><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co"># Check loaded packages</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html">cat</a></span><span class="op">(</span><span class="st">"Successfully loaded packages:\n"</span><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details><div class="cell-output cell-output-stdout">
+<pre><code>Successfully loaded packages:</code></pre>
+</div>
+<details open="" class="code-fold"><summary>Code</summary><div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10" data-lst-cap="Confirm which package environments are attached on the search path."><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/print.html">print</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/search.html">search</a></span><span class="op">(</span><span class="op">)</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/grep.html">grepl</a></span><span class="op">(</span><span class="st">"package:"</span>, <span class="fu"><a href="https://rdrr.io/r/base/search.html">search</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span><span class="op">]</span><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details><div class="cell-output cell-output-stdout">
+<pre><code> [1] "package:xgboost"    "package:mlbench"    "package:causaldata"
+ [4] "package:RCausalML"  "package:plyr"       "package:lubridate" 
+ [7] "package:forcats"    "package:stringr"    "package:dplyr"     
+[10] "package:purrr"      "package:readr"      "package:tidyr"     
+[13] "package:tibble"     "package:ggplot2"    "package:tidyverse" 
+[16] "package:stats"      "package:graphics"   "package:grDevices" 
+[19] "package:utils"      "package:datasets"   "package:methods"   
+[22] "package:base"      </code></pre>
+</div>
+</div>
+</section></section><section id="getting-started-with-causal-xgboost-in-r" class="level2"><h2 class="anchored" data-anchor-id="getting-started-with-causal-xgboost-in-r">Getting Started with Causal XGBoost in R</h2>
+<section id="data-generation-and-traintest-split" class="level3"><h3 class="anchored" data-anchor-id="data-generation-and-traintest-split">Data Generation and Train/Test Split</h3>
+<div class="cell">
+<details open="" class="code-fold"><summary>Code</summary><div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb12"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co"># Synthetic data: generate potential outcomes and observed (X, T, Y)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/Random.html">set.seed</a></span><span class="op">(</span><span class="fl">42</span><span class="op">)</span></span>
+<span><span class="va">n_syn</span> <span class="op">&lt;-</span> <span class="fl">500</span></span>
+<span><span class="va">p_syn</span> <span class="op">&lt;-</span> <span class="fl">5</span></span>
+<span><span class="va">X_syn</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html">matrix</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/Normal.html">rnorm</a></span><span class="op">(</span><span class="va">n_syn</span> <span class="op">*</span> <span class="va">p_syn</span><span class="op">)</span>, <span class="va">n_syn</span>, <span class="va">p_syn</span><span class="op">)</span></span>
+<span><span class="va">tau_syn</span> <span class="op">&lt;-</span> <span class="fl">0.5</span> <span class="op">*</span> <span class="va">X_syn</span><span class="op">[</span>, <span class="fl">1</span><span class="op">]</span> <span class="op">+</span> <span class="fl">0.3</span> <span class="op">*</span> <span class="va">X_syn</span><span class="op">[</span>, <span class="fl">2</span><span class="op">]</span>   <span class="co"># CATE</span></span>
+<span><span class="va">Y0_syn</span> <span class="op">&lt;-</span> <span class="fl">1</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/base/colSums.html">rowSums</a></span><span class="op">(</span><span class="va">X_syn</span><span class="op">[</span>, <span class="fl">1</span><span class="op">:</span><span class="fl">2</span><span class="op">]</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html">rnorm</a></span><span class="op">(</span><span class="va">n_syn</span>, <span class="fl">0</span>, <span class="fl">0.5</span><span class="op">)</span></span>
+<span><span class="va">Y1_syn</span> <span class="op">&lt;-</span> <span class="va">Y0_syn</span> <span class="op">+</span> <span class="va">tau_syn</span></span>
+<span><span class="va">e_syn</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/Logistic.html">plogis</a></span><span class="op">(</span><span class="fl">0.5</span> <span class="op">*</span> <span class="va">X_syn</span><span class="op">[</span>, <span class="fl">1</span><span class="op">]</span><span class="op">)</span></span>
+<span><span class="va">T_syn</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/integer.html">as.integer</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/Uniform.html">runif</a></span><span class="op">(</span><span class="va">n_syn</span><span class="op">)</span> <span class="op">&lt;</span> <span class="va">e_syn</span><span class="op">)</span></span>
+<span><span class="va">Y_syn</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/ifelse.html">ifelse</a></span><span class="op">(</span><span class="va">T_syn</span> <span class="op">==</span> <span class="fl">1</span>, <span class="va">Y1_syn</span>, <span class="va">Y0_syn</span><span class="op">)</span></span>
+<span><span class="va">potential_Y_syn</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/cbind.html">cbind</a></span><span class="op">(</span><span class="va">Y0_syn</span>, <span class="va">Y1_syn</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Train / test split</span></span>
+<span><span class="va">idx_train</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/sample.html">sample</a></span><span class="op">(</span><span class="fl">1</span><span class="op">:</span><span class="va">n_syn</span>, <span class="fl">0.8</span> <span class="op">*</span> <span class="va">n_syn</span><span class="op">)</span></span>
+<span><span class="va">trainX</span> <span class="op">&lt;-</span> <span class="va">X_syn</span><span class="op">[</span><span class="va">idx_train</span>, <span class="op">]</span>; <span class="va">trainT</span> <span class="op">&lt;-</span> <span class="va">T_syn</span><span class="op">[</span><span class="va">idx_train</span><span class="op">]</span>; <span class="va">trainY</span> <span class="op">&lt;-</span> <span class="va">Y_syn</span><span class="op">[</span><span class="va">idx_train</span><span class="op">]</span></span>
+<span><span class="va">testX</span> <span class="op">&lt;-</span> <span class="va">X_syn</span><span class="op">[</span><span class="op">-</span><span class="va">idx_train</span>, <span class="op">]</span>; <span class="va">test_potential_Y</span> <span class="op">&lt;-</span> <span class="va">potential_Y_syn</span><span class="op">[</span><span class="op">-</span><span class="va">idx_train</span>, <span class="op">]</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+</div>
+</section><section id="fit-causal-xgboost-on-synthetic-data" class="level3"><h3 class="anchored" data-anchor-id="fit-causal-xgboost-on-synthetic-data">Fit Causal XGBoost on Synthetic Data</h3>
+<p><code>CXGBoost()</code> fits a two-head XGBoost regressor with the masked loss. The <code>parameters</code> list can include any XGBoost hyperparameters (e.g.&nbsp;<code>eta</code>, <code>max_depth</code>, <code>lambda</code>, <code>alpha</code>, <code>tree_method</code>). The number of boosting rounds is passed separately to <code>fit()</code> via <code>nrounds</code>.</p>
+<p>Here below we show the constructor parameters and default XGBoost parameters used in <code>fit()</code> if not overridden. The defaults are designed for general tabular data but can be tuned for specific datasets.</p>
+<p><strong>Constructor parameters</strong> (for <code>CXGBoost$new(...)</code>)</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 25%">
+<col style="width: 22%">
+<col style="width: 22%">
+<col style="width: 30%">
+</colgroup>
+<thead><tr class="header">
+<th>Parameter</th>
+<th>Type</th>
+<th>Default</th>
+<th>Description</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td><strong><code>parameters</code></strong></td>
+<td><code>list</code></td>
+<td><code><a href="https://rdrr.io/r/base/list.html">list()</a></code></td>
+<td>XGBoost hyperparameters to override defaults. Can include: <code>eta</code>, <code>max_depth</code>, <code>subsample</code>, <code>colsample_bytree</code>, <code>min_child_weight</code>, <code>lambda</code>, <code>alpha</code>, <code>tree_method</code>, <code>num_target</code>, <code>multi_strategy</code>.</td>
+</tr>
+<tr class="even">
+<td><strong><code>propensity_model</code></strong></td>
+<td>
+<code>ranger</code> or <code>NULL</code>
+</td>
+<td><code>NULL</code></td>
+<td>Pre-fitted <code>ranger</code> model for propensity scores. If <code>NULL</code>, a ranger model (200 trees, max.depth 4) is fitted inside <code>fit()</code> from <code>X</code> and <code>t</code>; OOB error is stored in <code>$oob_error</code>.</td>
+</tr>
+<tr class="odd">
+<td><strong><code>scale_pos_weight</code></strong></td>
+<td>(optional)</td>
+<td><code>NULL</code></td>
+<td>Reserved for future use.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Default XGBoost parameters</strong> (used in <code>fit()</code> if not overridden)</p>
+<p>Defined in <code>fit()</code> and merged with <code>self$parameters</code>:</p>
+<ul>
+<li>
+<strong><code>eta</code></strong> = 0.05<br>
+</li>
+<li>
+<strong><code>max_depth</code></strong> = 6<br>
+</li>
+<li>
+<strong><code>subsample</code></strong> = 0.8<br>
+</li>
+<li>
+<strong><code>colsample_bytree</code></strong> = 0.8<br>
+</li>
+<li>
+<strong><code>min_child_weight</code></strong> = 1<br>
+</li>
+<li>
+<strong><code>lambda</code></strong> = 1<br>
+</li>
+<li>
+<strong><code>alpha</code></strong> = 0<br>
+</li>
+<li>
+<strong><code>tree_method</code></strong> = <code>"hist"</code><br>
+</li>
+<li>
+<strong><code>num_target</code></strong> = 2L<br>
+</li>
+<li>
+<strong><code>multi_strategy</code></strong> = <code>"multi_output_tree"</code><br>
+</li>
+<li>
+<strong><code>disable_default_eval_metric</code></strong> = TRUE</li>
+</ul>
+<p><strong><code>fit()</code> parameters</strong> (training)</p>
+<ul>
+<li>
+<strong><code>X</code></strong> – Covariate matrix (numeric). NAs are median-imputed before training.<br>
+</li>
+<li>
+<strong><code>t</code></strong> – Binary treatment (0/1), length = <code>nrow(X)</code>.<br>
+</li>
+<li>
+<strong><code>y</code></strong> – Observed outcome, same length as <code>t</code>.<br>
+</li>
+<li>
+<strong><code>nrounds</code></strong> – XGBoost boosting rounds (default <strong>100</strong>).<br>
+</li>
+<li>
+<strong><code>verbose</code></strong> – Integer verbosity: 0 = silent, 1 = progress (default <strong>0</strong>).<br>
+</li>
+<li>
+<strong><code>eval_data</code></strong> – Optional list <code>list(X=..., t=..., y=...)</code> for XGBoost watchlist; evaluation loss is printed when <code>verbose &gt;= 1</code> (no early stopping applied).</li>
+</ul>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb13"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">model</span> <span class="op">&lt;-</span> <span class="va">CXGBoost</span><span class="op">$</span><span class="fu">new</span><span class="op">(</span>parameters <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html">list</a></span><span class="op">(</span>eta <span class="op">=</span> <span class="fl">0.1</span>, max_depth <span class="op">=</span> <span class="fl">8</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">model</span><span class="op">$</span><span class="fu">fit</span><span class="op">(</span><span class="va">X</span>, <span class="va">t</span>, <span class="va">y</span>, nrounds <span class="op">=</span> <span class="fl">200</span>, verbose <span class="op">=</span> <span class="fl">0</span><span class="op">)</span></span>
+<span><span class="co"># Optional: eval_data = list(X = X_val, t = t_val, y = y_val) for watchlist</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Below we fit with a simple configuration; feel free to experiment with different hyperparameters and see how it affects the results.</p>
+<div class="cell">
+<details open="" class="code-fold"><summary>Code</summary><div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb14"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co"># Fit with same model configuration</span></span>
+<span><span class="va">model_syn</span> <span class="op">&lt;-</span> <span class="va">CXGBoost</span><span class="op">$</span><span class="fu">new</span><span class="op">(</span>parameters <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html">list</a></span><span class="op">(</span></span>
+<span>                  max_depth <span class="op">=</span> <span class="fl">5</span>, </span>
+<span>                  eta <span class="op">=</span> <span class="fl">1e-2</span>, </span>
+<span>                  lambda <span class="op">=</span> <span class="fl">5</span>, </span>
+<span>                  alpha <span class="op">=</span> <span class="fl">1.0</span>, </span>
+<span>                  tree_method <span class="op">=</span> <span class="st">"hist"</span>, </span>
+<span>                  nthread <span class="op">=</span> <span class="op">-</span><span class="fl">1</span></span>
+<span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">model_syn</span><span class="op">$</span><span class="fu">fit</span><span class="op">(</span><span class="va">trainX</span>, <span class="va">trainT</span>, <span class="va">trainY</span>, nrounds <span class="op">=</span> <span class="fl">100L</span>, verbose <span class="op">=</span> <span class="fl">0L</span><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+</div>
+</section><section id="predict-and-evaluate-synthetic-data" class="level3"><h3 class="anchored" data-anchor-id="predict-and-evaluate-synthetic-data">Predict and evaluate (synthetic data)</h3>
+<p><code><a href="https://rdrr.io/r/stats/predict.html">predict()</a></code> returns <code>y0_hat</code>, <code>y1_hat</code>, <code>tau_hat</code>, and <code>propensity_score</code>. For evaluation when ground truth is available, use <code>$evaluate(y_true, X)</code> or the exported <code>PEHE()</code> and <code>ATE()</code> (matrix or vector form).</p>
+<div class="cell">
+<details open="" class="code-fold"><summary>Code</summary><div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb15"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co"># Predict (includes tau_hat = y1_hat - y0_hat)</span></span>
+<span><span class="va">pred_syn</span> <span class="op">&lt;-</span> <span class="va">model_syn</span><span class="op">$</span><span class="fu">predict</span><span class="op">(</span><span class="va">testX</span><span class="op">)</span></span>
+<span><span class="va">predicted_potential_outcomes_syn</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/cbind.html">cbind</a></span><span class="op">(</span><span class="va">pred_syn</span><span class="op">$</span><span class="va">y0_hat</span>, <span class="va">pred_syn</span><span class="op">$</span><span class="va">y1_hat</span><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+</div>
+</section><section id="model-summary-and-evaluation" class="level3"><h3 class="anchored" data-anchor-id="model-summary-and-evaluation">Model summary and evaluation</h3>
+<div class="cell">
+<details open="" class="code-fold"><summary>Code</summary><div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb16"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co"># Print model summary (config, fit time, propensity OOB, top variables)</span></span>
+<span><span class="va">model_syn</span><span class="op">$</span><span class="fu">summary</span><span class="op">(</span><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details><div class="cell-output cell-output-stdout">
+<pre><code>
+  CXGBoost  Model Summary
+
+
+ Configuration 
+  eta (learning rate)  : 0.0100
+  max_depth            : 5
+  subsample            : 0.80
+  colsample_bytree     : 0.80
+  lambda (L2)          : 5.00
+  alpha  (L1)          : 1.00
+  Boosting rounds      : two_boosters
+
+  Fit time             : 4.19 sec
+
+ Propensity Model 
+  Ranger OOB error     : 0.2394
+  Ranger num.trees     : 200
+  Ranger max.depth     : 4
+
+ Top 10 Variables (XGBoost gain) 
+  f0           0.5268  
+  f1           0.4239  
+  f4           0.0176  
+  f3           0.0173  
+  f2           0.0144  </code></pre>
+</div>
+</div>
+<div class="cell">
+<details open="" class="code-fold"><summary>Code</summary><div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb18"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co"># Evaluate against ground truth: $evaluate() accepts matrix [Y(0), Y(1)] or ITE vector</span></span>
+<span><span class="va">eval_syn</span> <span class="op">&lt;-</span> <span class="va">model_syn</span><span class="op">$</span><span class="fu">evaluate</span><span class="op">(</span>y_true <span class="op">=</span> <span class="va">test_potential_Y</span>, X <span class="op">=</span> <span class="va">testX</span><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details><div class="cell-output cell-output-stdout">
+<pre><code>  PEHE      : 0.569580
+  ATE error : 0.547519</code></pre>
+</div>
+<details open="" class="code-fold"><summary>Code</summary><div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb20"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">true_ate</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html">mean</a></span><span class="op">(</span><span class="va">test_potential_Y</span><span class="op">[</span>, <span class="fl">2</span><span class="op">]</span> <span class="op">-</span> <span class="va">test_potential_Y</span><span class="op">[</span>, <span class="fl">1</span><span class="op">]</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html">cat</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/sprintf.html">sprintf</a></span><span class="op">(</span><span class="st">"True ATE     : %.3f\n"</span>, <span class="va">true_ate</span><span class="op">)</span><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details><div class="cell-output cell-output-stdout">
+<pre><code>True ATE     : -0.038</code></pre>
+</div>
+<details open="" class="code-fold"><summary>Code</summary><div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb22"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co"># Alternative: PEHE(y, y_hat) and ATE(y, y_hat), or vector form PEHE(tau_true=..., tau_hat=pred_syn$tau_hat)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+</div>
+</section></section><section id="use-case-causal-xgboost-on-the-abortion-dataset" class="level2"><h2 class="anchored" data-anchor-id="use-case-causal-xgboost-on-the-abortion-dataset">Use Case: Causal XGBoost on the Abortion Dataset</h2>
+<section id="data" class="level3"><h3 class="anchored" data-anchor-id="data">Data</h3>
+<p>R package <a href="https://github.com/NickCH-K/causaldata">causaldata</a> provides a collection of datasets for causal inference. We integrate {causaldata} with {RCausalML} to easily load datasets. In this tutorial, we use the <strong>abortion</strong> dataset, which contains state-year observations on gonorrhea rates among 15–19 year olds, with a binary indicator for early repeal of abortion prohibition. This dataset is commonly used to study the effects of abortion legalization on risky sexual behavior among teenagers, proxied by gonorrhea rates.</p>
+<p>This dataset is commonly used to study the <strong>causal effects of abortion legalization policies</strong> (specifically, early repeal of abortion prohibitions in certain U.S. states) on <strong>risky sexual behavior</strong> among teenagers. Risky behavior is proxied by the <strong>incidence of gonorrhea</strong> (a sexually transmitted infection) among 15–19 year olds. The idea is that access to abortion might influence sexual decision-making or risk-taking behavior in this age group.</p>
+<p>Here are the most important columns (based on the package documentation):</p>
+<ul>
+<li>
+<strong>fip</strong> — State FIPS code (numeric identifier for each U.S. state)</li>
+<li>
+<strong>age</strong> — Age in years (focused on 15–19 year olds)</li>
+<li>
+<strong>race</strong> — Race: 1 = white, 2 = black (or similar coding)</li>
+<li>
+<strong>year</strong> — Calendar year</li>
+<li>
+<strong>t</strong> — A rescaled time variable (often centered around policy change for DiD)</li>
+<li>
+<strong>sex</strong> — Sex: 1 = male, 2 = female</li>
+<li>
+<strong>totpop</strong> — Total population (state-level)</li>
+<li>
+<strong>ir</strong> — Incarcerated males per 100,000 (proxy for criminal justice environment)</li>
+<li>
+<strong>crack</strong> — Crack cocaine index (proxy for drug epidemic intensity)</li>
+<li>
+<strong>alcohol</strong> — Alcohol consumption per capita</li>
+<li>
+<strong>income</strong> — Real income per capita</li>
+<li>
+<strong>ur</strong> — State unemployment rate</li>
+<li>
+<strong>poverty</strong> — Poverty rate</li>
+<li>
+<strong>repeal</strong> — Treatment indicator: 1 = state had an <strong>early repeal</strong> of abortion prohibition (treatment group), 0 = otherwise (control group). This is the main policy/treatment variable.</li>
+<li>
+<strong>pi</strong> — Parental involvement law in effect (another policy control)</li>
+<li>
+<strong>bf15</strong> — Indicator: Is a black female in the 15–19 age group (useful for subgroup analysis)</li>
+</ul>
+<div class="cell">
+<details open="" class="code-fold"><summary>Code</summary><div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb23"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co"># causaldata integration</span></span>
+<span><span class="fu">list_causaldata_datasets</span><span class="op">(</span><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details><div class="cell-output-display">
+<div data-pagedtable="false">
+  <script data-pagedtable-source="" type="application/json">
+{"columns":[{"label":["name"],"name":[1],"type":["chr"],"align":["left"]},{"label":["description"],"name":[2],"type":["chr"],"align":["left"]},{"label":["type"],"name":[3],"type":["chr"],"align":["left"]},{"label":["treatment"],"name":[4],"type":["chr"],"align":["left"]},{"label":["outcome"],"name":[5],"type":["chr"],"align":["left"]},{"label":["covariates"],"name":[6],"type":["chr"],"align":["left"]},{"label":["textbook"],"name":[7],"type":["chr"],"align":["left"]}],"data":[{"1":"nsw_mixtape","2":"NSW job training experiment (Lalonde); experimental","3":"binary_treatment","4":"treat","5":"re78","6":"age, educ, black, hisp, marr, nodegree, re74, re75","7":"Mixtape"},{"1":"cps_mixtape","2":"CPS comparison to NSW; observational","3":"binary_treatment","4":"treat","5":"re78","6":"age, educ, black, hisp, marr, nodegree, re74, re75","7":"Mixtape"},{"1":"abortion","2":"Abortion repeal and gonorrhea (state-year); DiD","3":"binary_treatment","4":"repeal","5":"lnr","6":"age, race, year, income, ur, poverty, crack, alcohol, ...","7":"Mixtape"},{"1":"close_college","2":"College proximity and wages (Card); IV","3":"iv","4":"educ","5":"lwage","6":"exper, black, south, married, smsa","7":"Mixtape"},{"1":"social_insure","2":"Social networks and insurance take-up; experiment","3":"binary_treatment","4":"default","5":"takeup_survey","6":"age, agpop, ricearea_2010, disaster_prob, male, intensive, ...","7":"The Effect"},{"1":"black_politicians","2":"Black politicians and turnout; RDD","3":"binary_treatment","4":"treat_out","5":"responded","6":"totalpop, medianhhincom, blackpercent, leg_black, ...","7":"Mixtape"},{"1":"thornton_hiv","2":"HIV testing incentive experiment","3":"binary_treatment","4":"any","5":"got","6":"age, distvct, villnum, tinc","7":"The Effect"},{"1":"nhefs_complete","2":"NHEFS smoking and weight; observational","3":"binary_treatment","4":"qsmk","5":"wt82_71","6":"sex, age, race, school, smokeintensity, smokeyrs, ...","7":"What If"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
+  </script>
+</div>
+</div>
+</div>
+</section><section id="load-data" class="level3"><h3 class="anchored" data-anchor-id="load-data">Load Data</h3>
+<p>The <strong>outcome variable</strong> is typically <strong>lnr</strong> (logged gonorrhea rate per 100,000 population among 15–19 year olds), which measures the logged incidence of gonorrhea as a proxy for risky sexual behavior.</p>
+<div class="cell">
+<details open="" class="code-fold"><summary>Code</summary><div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb24"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co"># Load abortion dataset (use $data for the raw dataframe; load_causaldata returns list with X, w, y, data, citation)</span></span>
+<span><span class="va">abortion</span> <span class="op">&lt;-</span> <span class="fu">load_causaldata</span><span class="op">(</span><span class="st">"abortion"</span><span class="op">)</span><span class="op">$</span><span class="va">data</span></span>
+<span><span class="co"># Quick look</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/head.html">head</a></span><span class="op">(</span><span class="va">abortion</span><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details><div class="cell-output-display">
+<div data-pagedtable="false">
+  <script data-pagedtable-source="" type="application/json">
+{"columns":[{"label":["fip"],"name":[1],"type":["dbl"],"align":["right"]},{"label":["age"],"name":[2],"type":["dbl"],"align":["right"]},{"label":["race"],"name":[3],"type":["dbl"],"align":["right"]},{"label":["year"],"name":[4],"type":["dbl"],"align":["right"]},{"label":["sex"],"name":[5],"type":["dbl"],"align":["right"]},{"label":["totpop"],"name":[6],"type":["dbl"],"align":["right"]},{"label":["ir"],"name":[7],"type":["dbl"],"align":["right"]},{"label":["crack"],"name":[8],"type":["dbl"],"align":["right"]},{"label":["alcohol"],"name":[9],"type":["dbl"],"align":["right"]},{"label":["income"],"name":[10],"type":["dbl"],"align":["right"]},{"label":["ur"],"name":[11],"type":["dbl"],"align":["right"]},{"label":["poverty"],"name":[12],"type":["dbl"],"align":["right"]},{"label":["repeal"],"name":[13],"type":["dbl"],"align":["right"]},{"label":["acc"],"name":[14],"type":["dbl"],"align":["right"]},{"label":["wht"],"name":[15],"type":["dbl"],"align":["right"]},{"label":["male"],"name":[16],"type":["dbl"],"align":["right"]},{"label":["lnr"],"name":[17],"type":["dbl"],"align":["right"]},{"label":["t"],"name":[18],"type":["dbl"],"align":["right"]},{"label":["younger"],"name":[19],"type":["dbl"],"align":["right"]},{"label":["fa"],"name":[20],"type":["dbl"],"align":["right"]},{"label":["pi"],"name":[21],"type":["dbl"],"align":["right"]},{"label":["bf15"],"name":[22],"type":["dbl"],"align":["right"]}],"data":[{"1":"1","2":"15","3":"2","4":"1985","5":"2","6":"106187","7":"100.6280","8":"0.2174378","9":"1.90","10":"11566","11":"8.616667","12":"20.6","13":"0","14":"0.6795045","15":"0","16":"0","17":"8.783779","18":"1","19":"1","20":"1","21":"0","22":"1"},{"1":"1","2":"15","3":"2","4":"1986","5":"2","6":"106831","7":"111.8575","8":"0.2768753","9":"1.90","10":"12164","11":"9.083334","12":"23.8","13":"0","14":"1.5311961","15":"0","16":"0","17":"8.756399","18":"2","19":"1","20":"1","21":"0","22":"1"},{"1":"1","2":"15","3":"2","4":"1987","5":"2","6":"106496","7":"123.0869","8":"0.2113712","9":"1.89","10":"12826","11":"7.650000","12":"21.3","13":"0","14":"3.4984097","15":"0","16":"0","17":"8.658537","18":"3","19":"1","20":"1","21":"1","22":"1"},{"1":"1","2":"15","3":"2","4":"1988","5":"2","6":"105238","7":"134.3163","8":"0.5597811","9":"1.89","10":"13698","11":"6.916667","12":"19.3","13":"0","14":"6.2565465","15":"0","16":"0","17":"8.722515","18":"4","19":"1","20":"1","21":"1","22":"1"},{"1":"1","2":"15","3":"2","4":"1989","5":"2","6":"102956","7":"145.5457","8":"0.7218242","9":"1.87","10":"14865","11":"6.616667","12":"18.9","13":"0","14":"9.4229488","15":"0","16":"0","17":"8.691399","18":"5","19":"1","20":"1","21":"1","22":"1"},{"1":"1","2":"15","3":"2","4":"1990","5":"2","6":"100568","7":"156.7751","8":"0.5094361","9":"1.92","10":"15723","11":"6.333333","12":"19.2","13":"0","14":"12.9415684","15":"0","16":"0","17":"8.729364","18":"6","19":"1","20":"1","21":"1","22":"1"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
+  </script>
+</div>
+</div>
+<details open="" class="code-fold"><summary>Code</summary><div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb25"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/str.html">str</a></span><span class="op">(</span><span class="va">abortion</span><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details><div class="cell-output cell-output-stdout">
+<pre><code>tibble [737 × 22] (S3: tbl_df/tbl/data.frame)
+ $ fip    : num [1:737] 1 1 1 1 1 1 1 1 1 1 ...
+  ..- attr(*, "label")= chr "FIPSCODE"
+  ..- attr(*, "format.stata")= chr "%8.0g"
+ $ age    : num [1:737] 15 15 15 15 15 15 15 15 15 15 ...
+  ..- attr(*, "label")= chr "AGE"
+  ..- attr(*, "format.stata")= chr "%9.0g"
+ $ race   : num [1:737] 2 2 2 2 2 2 2 2 2 2 ...
+  ..- attr(*, "label")= chr "w-1, b-2"
+  ..- attr(*, "format.stata")= chr "%9.0g"
+ $ year   : num [1:737] 1985 1986 1987 1988 1989 ...
+  ..- attr(*, "label")= chr "YEAR"
+  ..- attr(*, "format.stata")= chr "%8.0g"
+ $ sex    : num [1:737] 2 2 2 2 2 2 2 2 2 2 ...
+  ..- attr(*, "label")= chr "m-1, f-2"
+  ..- attr(*, "format.stata")= chr "%9.0g"
+ $ totpop : num [1:737] 106187 106831 106496 105238 102956 ...
+  ..- attr(*, "label")= chr "TOTPOP"
+  ..- attr(*, "format.stata")= chr "%12.0g"
+ $ ir     : num [1:737] 101 112 123 134 146 ...
+  ..- attr(*, "label")= chr "Incarcerated Males per 100,000"
+  ..- attr(*, "format.stata")= chr "%9.0g"
+ $ crack  : num [1:737] 0.217 0.277 0.211 0.56 0.722 ...
+  ..- attr(*, "label")= chr "Crack index"
+  ..- attr(*, "format.stata")= chr "%9.0g"
+ $ alcohol: num [1:737] 1.9 1.9 1.89 1.89 1.87 ...
+  ..- attr(*, "label")= chr "Alcohol consumption per capita"
+  ..- attr(*, "format.stata")= chr "%9.0g"
+ $ income : num [1:737] 11566 12164 12826 13698 14865 ...
+  ..- attr(*, "label")= chr "Real income per capita"
+  ..- attr(*, "format.stata")= chr "%9.0g"
+ $ ur     : num [1:737] 8.62 9.08 7.65 6.92 6.62 ...
+  ..- attr(*, "label")= chr "State unemployment rate"
+  ..- attr(*, "format.stata")= chr "%9.0g"
+ $ poverty: num [1:737] 20.6 23.8 21.3 19.3 18.9 ...
+  ..- attr(*, "label")= chr "Poverty rate"
+  ..- attr(*, "format.stata")= chr "%9.0g"
+ $ repeal : num [1:737] 0 0 0 0 0 0 0 0 0 0 ...
+  ..- attr(*, "format.stata")= chr "%9.0g"
+ $ acc    : num [1:737] 0.68 1.53 3.5 6.26 9.42 ...
+  ..- attr(*, "label")= chr "AIDS mortality per 100,000 cumulative in t, t-1, t-2, t-3"
+  ..- attr(*, "format.stata")= chr "%9.0g"
+ $ wht    : num [1:737] 0 0 0 0 0 0 0 0 0 0 ...
+  ..- attr(*, "label")= chr "White Indicator"
+  ..- attr(*, "format.stata")= chr "%9.0g"
+ $ male   : num [1:737] 0 0 0 0 0 0 0 0 0 0 ...
+  ..- attr(*, "label")= chr "Male Indicator"
+  ..- attr(*, "format.stata")= chr "%9.0g"
+ $ lnr    : num [1:737] 8.78 8.76 8.66 8.72 8.69 ...
+  ..- attr(*, "format.stata")= chr "%9.0g"
+ $ t      : num [1:737] 1 2 3 4 5 6 7 8 9 10 ...
+  ..- attr(*, "format.stata")= chr "%9.0g"
+ $ younger: num [1:737] 1 1 1 1 1 1 1 1 1 1 ...
+  ..- attr(*, "format.stata")= chr "%9.0g"
+ $ fa     : num [1:737] 1 1 1 1 1 1 1 1 1 1 ...
+  ..- attr(*, "format.stata")= chr "%9.0g"
+ $ pi     : num [1:737] 0 0 1 1 1 1 1 1 1 1 ...
+  ..- attr(*, "format.stata")= chr "%9.0g"
+ $ bf15   : num [1:737] 1 1 1 1 1 1 1 1 1 1 ...
+  ..- attr(*, "format.stata")= chr "%9.0g"</code></pre>
+</div>
+<details open="" class="code-fold"><summary>Code</summary><div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb27"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html">summary</a></span><span class="op">(</span><span class="va">abortion</span><span class="op">$</span><span class="va">repeal</span><span class="op">)</span>      <span class="co"># Treatment balance</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details><div class="cell-output cell-output-stdout">
+<pre><code>   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+ 0.0000  0.0000  0.0000  0.1085  0.0000  1.0000 </code></pre>
+</div>
+<details open="" class="code-fold"><summary>Code</summary><div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb29"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/table.html">table</a></span><span class="op">(</span><span class="va">abortion</span><span class="op">$</span><span class="va">repeal</span>, <span class="va">abortion</span><span class="op">$</span><span class="va">race</span><span class="op">)</span>  <span class="co"># Example crosstab</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details><div class="cell-output cell-output-stdout">
+<pre><code>   
+      2
+  0 657
+  1  80</code></pre>
+</div>
+</div>
+</section><section id="data-processing" class="level3"><h3 class="anchored" data-anchor-id="data-processing">Data Processing</h3>
+<div class="cell">
+<details open="" class="code-fold"><summary>Code</summary><div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb31"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co"># Select relevant subset (focus on 15-19 year olds, complete cases)</span></span>
+<span><span class="va">abortion_clean</span> <span class="op">&lt;-</span> <span class="va">abortion</span> <span class="op">%&gt;%</span></span>
+<span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html">filter</a></span><span class="op">(</span><span class="va">age</span> <span class="op">&gt;=</span> <span class="fl">15</span> <span class="op">&amp;</span> <span class="va">age</span> <span class="op">&lt;=</span> <span class="fl">19</span><span class="op">)</span> <span class="op">%&gt;%</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/stats/na.fail.html">na.omit</a></span><span class="op">(</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Define covariates (X), outcome (Y), treatment (W)</span></span>
+<span><span class="va">X</span> <span class="op">&lt;-</span> <span class="va">abortion_clean</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">"age"</span>, <span class="st">"race"</span>, <span class="st">"sex"</span>, <span class="st">"totpop"</span>, <span class="st">"ir"</span>, <span class="st">"crack"</span>, </span>
+<span>                        <span class="st">"alcohol"</span>, <span class="st">"income"</span>, <span class="st">"ur"</span>, <span class="st">"poverty"</span><span class="op">)</span><span class="op">]</span></span>
+<span></span>
+<span><span class="va">Y</span> <span class="op">&lt;-</span> <span class="va">abortion_clean</span><span class="op">$</span><span class="va">lnr</span>          <span class="co"># Logged gonorrhea rate per 100,000 (continuous)</span></span>
+<span><span class="va">W</span> <span class="op">&lt;-</span> <span class="va">abortion_clean</span><span class="op">$</span><span class="va">repeal</span>       <span class="co"># 1 = early repeal (treatment), 0 = otherwise</span></span>
+<span></span>
+<span><span class="co"># Convert X to numeric matrix</span></span>
+<span><span class="va">X</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html">as.matrix</a></span><span class="op">(</span><span class="va">X</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/colnames.html">colnames</a></span><span class="op">(</span><span class="va">X</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">"age"</span>, <span class="st">"race"</span>, <span class="st">"sex"</span>, <span class="st">"totpop"</span>, <span class="st">"ir"</span>, <span class="st">"crack"</span>, </span>
+<span>                 <span class="st">"alcohol"</span>, <span class="st">"income"</span>, <span class="st">"ur"</span>, <span class="st">"poverty"</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Remove near-zero variance columns (if any)</span></span>
+<span><span class="va">X</span> <span class="op">&lt;-</span> <span class="va">X</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/apply.html">apply</a></span><span class="op">(</span><span class="va">X</span>, <span class="fl">2</span>, <span class="fu">stats</span><span class="fu">::</span><span class="va"><a href="https://rdrr.io/r/stats/cor.html">var</a></span><span class="op">)</span> <span class="op">&gt;</span> <span class="fl">1e-10</span>, drop <span class="op">=</span> <span class="cn">FALSE</span><span class="op">]</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html">cat</a></span><span class="op">(</span><span class="st">"Covariates used:"</span>, <span class="fu"><a href="https://rdrr.io/r/base/colnames.html">colnames</a></span><span class="op">(</span><span class="va">X</span><span class="op">)</span>, <span class="st">"\n"</span><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details><div class="cell-output cell-output-stdout">
+<pre><code>Covariates used: totpop ir crack alcohol income ur poverty </code></pre>
+</div>
+</div>
+</section><section id="split-data-into-training-and-test-sets" class="level3"><h3 class="anchored" data-anchor-id="split-data-into-training-and-test-sets">Split Data into Training and Test Sets</h3>
+<p>We’ll split the data into 80% training and 20% test sets using random sampling.</p>
+<div class="cell">
+<details open="" class="code-fold"><summary>Code</summary><div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb33"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co"># Split data into training (80%) and test (20%) sets</span></span>
+<span><span class="va">train_prop</span> <span class="op">&lt;-</span> <span class="fl">0.8</span></span>
+<span><span class="va">n</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/nrow.html">nrow</a></span><span class="op">(</span><span class="va">abortion_clean</span><span class="op">)</span></span>
+<span><span class="va">train_idx</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/sample.html">sample</a></span><span class="op">(</span><span class="fl">1</span><span class="op">:</span><span class="va">n</span>, size <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Round.html">round</a></span><span class="op">(</span><span class="va">train_prop</span> <span class="op">*</span> <span class="va">n</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">X_train</span> <span class="op">&lt;-</span> <span class="va">X</span><span class="op">[</span><span class="va">train_idx</span>, , drop <span class="op">=</span> <span class="cn">FALSE</span><span class="op">]</span></span>
+<span><span class="va">Y_train</span> <span class="op">&lt;-</span> <span class="va">Y</span><span class="op">[</span><span class="va">train_idx</span><span class="op">]</span></span>
+<span><span class="va">W_train</span> <span class="op">&lt;-</span> <span class="va">W</span><span class="op">[</span><span class="va">train_idx</span><span class="op">]</span></span>
+<span><span class="va">X_test</span> <span class="op">&lt;-</span> <span class="va">X</span><span class="op">[</span><span class="op">-</span><span class="va">train_idx</span>, , drop <span class="op">=</span> <span class="cn">FALSE</span><span class="op">]</span></span>
+<span><span class="va">Y_test</span> <span class="op">&lt;-</span> <span class="va">Y</span><span class="op">[</span><span class="op">-</span><span class="va">train_idx</span><span class="op">]</span></span>
+<span><span class="va">W_test</span> <span class="op">&lt;-</span> <span class="va">W</span><span class="op">[</span><span class="op">-</span><span class="va">train_idx</span><span class="op">]</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html">cat</a></span><span class="op">(</span><span class="st">"Training set size:"</span>, <span class="fu"><a href="https://rdrr.io/r/base/nrow.html">nrow</a></span><span class="op">(</span><span class="va">X_train</span><span class="op">)</span>, <span class="st">"\n"</span><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details><div class="cell-output cell-output-stdout">
+<pre><code>Training set size: 590 </code></pre>
+</div>
+<details open="" class="code-fold"><summary>Code</summary><div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb35"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/cat.html">cat</a></span><span class="op">(</span><span class="st">"Test set size:"</span>, <span class="fu"><a href="https://rdrr.io/r/base/nrow.html">nrow</a></span><span class="op">(</span><span class="va">X_test</span><span class="op">)</span>, <span class="st">"\n"</span><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details><div class="cell-output cell-output-stdout">
+<pre><code>Test set size: 147 </code></pre>
+</div>
+<details open="" class="code-fold"><summary>Code</summary><div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb37"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/cat.html">cat</a></span><span class="op">(</span><span class="st">"Column names of X_train:"</span>, <span class="fu"><a href="https://rdrr.io/r/base/colnames.html">colnames</a></span><span class="op">(</span><span class="va">X_train</span><span class="op">)</span>, <span class="st">"\n"</span><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details><div class="cell-output cell-output-stdout">
+<pre><code>Column names of X_train: totpop ir crack alcohol income ur poverty </code></pre>
+</div>
+</div>
+</section><section id="train-causal-xgboost-on-training-data" class="level3"><h3 class="anchored" data-anchor-id="train-causal-xgboost-on-training-data">Train Causal XGBoost on Training Data</h3>
+<p>The <code>CXGBoost</code> R6 class fits a two-head XGBoost outcome model (and an optional propensity model via ranger).</p>
+<p>Key arguments for <code>CXGBoost</code>:</p>
+<ul>
+<li>
+<strong><code>parameters</code></strong>: List of XGBoost hyperparameters (e.g.&nbsp;<code>eta</code>, <code>max_depth</code>, <code>lambda</code>, <code>alpha</code>, <code>tree_method</code>). Defaults include <code>num_target = 2</code>, <code>multi_strategy = "multi_output_tree"</code>.</li>
+<li>
+<strong><code>$fit(X, t, y, nrounds, verbose, eval_data)</code></strong>: <code>X</code> = covariate matrix (NAs median-imputed), <code>t</code> = binary treatment (0/1), <code>y</code> = observed outcome; <code>nrounds</code> = boosting rounds (default 100); optional <code>eval_data</code> for watchlist when <code>verbose &gt;= 1</code>.</li>
+<li>
+<strong><code>$predict(X)</code></strong>: Returns a list with <code>y0_hat</code>, <code>y1_hat</code>, <code>tau_hat</code>, and <code>propensity_score</code>.</li>
+<li>
+<strong><code>$summary()</code></strong>, <strong><code>$evaluate(y_true, X)</code></strong>, <strong><code>$plot_importance()</code></strong>, <strong><code>$save_model(path)</code></strong>, <strong><code>load_cxgboost(path)</code></strong>, <strong><code>$clone_reset()</code></strong>: see the Implementation in R section above.</li>
+</ul>
+<div class="cell">
+<details open="" class="code-fold"><summary>Code</summary><div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb39"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co"># -----------------------------------------------------------------------------</span></span>
+<span><span class="co"># Model Configuration and Training</span></span>
+<span><span class="co"># -----------------------------------------------------------------------------</span></span>
+<span><span class="va">model_params</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html">list</a></span><span class="op">(</span></span>
+<span>  max_depth <span class="op">=</span> <span class="fl">5</span>,</span>
+<span>  eta <span class="op">=</span> <span class="fl">1e-2</span>,           <span class="co"># learning_rate</span></span>
+<span>  nrounds <span class="op">=</span> <span class="fl">100</span>,         <span class="co"># n_estimators (passed to fit())</span></span>
+<span>  nthread <span class="op">=</span> <span class="op">-</span><span class="fl">1</span>,          <span class="co"># n_jobs = -1 (use all cores)</span></span>
+<span>  lambda <span class="op">=</span> <span class="fl">5</span>,</span>
+<span>  alpha <span class="op">=</span> <span class="fl">1.0</span>,           <span class="co"># reg_alpha</span></span>
+<span>  <span class="co"># reg_lambda in Python is lambda above</span></span>
+<span>  tree_method <span class="op">=</span> <span class="st">"hist"</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">nrounds</span> <span class="op">&lt;-</span> <span class="va">model_params</span><span class="op">$</span><span class="va">nrounds</span></span>
+<span><span class="va">model_params</span><span class="op">$</span><span class="va">nrounds</span> <span class="op">&lt;-</span> <span class="cn">NULL</span>  <span class="co"># fit() takes nrounds separately</span></span>
+<span></span>
+<span><span class="va">cx_model</span> <span class="op">&lt;-</span> <span class="va">CXGBoost</span><span class="op">$</span><span class="fu">new</span><span class="op">(</span>parameters <span class="op">=</span> <span class="va">model_params</span><span class="op">)</span></span>
+<span><span class="va">cx_model</span><span class="op">$</span><span class="fu">fit</span><span class="op">(</span><span class="va">X_train</span>, <span class="va">W_train</span>, <span class="va">Y_train</span>, nrounds <span class="op">=</span> <span class="va">nrounds</span>, verbose <span class="op">=</span> <span class="fl">0L</span><span class="op">)</span></span>
+<span><span class="va">cx_model</span><span class="op">$</span><span class="fu">summary</span><span class="op">(</span><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details><div class="cell-output cell-output-stdout">
+<pre><code>
+  CXGBoost  Model Summary
+
+
+ Configuration 
+  eta (learning rate)  : 0.0100
+  max_depth            : 5
+  subsample            : 0.80
+  colsample_bytree     : 0.80
+  lambda (L2)          : 5.00
+  alpha  (L1)          : 1.00
+  Boosting rounds      : two_boosters
+
+  Fit time             : 1.08 sec
+
+ Propensity Model 
+  Ranger OOB error     : 0.0575
+  Ranger num.trees     : 200
+  Ranger max.depth     : 4
+
+ Top 10 Variables (XGBoost gain) 
+  income       0.3360  
+  totpop       0.2834  
+  ur           0.1846  
+  alcohol      0.0747  
+  ir           0.0648  
+  crack        0.0306  
+  poverty      0.0259  </code></pre>
+</div>
+</div>
+<p>Sample <strong>ATE</strong> on the training set (mean of predicted CATE). The <code><a href="https://rdrr.io/r/stats/predict.html">predict()</a></code> output includes <code>tau_hat</code> for convenience.</p>
+<div class="cell">
+<details open="" class="code-fold"><summary>Code</summary><div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb41"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">pred_train</span> <span class="op">&lt;-</span> <span class="va">cx_model</span><span class="op">$</span><span class="fu">predict</span><span class="op">(</span><span class="va">X_train</span><span class="op">)</span></span>
+<span><span class="va">ate_train_est</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html">mean</a></span><span class="op">(</span><span class="va">pred_train</span><span class="op">$</span><span class="va">tau_hat</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html">cat</a></span><span class="op">(</span><span class="st">"Training sample ATE (mean CATE):"</span>, <span class="fu"><a href="https://rdrr.io/r/base/Round.html">round</a></span><span class="op">(</span><span class="va">ate_train_est</span>, <span class="fl">4</span><span class="op">)</span>, <span class="st">"\n"</span><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details><div class="cell-output cell-output-stdout">
+<pre><code>Training sample ATE (mean CATE): -0.6037 </code></pre>
+</div>
+</div>
+<p>The <strong>ATE</strong> is the average treatment effect on the logged gonorrhea rate (lnr) across the training population—i.e., how much early repeal of abortion prohibition is associated with a change in lnr.</p>
+</section><section id="prediction" class="level3"><h3 class="anchored" data-anchor-id="prediction">Prediction</h3>
+<div class="cell">
+<details open="" class="code-fold"><summary>Code</summary><div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb43"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co"># -----------------------------------------------------------------------------</span></span>
+<span><span class="co"># Prediction (returns y0_hat, y1_hat, tau_hat, propensity_score)</span></span>
+<span><span class="co"># -----------------------------------------------------------------------------</span></span>
+<span><span class="va">pred_test</span> <span class="op">&lt;-</span> <span class="va">cx_model</span><span class="op">$</span><span class="fu">predict</span><span class="op">(</span><span class="va">X_test</span><span class="op">)</span></span>
+<span><span class="va">predicted_potential_outcomes</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/cbind.html">cbind</a></span><span class="op">(</span><span class="va">pred_test</span><span class="op">$</span><span class="va">y0_hat</span>, <span class="va">pred_test</span><span class="op">$</span><span class="va">y1_hat</span><span class="op">)</span></span>
+<span><span class="va">cate_test_pred</span> <span class="op">&lt;-</span> <span class="va">pred_test</span><span class="op">$</span><span class="va">tau_hat</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/hist.html">hist</a></span><span class="op">(</span><span class="va">cate_test_pred</span>, main <span class="op">=</span> <span class="st">"CATE Distribution (Test Set)"</span>, xlab <span class="op">=</span> <span class="st">"Estimated Treatment Effect (lnr)"</span>, col <span class="op">=</span> <span class="st">"lightblue"</span><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details><div class="cell-output-display">
+<div>
+<figure class="figure"><p><img src="02-08-05-01-06-causal-xgboost-r_files/figure-html/abortion-predict-test-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+</section><section id="cate-summary-and-sample-ate" class="level3"><h3 class="anchored" data-anchor-id="cate-summary-and-sample-ate">CATE summary and sample ATE</h3>
+<p>C-XGBoost does not implement RATE/AUTOC; for prioritization metrics use <strong>{grf}</strong> with a causal forest. Below we summarize CATE heterogeneity on the test set and the sample ATE.</p>
+<div class="cell">
+<details open="" class="code-fold"><summary>Code</summary><div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb44"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/cat.html">cat</a></span><span class="op">(</span><span class="st">"CATE on test set: mean ="</span>, <span class="fu"><a href="https://rdrr.io/r/base/Round.html">round</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/mean.html">mean</a></span><span class="op">(</span><span class="va">cate_test_pred</span><span class="op">)</span>, <span class="fl">3</span><span class="op">)</span>,</span>
+<span>    <span class="st">", sd ="</span>, <span class="fu"><a href="https://rdrr.io/r/base/Round.html">round</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/sd.html">sd</a></span><span class="op">(</span><span class="va">cate_test_pred</span><span class="op">)</span>, <span class="fl">3</span><span class="op">)</span>, <span class="st">"\n"</span><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details><div class="cell-output cell-output-stdout">
+<pre><code>CATE on test set: mean = -0.643 , sd = 0.27 </code></pre>
+</div>
+<details open="" class="code-fold"><summary>Code</summary><div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb46"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/cat.html">cat</a></span><span class="op">(</span><span class="st">"Sample ATE (test):"</span>, <span class="fu"><a href="https://rdrr.io/r/base/Round.html">round</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/mean.html">mean</a></span><span class="op">(</span><span class="va">cate_test_pred</span><span class="op">)</span>, <span class="fl">4</span><span class="op">)</span>, <span class="st">"\n"</span><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details><div class="cell-output cell-output-stdout">
+<pre><code>Sample ATE (test): -0.6428 </code></pre>
+</div>
+<details open="" class="code-fold"><summary>Code</summary><div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb48"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/cat.html">cat</a></span><span class="op">(</span><span class="st">"Range:"</span>, <span class="fu"><a href="https://rdrr.io/r/base/Round.html">round</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/Extremes.html">min</a></span><span class="op">(</span><span class="va">cate_test_pred</span><span class="op">)</span>, <span class="fl">3</span><span class="op">)</span>, <span class="st">"to"</span>, <span class="fu"><a href="https://rdrr.io/r/base/Round.html">round</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/Extremes.html">max</a></span><span class="op">(</span><span class="va">cate_test_pred</span><span class="op">)</span>, <span class="fl">3</span><span class="op">)</span>, <span class="st">"\n"</span><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details><div class="cell-output cell-output-stdout">
+<pre><code>Range: -1.146 to 0.206 </code></pre>
+</div>
+</div>
+</section><section id="evaluation" class="level3"><h3 class="anchored" data-anchor-id="evaluation">Evaluation</h3>
+<p>When ground-truth potential outcomes are available (e.g.&nbsp;synthetic data), use <strong><code>$evaluate(y_true, X)</code></strong> (which accepts a matrix <code>[Y(0), Y(1)]</code> or a vector of true ITEs) or the exported <strong><code>PEHE()</code></strong> and <strong><code>ATE()</code></strong> (matrix form <code>(y, y_hat)</code> or vector form <code>(tau_true, tau_hat)</code>). The abortion dataset is observational, so we do not observe both potential outcomes [Y(0), Y(1)] for each unit; true PEHE and ATE error cannot be computed. The code below illustrates the placeholder case (all NA) for completeness.</p>
+<div class="cell">
+<details open="" class="code-fold"><summary>Code</summary><div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb50"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co"># Observational data: no ground-truth potential outcomes</span></span>
+<span><span class="va">test_potential_Y</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html">matrix</a></span><span class="op">(</span><span class="cn">NA_real_</span>, nrow <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/nrow.html">nrow</a></span><span class="op">(</span><span class="va">predicted_potential_outcomes</span><span class="op">)</span>, ncol <span class="op">=</span> <span class="fl">2</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/colnames.html">colnames</a></span><span class="op">(</span><span class="va">test_potential_Y</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">"Y0"</span>, <span class="st">"Y1"</span><span class="op">)</span></span>
+<span><span class="co"># With synthetic data you would use: model$evaluate(y_true = test_potential_Y, X = testX)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html">cat</a></span><span class="op">(</span><span class="st">"For observational data, PEHE/ATE evaluation is not available (no ground-truth ITEs).\n"</span><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details><div class="cell-output cell-output-stdout">
+<pre><code>For observational data, PEHE/ATE evaluation is not available (no ground-truth ITEs).</code></pre>
+</div>
+<details open="" class="code-fold"><summary>Code</summary><div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb52"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/cat.html">cat</a></span><span class="op">(</span><span class="st">"Sample ATE (mean predicted CATE):"</span>, <span class="fu"><a href="https://rdrr.io/r/base/Round.html">round</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/mean.html">mean</a></span><span class="op">(</span><span class="va">cate_test_pred</span><span class="op">)</span>, <span class="fl">4</span><span class="op">)</span>, <span class="st">"\n"</span><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details><div class="cell-output cell-output-stdout">
+<pre><code>Sample ATE (mean predicted CATE): -0.6428 </code></pre>
+</div>
+</div>
+</section><section id="variable-importance-xgboost" class="level3"><h3 class="anchored" data-anchor-id="variable-importance-xgboost">Variable importance (XGBoost)</h3>
+<p>Use the built-in <strong><code>$plot_importance()</code></strong> method for a ggplot2 chart. You can pass <code>top_n</code> and <code>metric</code> (<code>"Gain"</code>, <code>"Cover"</code>, or <code>"Frequency"</code>). The model uses a multi-output tree (<code>num_target = 2</code>); importance is over the shared tree structure (or the Y(1) booster in two-booster fallback mode).</p>
+<div class="cell">
+<details open="" class="code-fold"><summary>Code</summary><div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb54"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">cx_model</span><span class="op">$</span><span class="fu">plot_importance</span><span class="op">(</span>top_n <span class="op">=</span> <span class="fl">15L</span>, metric <span class="op">=</span> <span class="st">"Gain"</span><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details><div class="cell-output-display">
+<div>
+<figure class="figure"><p><img src="02-08-05-01-06-causal-xgboost-r_files/figure-html/abortion-plot-importance-1.png" class="img-fluid figure-img" width="576"></p>
+</figure>
+</div>
+</div>
+</div>
+</section><section id="shap-analysis" class="level3"><h3 class="anchored" data-anchor-id="shap-analysis">SHAP analysis</h3>
+<p>We use the {shapviz} package for SHAP analysis. This package is integrated with {RCausalML} via <code>explain_cate()</code>: you compute SHAP values with {kernelshap} (or {permshap}), then pass the result to <code>shapviz()</code> for importance, dependence, waterfall, and force plots.</p>
+<section id="shap-estimation" class="level4"><h4 class="anchored" data-anchor-id="shap-estimation">SHAP estimation</h4>
+<p>SHAP values are computed for the causal forest’s CATE predictions using <code>explain_cate()</code>, then visualized with {shapviz}. A subsample of the training data is used for speed.</p>
+<div class="cell">
+<details open="" class="code-fold"><summary>Code</summary><div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb55"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">explain_cate</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">object</span>,</span>
+<span>                        <span class="va">X</span>,</span>
+<span>                        <span class="va">bg_X</span> <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>                        <span class="va">n_samples</span> <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>                        <span class="va">use_permshap</span> <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>                        <span class="va">pred_fun</span> <span class="op">=</span> <span class="cn">NULL</span>,          <span class="co"># keep this</span></span>
+<span>                        <span class="va">...</span><span class="op">)</span> <span class="op">{</span>                    <span class="co"># ... for bg_n, verbose, etc.</span></span>
+<span></span>
+<span>  <span class="kw">if</span> <span class="op">(</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/ns-load.html">requireNamespace</a></span><span class="op">(</span><span class="st">"kernelshap"</span>, quietly <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span>
+<span>    <span class="kw"><a href="https://rdrr.io/r/base/stop.html">stop</a></span><span class="op">(</span><span class="st">"..."</span><span class="op">)</span></span>
+<span>  <span class="op">}</span></span>
+<span></span>
+<span>  <span class="va">X</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/as.data.frame.html">as.data.frame</a></span><span class="op">(</span><span class="va">X</span><span class="op">)</span></span>
+<span>  <span class="kw">if</span> <span class="op">(</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/NULL.html">is.null</a></span><span class="op">(</span><span class="va">n_samples</span><span class="op">)</span> <span class="op">&amp;&amp;</span> <span class="fu"><a href="https://rdrr.io/r/base/nrow.html">nrow</a></span><span class="op">(</span><span class="va">X</span><span class="op">)</span> <span class="op">&gt;</span> <span class="va">n_samples</span><span class="op">)</span> <span class="op">{</span></span>
+<span>    <span class="va">X</span> <span class="op">&lt;-</span> <span class="va">X</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/seq.html">seq_len</a></span><span class="op">(</span><span class="va">n_samples</span><span class="op">)</span>, , drop <span class="op">=</span> <span class="cn">FALSE</span><span class="op">]</span></span>
+<span>  <span class="op">}</span></span>
+<span>  <span class="kw">if</span> <span class="op">(</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/NULL.html">is.null</a></span><span class="op">(</span><span class="va">bg_X</span><span class="op">)</span><span class="op">)</span> <span class="va">bg_X</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/as.data.frame.html">as.data.frame</a></span><span class="op">(</span><span class="va">bg_X</span><span class="op">)</span></span>
+<span></span>
+<span>  <span class="co"># Define default only if not provided</span></span>
+<span>  <span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/NULL.html">is.null</a></span><span class="op">(</span><span class="va">pred_fun</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span>
+<span>    <span class="va">pred_fun</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">m</span>, <span class="va">x</span><span class="op">)</span> <span class="fu">rcausalml_predict_numeric</span><span class="op">(</span><span class="va">m</span>, <span class="fu"><a href="https://rdrr.io/r/base/as.data.frame.html">as.data.frame</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span><span class="op">)</span></span>
+<span>  <span class="op">}</span></span>
+<span></span>
+<span>  <span class="kw">if</span> <span class="op">(</span><span class="va">use_permshap</span><span class="op">)</span> <span class="op">{</span></span>
+<span>    <span class="va">ks</span> <span class="op">&lt;-</span> <span class="fu">kernelshap</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/kernelshap/man/permshap.html">permshap</a></span><span class="op">(</span><span class="va">object</span>, X <span class="op">=</span> <span class="va">X</span>, pred_fun <span class="op">=</span> <span class="va">pred_fun</span>, bg_X <span class="op">=</span> <span class="va">bg_X</span>, <span class="va">...</span><span class="op">)</span></span>
+<span>  <span class="op">}</span> <span class="kw">else</span> <span class="op">{</span></span>
+<span>    <span class="va">ks</span> <span class="op">&lt;-</span> <span class="fu">kernelshap</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/kernelshap/man/kernelshap.html">kernelshap</a></span><span class="op">(</span><span class="va">object</span>, X <span class="op">=</span> <span class="va">X</span>, pred_fun <span class="op">=</span> <span class="va">pred_fun</span>, bg_X <span class="op">=</span> <span class="va">bg_X</span>, <span class="va">...</span><span class="op">)</span></span>
+<span>  <span class="op">}</span></span>
+<span>  <span class="va">ks</span></span>
+<span><span class="op">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+</div>
+<div class="cell">
+<details open="" class="code-fold"><summary>Code</summary><div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb56"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span>  <span class="co"># Subsample for speed (kernelshap can be slow on large data)</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/Random.html">set.seed</a></span><span class="op">(</span><span class="fl">42</span><span class="op">)</span></span>
+<span>  <span class="va">n_explain</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html">min</a></span><span class="op">(</span><span class="fl">80</span>, <span class="fu"><a href="https://rdrr.io/r/base/nrow.html">nrow</a></span><span class="op">(</span><span class="va">X_train</span><span class="op">)</span><span class="op">)</span></span>
+<span>  <span class="va">X_explain</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/as.data.frame.html">as.data.frame</a></span><span class="op">(</span><span class="va">X_train</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/sample.html">sample</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html">nrow</a></span><span class="op">(</span><span class="va">X_train</span><span class="op">)</span>, <span class="va">n_explain</span><span class="op">)</span>, <span class="op">]</span><span class="op">)</span></span>
+<span>  <span class="va">xvars</span>     <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/colnames.html">colnames</a></span><span class="op">(</span><span class="va">X_explain</span><span class="op">)</span></span>
+<span></span>
+<span>  <span class="co"># To avoid the "pred_fun matched by multiple actual arguments" error,</span></span>
+<span>  <span class="co"># do NOT set 'pred_fun' directly in explain_cate() when use_permshap = TRUE. </span></span>
+<span>  <span class="co"># For kernelshap (the default), passing pred_fun is acceptable:</span></span>
+<span><span class="va">ks</span> <span class="op">&lt;-</span> <span class="fu">explain_cate</span><span class="op">(</span></span>
+<span>  <span class="va">cx_model</span>,</span>
+<span>  <span class="va">X_explain</span>,</span>
+<span>  bg_X <span class="op">=</span> <span class="va">X_explain</span>,</span>
+<span>  use_permshap <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  verbose <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  <span class="co"># Pass custom pred_fun without naming it "pred_fun" again if you want,</span></span>
+<span>  <span class="co"># but since the argument exists in the wrapper, this is fine and clear:</span></span>
+<span>  pred_fun <span class="op">=</span> <span class="kw">function</span><span class="op">(</span><span class="va">object</span>, <span class="va">newdata</span><span class="op">)</span> <span class="op">{</span></span>
+<span>    <span class="va">object</span><span class="op">$</span><span class="fu">predict</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/matrix.html">as.matrix</a></span><span class="op">(</span><span class="va">newdata</span><span class="op">)</span><span class="op">)</span><span class="op">$</span><span class="va">tau_hat</span></span>
+<span>  <span class="op">}</span></span>
+<span><span class="op">)</span></span>
+<span><span class="va">shp</span> <span class="op">&lt;-</span> <span class="fu">shapviz</span><span class="fu">::</span><span class="fu"><a href="https://modeloriented.github.io/shapviz/reference/shapviz.html">shapviz</a></span><span class="op">(</span><span class="va">ks</span><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+</div>
+</section><section id="importance-plot-bar-beeswarm" class="level4"><h4 class="anchored" data-anchor-id="importance-plot-bar-beeswarm">Importance plot (bar / beeswarm)</h4>
+<div class="cell">
+<details open="" class="code-fold"><summary>Code</summary><div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb57"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu">shapviz</span><span class="fu">::</span><span class="fu"><a href="https://modeloriented.github.io/shapviz/reference/sv_importance.html">sv_importance</a></span><span class="op">(</span><span class="va">shp</span>, kind <span class="op">=</span> <span class="st">"beeswarm"</span><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details><div class="cell-output-display">
+<div>
+<figure class="figure"><p><img src="02-08-05-01-06-causal-xgboost-r_files/figure-html/shap-importance-plot-1.png" class="img-fluid figure-img" width="576"></p>
+</figure>
+</div>
+</div>
+</div>
+<div class="cell">
+<details open="" class="code-fold"><summary>Code</summary><div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb58"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span>  <span class="fu">shapviz</span><span class="fu">::</span><span class="fu"><a href="https://modeloriented.github.io/shapviz/reference/sv_importance.html">sv_importance</a></span><span class="op">(</span><span class="va">shp</span>, show_numbers <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details><div class="cell-output-display">
+<div>
+<figure class="figure"><p><img src="02-08-05-01-06-causal-xgboost-r_files/figure-html/shap-importance-plot-number-1.png" class="img-fluid figure-img" width="576"></p>
+</figure>
+</div>
+</div>
+</div>
+</section><section id="shap-dependence" class="level4"><h4 class="anchored" data-anchor-id="shap-dependence">SHAP dependence</h4>
+<p>Dependence of SHAP values on each covariate (patchwork object).</p>
+<div class="cell">
+<details open="" class="code-fold"><summary>Code</summary><div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb59"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu">shapviz</span><span class="fu">::</span><span class="fu"><a href="https://modeloriented.github.io/shapviz/reference/sv_dependence.html">sv_dependence</a></span><span class="op">(</span><span class="va">shp</span>, v <span class="op">=</span> <span class="va">xvars</span>, share_y <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details><div class="cell-output-display">
+<div>
+<figure class="figure"><p><img src="02-08-05-01-06-causal-xgboost-r_files/figure-html/shap-dependence-plots-1.png" class="img-fluid figure-img" width="768"></p>
+</figure>
+</div>
+</div>
+</div>
+</section><section id="decompose-single-predictions" class="level4"><h4 class="anchored" data-anchor-id="decompose-single-predictions">Decompose single predictions</h4>
+<p>Waterfall and force plots show how each feature contributes to the predicted CATE for one observation.</p>
+<div class="cell">
+<details open="" class="code-fold"><summary>Code</summary><div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb60"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu">shapviz</span><span class="fu">::</span><span class="fu"><a href="https://modeloriented.github.io/shapviz/reference/sv_waterfall.html">sv_waterfall</a></span><span class="op">(</span><span class="va">shp</span>, row_id <span class="op">=</span> <span class="fl">1</span><span class="op">)</span> <span class="op">+</span></span>
+<span>    <span class="fu">theme</span><span class="op">(</span>axis.text <span class="op">=</span> <span class="fu">element_text</span><span class="op">(</span>size <span class="op">=</span> <span class="fl">11</span><span class="op">)</span><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details><div class="cell-output-display">
+<div>
+<figure class="figure"><p><img src="02-08-05-01-06-causal-xgboost-r_files/figure-html/shap-single-prediction-1.png" class="img-fluid figure-img" width="576"></p>
+</figure>
+</div>
+</div>
+<details open="" class="code-fold"><summary>Code</summary><div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb61"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span>  <span class="fu">shapviz</span><span class="fu">::</span><span class="fu"><a href="https://modeloriented.github.io/shapviz/reference/sv_force.html">sv_force</a></span><span class="op">(</span><span class="va">shp</span>, row_id <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details><div class="cell-output-display">
+<div>
+<figure class="figure"><p><img src="02-08-05-01-06-causal-xgboost-r_files/figure-html/shap-single-prediction-2.png" class="img-fluid figure-img" width="576"></p>
+</figure>
+</div>
+</div>
+</div>
+</section><section id="averaged-shap-values-importance-by-subgroup" class="level4"><h4 class="anchored" data-anchor-id="averaged-shap-values-importance-by-subgroup">Averaged SHAP values (importance by subgroup)</h4>
+<p>You can show waterfall plots for a subset of observations (e.g., by covariate). Here we show one observation where <code>sex == 2</code> (female) as an example; the bar importance plot above summarizes average |SHAP| across all explained rows.</p>
+<div class="cell">
+<details open="" class="code-fold"><summary>Code</summary><div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb62"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/exists.html">exists</a></span><span class="op">(</span><span class="st">"shp"</span><span class="op">)</span> <span class="op">&amp;&amp;</span> <span class="st">"sex"</span> <span class="op"><a href="https://rdrr.io/r/base/match.html">%in%</a></span> <span class="fu"><a href="https://rdrr.io/r/base/names.html">names</a></span><span class="op">(</span><span class="va">shp</span><span class="op">$</span><span class="va">X</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span>
+<span>  <span class="va">idx_female</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/which.html">which</a></span><span class="op">(</span><span class="va">shp</span><span class="op">$</span><span class="va">X</span><span class="op">$</span><span class="va">sex</span> <span class="op">==</span> <span class="fl">2</span><span class="op">)</span></span>
+<span>  <span class="va">row_show</span>   <span class="op">&lt;-</span> <span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/length.html">length</a></span><span class="op">(</span><span class="va">idx_female</span><span class="op">)</span> <span class="op">&gt;</span> <span class="fl">0</span><span class="op">)</span> <span class="va">idx_female</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span> <span class="kw">else</span> <span class="fl">1</span></span>
+<span>  <span class="fu">shapviz</span><span class="fu">::</span><span class="fu"><a href="https://modeloriented.github.io/shapviz/reference/sv_waterfall.html">sv_waterfall</a></span><span class="op">(</span><span class="va">shp</span>, row_id <span class="op">=</span> <span class="va">row_show</span><span class="op">)</span> <span class="op">+</span></span>
+<span>    <span class="fu">theme</span><span class="op">(</span>axis.text <span class="op">=</span> <span class="fu">element_text</span><span class="op">(</span>size <span class="op">=</span> <span class="fl">11</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="op">}</span> <span class="kw">else</span> <span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/exists.html">exists</a></span><span class="op">(</span><span class="st">"shp"</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span>
+<span>  <span class="fu">shapviz</span><span class="fu">::</span><span class="fu"><a href="https://modeloriented.github.io/shapviz/reference/sv_waterfall.html">sv_waterfall</a></span><span class="op">(</span><span class="va">shp</span>, row_id <span class="op">=</span> <span class="fl">2</span><span class="op">)</span> <span class="op">+</span></span>
+<span>    <span class="fu">theme</span><span class="op">(</span>axis.text <span class="op">=</span> <span class="fu">element_text</span><span class="op">(</span>size <span class="op">=</span> <span class="fl">11</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="op">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details><div class="cell-output-display">
+<div>
+<figure class="figure"><p><img src="02-08-05-01-06-causal-xgboost-r_files/figure-html/shap-female-waterfall-1.png" class="img-fluid figure-img" width="576"></p>
+</figure>
+</div>
+</div>
+</div>
+</section></section><section id="propensity-scores" class="level3"><h3 class="anchored" data-anchor-id="propensity-scores">Propensity scores</h3>
+<p>C-XGBoost fits a separate propensity model (ranger) and returns propensity scores with predictions. These are not used in the XGBoost loss but are useful for diagnostics or weighting.</p>
+<div class="cell">
+<details open="" class="code-fold"><summary>Code</summary><div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb63"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/hist.html">hist</a></span><span class="op">(</span><span class="va">pred_test</span><span class="op">$</span><span class="va">propensity_score</span>, main <span class="op">=</span> <span class="st">"Propensity scores (test set)"</span>, xlab <span class="op">=</span> <span class="st">"P(T=1|X)"</span>, col <span class="op">=</span> <span class="st">"lightgreen"</span>, breaks <span class="op">=</span> <span class="fl">20</span><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details><div class="cell-output-display">
+<div>
+<figure class="figure"><p><img src="02-08-05-01-06-causal-xgboost-r_files/figure-html/abortion-propensity-histogram-1.png" class="img-fluid figure-img" width="576"></p>
+</figure>
+</div>
+</div>
+</div>
+</section></section><section id="summary-and-conclusion" class="level2"><h2 class="anchored" data-anchor-id="summary-and-conclusion">Summary and Conclusion</h2>
+<p>C-XGBoost (causal XGBoost) is a boosted tree model for estimating heterogeneous treatment effects from observational data. It fits a single multi-output XGBoost with two heads for potential outcomes Y(0) and Y(1), using a DragonNet-style treatment mask so each unit only contributes loss to its factual head. The <strong>RCausalML</strong> package provides the R6 class <code>CXGBoost</code> with <code>$fit()</code>, <code>$predict()</code> (returning <code>y0_hat</code>, <code>y1_hat</code>, <code>tau_hat</code>, <code>propensity_score</code>), <code>$summary()</code>, <code>$evaluate(y_true, X)</code>, <code>$plot_importance()</code>, <code>$save_model()</code> / <code>load_cxgboost()</code>, and <code>$clone_reset()</code>, plus exported <code>PEHE()</code> and <code>ATE()</code> (matrix or vector form) for evaluation when ground-truth potential outcomes exist. This tutorial demonstrated fitting C-XGBoost on synthetic data and on the <strong>abortion</strong> dataset from <a href="https://github.com/NickCH-K/causaldata">causaldata</a>, including data preprocessing, training, CATE prediction, sample ATE, variable importance via <code>$plot_importance()</code>, and propensity scores from the built-in ranger model.</p>
+<p>This tutorial covered the core concepts, implementation details, and evaluation workflow for C-XGBoost in R. For more advanced use cases (e.g., RATE/AUTOC, doubly-robust extensions, multiclass potential outcomes), additional methods and packages may be needed. We encourage readers to explore the reference implementation and related literature for deeper understanding and further experimentation.</p>
+</section><section id="resources" class="level2"><h2 class="anchored" data-anchor-id="resources">Resources</h2>
+<ol type="1">
+<li><p>C-XGBoost: two-head XGBoost with treatment masking for causal inference (see package <code>R/causalXGBoost.R</code> and C-XGBoost reference implementation).</p></li>
+<li><p>DragonNet-style outcome regression: Shi et al., “Adapting Neural Networks for the Estimation of Treatment Effects” (2019).</p></li>
+<li><p>For causal forests and RATE/AUTOC in R, see the <strong>{grf}</strong> package (Athey, Tibshirani, Wager; Annals of Statistics, 2019).</p></li>
+</ol>
+
+
+</section></section><a onclick="window.scrollTo(0, 0); return false;" role="button" id="quarto-back-to-top"><i class="bi bi-arrow-up"></i> Back to top</a></main><!-- /main --><script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    // Ensure there is a toggle, if there isn't float one in the top right
+    if (window.document.querySelector('.quarto-color-scheme-toggle') === null) {
+      const a = window.document.createElement('a');
+      a.classList.add('top-right');
+      a.classList.add('quarto-color-scheme-toggle');
+      a.href = "";
+      a.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
+      const i = window.document.createElement("i");
+      i.classList.add('bi');
+      a.appendChild(i);
+      window.document.body.appendChild(a);
+    }
+    setColorSchemeToggle(hasAlternateSentinel())
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+<footer class="footer"><div class="nav-footer">
+    <div class="nav-footer-left">
+<p>© CC-By Zia Ahmed, Upatta Analytics, 2026</p>
+</div>   
+    <div class="nav-footer-center">
+      &nbsp;
+    </div>
+    <div class="nav-footer-right">
+<p>This page is built with <a href="https://quarto.org/">Quarto</a>.</p>
+</div>
+  </div>
+</footer>
+
+
+<script src="../site_libs/quarto-html/zenscroll-min.js"></script>
+</body></html>
