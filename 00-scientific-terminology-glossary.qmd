@@ -1,4 +1,4 @@
-![](Images/banner_causalML.png)
+![](Image/upatta_logo.png){fig-align="right" width="250"}
 
 # A complete A–Z reference for causal inference and machine learning
 

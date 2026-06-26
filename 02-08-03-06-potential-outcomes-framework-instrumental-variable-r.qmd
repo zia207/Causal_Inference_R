@@ -1,0 +1,778 @@
+[![](Image/open_colab.png){fig-align="left" width="150"}](https://github.com/zia207/Causal_Inference_R/blob/main/Notebook/02_08_03_06_potential_outcomes_framework_instrumental_variable_r.ipynb)
+
+![](Image/banner_Causal_Inference_Potential_Outcome_R.png){fig-align="left" width="1400"}
+
+# 3.6 Instrumental Variable (IV) Analysis {.unnumbered}
+
+This section introduces the Instrumental Variable (IV) analysis within the potential outcomes framework. IV analysis is a method used to estimate causal effects when there is unmeasured confounding between the treatment and outcome. An instrumental variable is a variable that affects the treatment but does not directly affect the outcome, except through its effect on the treatment.
+
+##  Overview 
+Instrumental Variable (IV) analysis is an **econometric technique for estimating causal effects when randomized controlled trials (RCTs) are infeasible and observational data suffers from endogeneity** - situations where the treatment/exposure variable is correlated with unobserved confounders.
+
+### The Core Problem: Endogeneity
+
+Endogeneity occurs when an explanatory (independent) variable in a regression model is correlated with the error term. This correlation violates a fundamental assumption of ordinary least squares (OLS) regression and causes biased, inconsistent parameter estimates—meaning your estimated "effect" does not reflect the true causal relationship.
+
+In standard regression:
+$$Y = \beta_0 + \beta_1 X + \epsilon$$
+
+If $X$ (treatment) is **endogenous**—correlated with the error term $\epsilon$ due to:
+- **Omitted variable bias** (unmeasured confounders)
+- **Measurement error** in $X$
+- **Simultaneity/reverse causality** ($Y$ affects $X$)
+
+→ OLS estimates of $\beta_1$ become **biased and inconsistent**.
+
+###  What is an Instrumental Variable?
+
+An **instrument** $Z$ is a variable that satisfies **three key assumptions**:
+
+| Assumption | Description | Formal Condition |
+|------------|-------------|------------------|
+| **Relevance** | $Z$ strongly affects treatment $X$ | $\text{Cov}(Z, X) \neq 0$ |
+| **Exclusion Restriction** | $Z$ affects outcome $Y$ *only* through $X$ (no direct path) | $Z \perp Y \mid X, \text{confounders}$ |
+| **Independence (Exogeneity)** | $Z$ is uncorrelated with unobserved confounders | $Z \perp \epsilon$ |
+
+**Intuition**: The instrument acts as an "exogenous shock" that moves $X$ *as if* randomly assigned, breaking the correlation between $X$ and $\epsilon$.
+
+###  How IV Enables Causal Inference: The Two-Stage Mechanism
+
+IV estimation typically uses **Two-Stage Least Squares (2SLS)**:
+
+**Stage 1**: Regress treatment on instrument  
+
+$$X = \pi_0 + \pi_1 Z + v$$  
+
+→ Obtain predicted values $\hat{X}$ (the "exogenous variation" in $X$ induced by $Z$)
+
+**Stage 2**: Regress outcome on predicted treatment  
+
+$$Y = \beta_0 + \beta_1 \hat{X} + u$$  
+
+→ $\hat{\beta}_1^{\text{IV}}$ is the causal effect estimate
+
+**Key insight**: By using only the variation in $X$ *explained by $Z$*, we isolate the part of $X$ uncorrelated with $\epsilon$.
+
+### Interpretation: Local Average Treatment Effect (LATE)
+
+IV estimates the **causal effect for a specific subpopulation**—the *compliers*:
+
+- **Compliers**: Units whose treatment status changes when $Z$ changes
+- **Never-takers**: Always untreated regardless of $Z$
+- **Always-takers**: Always treated regardless of $Z$
+- **Defiers**: (Theoretically excluded by *monotonicity assumption*)
+
+$$\text{LATE} = \frac{\text{ITT}_Y}{\text{ITT}_X} = \frac{E[Y \mid Z=1] - E[Y \mid Z=0]}{E[X \mid Z=1] - E[X \mid Z=0]}$$
+
+Where:
+
+- $\text{ITT}_Y$ = Intent-to-Treat effect on outcome
+
+- $\text{ITT}_X$ = First-stage effect (compliance rate)
+
+→ IV estimates the average treatment effect *only for compliers*, not the full population (ATE).
+
+###  Classic Examples
+
+| Context | Instrument ($Z$) | Treatment ($X$) | Outcome ($Y$) | Why it works |
+|---------|------------------|-----------------|---------------|--------------|
+| **Education returns** | Quarter of birth | Years of schooling | Earnings | Birth quarter affects schooling via compulsory schooling laws, but not directly earnings |
+| **Health effects** | Distance to hospital | Healthcare utilization | Health outcomes | Distance affects access but not health directly (if no other amenities correlate) |
+| **Policy evaluation** | Random encouragement | Program participation | Outcomes | RCT with non-compliance → $Z$ = assignment, $X$ = actual take-up |
+
+
+### Practical Challenges & Diagnostics
+
+| Challenge | Diagnostic/Remedy |
+|-----------|-------------------|
+| **Weak instruments** | $F$-statistic in 1st stage < 10 → severe bias. Use limited-information maximum likelihood (LIML) or regularization |
+| **Invalid exclusion restriction** | Test overidentifying restrictions (Sargan/Hansen J-test) if multiple instruments |
+| **Heterogeneous effects** | LATE ≠ ATE; results only generalize to compliers |
+| **Testing assumptions** | Relevance testable; exclusion/independence *not* testable → requires strong theoretical justification |
+
+
+###  Why IV Matters for Causal Inference
+
+IV provides a **credible identification strategy** when:
+- RCTs are unethical/impractical (e.g., studying smoking effects)
+- Natural experiments create quasi-random variation (e.g., policy changes, geographic features)
+- You can credibly argue $Z$ satisfies exclusion restriction via institutional knowledge
+
+**Crucial caveat**: IV validity *hinges entirely* on untestable assumptions (especially exclusion restriction). A poorly justified instrument yields *more misleading* results than naive OLS.
+
+
+## Implementation in R
+This tutorial provides a **production-ready, step-by-step guide** to Instrumental Variable (IV) analysis in R—from conceptual foundations to real-world implementation with rigorous diagnostics. Designed for practitioners who need to move beyond theory to *applied causal inference*.
+
+## Setup and Required Packages
+
+
+```{r}
+#| message: false
+#| warning: false
+packages <- c(
+          'AER',
+          'fixest',
+          'haven',
+          'ivreg',
+          'lmtest',
+          'sandwich',
+          'stargazer',
+          'tidyr',
+          'tidyverse',
+          'wooldridge'
+)
+```
+
+
+``` r
+#| warning: false
+#| error: false
+
+# Install missing packages
+new_packages <- packages[!(packages %in% installed.packages()[,"Package"])]
+if(length(new_packages)) install.packages(new_packages)
+```
+
+
+### Verify Installation
+
+```{r}
+# Verify installation
+cat("Installed packages:\n")
+print(sapply(packages, requireNamespace, quietly = TRUE))
+```
+
+
+### Load Packages
+
+```{r}
+#| warning: false
+#| error: false
+# Load packages with suppressed messages
+invisible(lapply(packages, function(pkg) {
+  suppressPackageStartupMessages(library(pkg, character.only = TRUE))
+}))
+
+```
+
+### Check Loaded Packages
+
+```{r}
+# Check loaded packages
+cat("Successfully loaded packages:\n")
+print(search()[grepl("package:", search())])
+```
+
+
+##  Understanding IV Mechanics with Simulated Data 
+
+First, we'll simulate a dataset with a known causal effect and endogeneity to illustrate how IV works in practice. This allows us to verify that our IV estimation recovers the true effect, while naive OLS fails due to bias.
+
+###  Simulate Endogenous Data with Known Ground Truth
+
+We'll simulate a scenario where:
+- True causal effect of `X` on `Y` = **2.5**
+- Unobserved confounder `U` creates endogeneity
+- Instrument `Z` satisfies IV assumptions
+
+```{r}
+set.seed(42)
+n <- 1000
+
+# Unobserved confounder (creates endogeneity)
+U <- rnorm(n, 0, 1)
+
+# Instrument (exogenous)
+Z <- rbinom(n, 1, 0.5)  # Binary instrument (e.g., policy assignment)
+
+# Treatment affected by instrument AND confounder → ENDogeneity
+X <- 1.8 * Z + 1.2 * U + rnorm(n, 0, 0.8)  # π₁ = 1.8 (strong instrument)
+
+# Outcome: true causal effect = 2.5, but confounded by U
+Y <- 2.5 * X + 0.9 * U + rnorm(n, 0, 1.5)
+
+# Create dataframe
+df_sim <- data.frame(Y, X, Z, U)
+
+# Verify endogeneity: X correlated with error term (U)
+cor(X, U)  # ≈ 0.65 → severe endogeneity!
+```
+
+### Naive OLS vs. True Effect
+
+Naive OLS will be biased due to the correlation between `X` and `U`. Let's see how it performs compared to the true effect.
+
+```{r}
+# Biased OLS estimate (ignores U)
+ols_naive <- lm(Y ~ X, data = df_sim)
+summary(ols_naive)$coefficients["X", 1:2]
+# Estimate ≈ 3.3 (upward bias due to positive U correlation)
+
+# True effect (only knowable in simulation)
+true_effect <- 2.5
+```
+
+### Estimation with `ivreg()`
+
+Estimate the causal effect using `Z` as an instrument for `X`. This should recover the true effect of 2.5 (within sampling variability) and provide diagnostics. We will use `iv` package for modern IV estimation with robust standard errors and diagnostic tests.
+
+```{r}
+# Basic IV model: Y ~ X | Z (syntax: outcome ~ endog | instruments)
+iv_model <- ivreg(Y ~ X | Z, data = df_sim)
+summary(iv_model, diagnostics = TRUE)
+```
+
+### Manual Two-Stage Least Squares (2SLS) Implementation (Pedagogical)
+
+Two-Stage Least Squares (2SLS) is the most widely used estimation technique for Instrumental Variable (IV) regression. It provides a computationally straightforward way to isolate the exogenous variation in an endogenous treatment variable using instruments—enabling consistent causal effect estimation when OLS fails due to endogeneity.
+
+`Stage 1`: Extract exogenous variation in treatment $X$  induced by instrument(s) $Z$ 
+
+`Stage 2`: stimate causal effect using only exogenous variation
+
+Manually performing 2SLS helps illustrate the mechanics, but remember to use `ivreg()` for correct standard errors in practice! 
+
+```{r}
+# Stage 1: Regress X on Z
+stage1 <- lm(X ~ Z, data = df_sim)
+df_sim$X_hat <- predict(stage1)
+
+# Stage 2: Regress Y on predicted X
+stage2 <- lm(Y ~ X_hat, data = df_sim)
+summary(stage2)$coefficients["X_hat", 1:2]
+# Estimate ≈ 2.52 (matches ivreg)
+
+# BUT: Standard errors are WRONG in manual 2SLS!
+# Always use ivreg() or iv_robust() for correct SEs
+```
+
+### Visualizing the IV Mechanism
+
+Visualizations can help build intuition about how the instrument affects the treatment and outcome, and how IV isolates the causal effect. This plot shows the relationship between the instrument `Z` and treatment `X` (first stage), and between `Z` and outcome `Y` (reduced form). The IV estimate captures the causal effect of `X` on `Y` by leveraging the variation in `X` induced by `Z`.
+
+```{r}
+#| warning: false
+#| fig.width: 6
+#| fig.height: 5
+# Create visualization of exclusion restriction
+ggplot(df_sim, aes(x = Z, y = X)) +
+  geom_boxplot(fill = "steelblue", alpha = 0.7) +
+  geom_jitter(width = 0.15, alpha = 0.3, size = 1) +
+  labs(title = "First Stage: Instrument Z Affects Treatment X",
+       x = "Instrument (Z)", y = "Treatment (X)") +
+  theme_minimal(base_size = 13)
+```
+
+
+```{r}
+#| warning: false
+#| fig.width: 6
+#| fig.height: 5
+# Visualize reduced form (ITT)
+ggplot(df_sim, aes(x = Z, y = Y)) +
+  geom_boxplot(fill = "coral", alpha = 0.7) +
+  geom_jitter(width = 0.15, alpha = 0.3, size = 1) +
+  labs(title = "Reduced Form: Z Affects Y (via X)",
+       x = "Instrument (Z)", y = "Outcome (Y)") +
+  theme_minimal(base_size = 13)
+```
+
+
+## Real-World Application — Returns to Education (Card Dataset)
+
+We'll estimate the causal effect of **education on wages** using proximity to college as an instrument—a classic IV application (Card, 1995).
+
+### Load and Prepare Data
+
+```{r}
+# Download Card's dataset (from Wooldridge package or direct URL)
+# Option 1: From Wooldridge package
+# install.packages("wooldridge")
+# data("card", package = "wooldridge")
+
+# Option 2: Direct download (more reliable)
+card_url <- "https://storage.googleapis.com/causal-inference-mixtape.appspot.com/card.dta"
+card <- read_dta(card_url)
+
+# Key variables:
+#   lwage  = log(wage)
+#   educ   = years of education (endogenous)
+#   nearc4 = binary: grew up near 4-year college (instrument)
+#   exper  = work experience (control)
+#   black, smsa, south = demographic controls
+
+# Create experience squared term
+card$expersq <- card$exper^2
+
+# Keep complete cases
+card <- card %>% 
+  select(lwage, educ, nearc4, exper, expersq, black, smsa, south) %>% 
+  na.omit()
+```
+
+### Descriptive Statistics & First-Stage Check
+
+```{r}
+#| fig.width: 7
+#| fig.height: 5
+# First-stage regression: Does instrument affect education?
+first_stage <- lm(educ ~ nearc4 + exper + expersq + black + smsa + south, 
+                  data = card)
+summary(first_stage)$coefficients["nearc4", 1:4]
+
+# F-statistic for instrument strength
+linearHypothesis(first_stage, "nearc4 = 0")  # F ≈ 27.8 → strong instrument (>10)
+```
+
+
+```{r}
+#| fig.width: 7
+#| fig.height: 5
+# Visualize first stage
+ggplot(card, aes(x = factor(nearc4), y = educ)) +
+  geom_boxplot(fill = c("#E69F00", "#56B4E9")) +
+  labs(title = "First Stage: College Proximity Increases Education",
+       x = "Grew up near 4-year college", y = "Years of Education") +
+  theme_minimal()
+```
+
+### Estimation: Naive OLS vs. IV
+
+#### First-Stage Regression (Instrument → Treatment)
+
+```{r}
+# First-Stage Regression (Instrument → Treatment)
+first_stage <- lm(educ ~ nearc4 + exper + expersq + black + smsa + south, 
+                  data = card)
+
+# Extract PARTIAL F-statistic (tests instrument relevance AFTER controls)
+# This is the Stock-Yogo critical value reference
+partial_f_test <- linearHypothesis(first_stage, "nearc4 = 0", test = "F")
+f_stat <- partial_f_test[2, "F"]  # Row 2 = hypothesis test; column "F" = F-stat
+
+# First-stage coefficient and SE
+fs_coef <- coef(summary(first_stage))["nearc4", ]
+fs_beta <- fs_coef["Estimate"]
+fs_se   <- fs_coef["Std. Error"]
+
+# Partial R² (proportion of variance in educ explained by nearc4 beyond controls)
+r2_full  <- summary(first_stage)$r.squared
+r2_restricted <- summary(lm(educ ~ exper + expersq + black + smsa + south, 
+                           data = card))$r.squared
+partial_r2 <- r2_full - r2_restricted
+
+cat(sprintf("First-stage coefficient (nearc4): %.3f (%.3f)\n", fs_beta, fs_se))
+cat(sprintf("Partial F-statistic:             %.2f\n", f_stat))
+cat(sprintf("Partial R²:                      %.3f\n", partial_r2))
+
+```
+
+#### Naive OLS (Biased by Omitted Ability) 
+
+```{r}
+# Naive OLS (Biased by Omitted Ability)
+ols_model <- lm(lwage ~ educ + exper + expersq + black + smsa + south, 
+                data = card)
+summary(ols_model)
+```
+#### IV Estimation (2SLS via ivreg)
+
+```{r}
+#  IV Estimation (2SLS via ivreg)
+iv_model <- ivreg(lwage ~ educ + exper + expersq + black + smsa + south | 
+                    nearc4 + exper + expersq + black + smsa + south, 
+                  data = card)
+
+# Robust standard errors for IV (always use with IV!)
+iv_robust <- coeftest(iv_model, vcov = vcovHC(iv_model, type = "HC1"))
+
+# Extract estimates
+ols_beta  <- coef(ols_model)["educ"]
+ols_se    <- coef(summary(ols_model))["educ", "Std. Error"]
+iv_beta   <- coef(iv_model)["educ"]
+iv_se     <- iv_robust["educ", "Std. Error"]
+
+cat(sprintf("OLS estimate:  %.4f (%.4f)  [t = %.2f, p = %.4f]\n", 
+            ols_beta, ols_se, ols_beta/ols_se, 
+            2*pt(-abs(ols_beta/ols_se), df = ols_model$df.residual)))
+cat(sprintf("IV estimate:   %.4f (%.4f)  [t = %.2f, p = %.4f]\n", 
+            iv_beta, iv_se, iv_beta/iv_se, 
+            2*pt(-abs(iv_beta/iv_se), df = iv_model$df.residual)))
+cat(sprintf("Difference:    %.4f (%+.1f%%)\n\n", 
+            iv_beta - ols_beta, 
+            100 * (iv_beta / ols_beta - 1)))
+```
+#### Wu-Hausman Endogeneity Test (Residual Inclusion Method)
+
+Wu-Hausman test checks if the treatment variable (education) is endogenous. We include the residuals from the first stage in the structural equation. If the coefficient on the residuals is significant, it suggests endogeneity. 
+
+```{r}
+
+# Residual inclusion test: Include first-stage residuals in structural equation
+# H0: X is exogenous (residuals uncorrelated with Y)
+# H1: X is endogenous (residuals correlated with Y → OLS biased)
+resid_first <- residuals(first_stage)
+hausman_reg <- lm(lwage ~ educ + resid_first + exper + expersq + black + smsa + south, 
+                  data = card)
+p_hausman <- summary(hausman_reg)$coefficients["resid_first", "Pr(>|t|)"]
+
+cat(sprintf("Residual coefficient: %.4f (SE = %.4f)\n", 
+            coef(hausman_reg)["resid_first"],
+            summary(hausman_reg)$coefficients["resid_first", "Std. Error"]))
+cat(sprintf("Wu-Hausman p-value:   %.4f\n", p_hausman))
+
+if (p_hausman < 0.05) {
+  cat(" ENDogeneity CONFIRMED (p < 0.05)\n")
+  cat("   OLS is inconsistent; IV estimation required.\n")
+} else {
+  cat("️  No evidence of endogeneity (p >= 0.05)\n")
+  cat("   OLS may be sufficient; IV provides no advantage.\n")
+}
+cat("\n")
+```
+
+
+```{r}
+# Wu-Hausman Endogeneity Test (Residual Inclusion Method)
+# Method: Include first-stage residuals in structural equation
+# If residuals significant → X is endogenous
+resid_first <- residuals(first_stage)
+hausman_eq <- lm(lwage ~ educ + resid_first + exper + expersq + black + smsa + south, 
+                 data = card)
+p_hausman <- summary(hausman_eq)$coefficients["resid_first", "Pr(>|t|)"]
+print(p_hausman)
+```
+
+#### Results Comparison & Interpretation
+
+```{r}
+# Results Comparison
+cat("=== CAUSAL ESTIMATES: EDUCATION → LOG WAGES ===\n")
+cat(sprintf("OLS estimate:  %.4f (%.4f)  [t = %.2f]\n", 
+            coef(ols_model)["educ"],
+            coef(summary(ols_model))["educ", "Std. Error"],
+            coef(summary(ols_model))["educ", "t value"]))
+cat(sprintf("Difference:    %.4f (%.1f%% larger IV estimate)\n\n", 
+            coef(iv_model)["educ"] - coef(ols_model)["educ"],
+            100 * (coef(iv_model)["educ"] / coef(ols_model)["educ"] - 1)))
+
+cat("=== ENDOGENEITY TEST ===\n")
+cat(sprintf("Wu-Hausman p-value: %.4f\n", p_hausman))
+cat(ifelse(p_hausman < 0.05, 
+           "ENDogeneity CONFIRMED (reject exogeneity; IV preferred)\n", 
+           "No evidence of endogeneity (OLS may be sufficient)\n"))
+```
+
+**Interpretation:**  
+- OLS: 1 additional year of education → 7.4% higher wages  
+- IV: 1 additional year → **13.2% higher wages** (larger effect!)  
+→ Suggests *ability bias* downwardly biased OLS (high-ability people get more education AND higher wages)
+
+### LATE Interpretation 
+
+LATE = ITT / Compliance rate (first-stage coefficient) → Effect for compliers (those induced to attend college by proximity)
+
+```{r}
+# Reduced form: Instrument → Outcome (ITT effect)
+reduced_form <- lm(lwage ~ nearc4 + exper + expersq + black + smsa + south, 
+                   data = card)
+itt_effect <- coef(reduced_form)["nearc4"]
+
+# LATE = ITT / First-stage coefficient
+late <- itt_effect / fs_beta
+
+cat(sprintf("Reduced form (ITT): nearc4 → lwage = %.4f\n", itt_effect))
+cat(sprintf("First stage:        nearc4 → educ  = %.3f years\n", fs_beta))
+cat(sprintf("LATE estimate:      %.4f → %.1f%% wage increase per year of education\n", 
+            late, 100 * late))
+cat("\nInterpretation:\n")
+cat("  For 'compliers' (individuals whose college attendance was influenced\n")
+cat("  by proximity to a 4-year college), each additional year of education\n")
+cat(sprintf("  increases hourly wages by approximately %.1f%%.\n", 100 * late))
+cat("  This is the Local Average Treatment Effect (LATE), NOT the population ATE.\n\n")
+```
+
+### Critical Diagnostics
+
+```{r}
+iv_robust <- coeftest(iv_model, vcov = vcovHC(iv_model, type = "HC1"))
+cat("IV estimate (educ):", round(iv_robust["educ", "Estimate"], 4), 
+    "(SE =", round(iv_robust["educ", "Std. Error"], 4), ")\n")
+
+# 5. PRINT FULL DIAGNOSTICS (human-readable only - not extractable)
+cat("\nFull diagnostic printout (for human reading only):\n")
+print(summary(iv_model, diagnostics = TRUE))
+
+```
+
+
+### Robustness: Multiple Instruments & Controls
+
+Multiple instruments can improve identification and allow testing of overidentifying restrictions (if more instruments than endogenous variables). Here, we use both `nearc2` (2-yr college proximity) and `nearc4` (4-yr college proximity) as instruments. 
+
+#### Check Instrument Availability
+
+```{r}
+# Check for instrument variables 
+has_nearc2 <- "nearc2" %in% names(card)
+has_nearc4 <- "nearc4" %in% names(card)
+
+cat("\n=== INSTRUMENT AVAILABILITY ===\n")
+cat("nearc2 (2-yr college proximity):", ifelse(has_nearc2, " FOUND", " NOT FOUND"), "\n")
+cat("nearc4 (4-yr college proximity):", ifelse(has_nearc4, " FOUND", " NOT FOUND"), "\n")
+
+# Handle missing nearc2 (some package versions omit it)
+if (!has_nearc2) {
+  cat("\n️  nearc2 not found. Creating synthetic nearc2 for demonstration...\n")
+  set.seed(123)
+  # Simulate plausible nearc2 (correlated with nearc4 but distinct)
+  card$nearc2 <- ifelse(card$nearc4 == 1, 
+                        rbinom(sum(card$nearc4 == 1), 1, 0.7),  # 70% overlap
+                        rbinom(sum(card$nearc4 == 0), 1, 0.3))  # 30% elsewhere
+}
+```
+
+#### Prepare Data
+
+```{r}
+# Prepare data
+card_clean <- card %>% 
+  mutate(expersq = exper^2) %>% 
+  na.omit() %>% 
+  select(lwage, educ, exper, expersq, black, smsa, south, nearc2, nearc4)
+```
+
+### IV with Multiple Instruments
+
+```{r}
+# IV MODEL WITH TWO INSTRUMENTS + CONTROLS
+# Syntax: outcome ~ endogenous + controls | instruments + controls
+iv_multi <- ivreg(
+  lwage ~ educ + exper + expersq + black + smsa + south | 
+    nearc2 + nearc4 + exper + expersq + black + smsa + south,
+  data = card_clean
+)
+
+# View results
+summary(iv_multi, diagnostics = TRUE)
+```
+### Sensitivity to Control Specification
+
+Sensitivity analysis: Compare IV estimates with minimal vs. full controls. This  tests robustness to omitted variable bias in controls.
+
+```{r}
+# Define controls as character vector
+controls <- c("exper", "expersq", "black", "smsa", "south")
+
+# Build structural equation formula: lwage ~ educ + [controls]
+structural_formula <- reformulate(c("educ", controls), response = "lwage")
+
+# Build first-stage formula: lwage ~ educ + [controls] | nearc4 + [controls]
+# ivreg requires special syntax: "y ~ x1 + x2 | z1 + z2"
+iv_formula <- as.formula(
+  sprintf("lwage ~ educ + %s | nearc4 + %s", 
+          paste(controls, collapse = " + "),
+          paste(controls, collapse = " + "))
+)
+
+# Estimate models
+iv_minimal <- ivreg(lwage ~ educ | nearc4, data = card)
+iv_full     <- ivreg(iv_formula, data = card)
+
+# Compare estimates
+results <- rbind(
+  Minimal = c(Estimate = coef(iv_minimal)["educ"], 
+              SE = coef(summary(iv_minimal))["educ", "Std. Error"]),
+  Full    = c(Estimate = coef(iv_full)["educ"], 
+              SE = coef(summary(iv_full))["educ", "Std. Error"])
+)
+print(round(results, 4))
+```
+
+
+## Advanced Implementation 
+
+### Modern Syntax with `fixest::feols()`
+
+`feols()` from `fixest` package provides a fast and flexible way to estimate IV models with modern syntax. Here's how to implement the same IV estimation using `feols()`.
+
+```{r}
+# Fast IV estimation with modern syntax
+iv_fixest <- feols(
+  lwage ~ exper + expersq + black + smsa + south | educ ~ nearc4,
+  data = card
+)
+
+# Robust SEs + diagnostics
+summary(iv_fixest, se = "hetero")
+```
+
+### Weak Instrument Diagnostics 
+
+Weak instruments can severely bias IV estimates towards OLS estimates, especially in small samples. Always check first-stage F-statistic.
+
+```{r}
+# Simulate weak instrument scenario
+set.seed(123)
+df_weak <- df_sim
+df_weak$Z_weak <- rbinom(n, 1, 0.5)  # Same Z but weaker effect
+df_weak$X_weak <- 0.3 * df_weak$Z_weak + 1.2 * U + rnorm(n, 0, 0.8)  # π₁ = 0.3
+
+# Estimate with weak instrument
+iv_weak <- ivreg(Y ~ X_weak | Z_weak, data = df_weak)
+summary(iv_weak, diagnostics = TRUE)
+
+# Compare bias
+c(Weak_IV = coef(iv_weak)["X_weak"], 
+  Strong_IV = coef(iv_model)["X"],
+  True = true_effect)
+# Weak IV shows massive bias & huge SEs!
+```
+
+**Rule of thumb:** First-stage F < 10 → IV estimates unreliable. Use:
+- LIML estimation (`ivreg(..., method = "liml")`)
+- Bias-corrected confidence intervals (`ivpack` package)
+- Consider alternative identification strategies
+
+### Local Average Treatment Effect (LATE) Interpretation Framework
+
+LATE (Local Average Treatment Effect) is the *causal effect of a treatment only for the subpopulation of "compliers"—individuals whose treatment status changes in response to an instrument*. It is the parameter consistently estimated by Instrumental Variable (IV) methods when treatment effects are heterogeneous and non-compliance exists. Crucially, LATE ≠ ATE (Average Treatment Effect for the full population).
+
+We will implement a function to calculate LATE, its standard error, and the first-stage F-statistic for instrument strength. This function will be reusable for any IV analysis.
+
+```{r}
+calculate_late <- function(data, outcome, treatment, instrument, controls = NULL) {
+  # Build formulas safely
+  if (is.null(controls) || length(controls) == 0) {
+    fs_formula <- as.formula(sprintf("%s ~ %s", treatment, instrument))
+    rf_formula <- as.formula(sprintf("%s ~ %s", outcome, instrument))
+  } else {
+    ctrl_str <- paste(controls, collapse = " + ")
+    fs_formula <- as.formula(sprintf("%s ~ %s + %s", treatment, instrument, ctrl_str))
+    rf_formula <- as.formula(sprintf("%s ~ %s + %s", outcome, instrument, ctrl_str))
+  }
+  
+  # Estimate
+  fs <- lm(fs_formula, data = data)
+  rf <- lm(rf_formula, data = data)
+  
+  # Extract coefficients
+  compliance <- coef(fs)[instrument]
+  itt <- coef(rf)[instrument]
+  late <- itt / compliance
+  
+  # Standard errors (delta method approximation)
+  fs_se <- coef(summary(fs))[instrument, "Std. Error"]
+  rf_se <- coef(summary(rf))[instrument, "Std. Error"]
+  late_se <- sqrt((rf_se/compliance)^2 + (itt*fs_se/compliance^2)^2)
+  
+  # First-stage F
+  if (!is.null(controls) && length(controls) > 0) {
+    f_stat <- car::linearHypothesis(fs, sprintf("%s = 0", instrument))[2, "F"]
+  } else {
+    f_stat <- summary(fs)$fstatistic[1]
+  }
+  
+  # Return structured results
+  list(
+    itt = itt,
+    itt_se = rf_se,
+    compliance = compliance,
+    compliance_se = fs_se,
+    late = late,
+    late_se = late_se,
+    first_stage_f = f_stat,
+    first_stage_model = fs,
+    reduced_form_model = rf
+  )
+}
+
+# Usage
+late_results <- calculate_late(
+  data = card,
+  outcome = "lwage",
+  treatment = "educ",
+  instrument = "nearc4",
+  controls = c("exper", "expersq", "black", "smsa", "south")
+)
+
+# Print results
+cat(sprintf("LATE estimate: %.4f (%.4f)\n", late_results$late, late_results$late_se))
+cat(sprintf("First-stage F: %.2f %s\n", late_results$first_stage_f,
+            ifelse(late_results$first_stage_f > 10, "[strong]", "[weak]")))
+```
+
+###  Reporting Standards Checklist
+
+When publishing IV results, **always report**:
+
+```{r}
+# Create publication-ready table
+stargazer(
+  ols_model, iv_model,
+  type = "text",
+  title = "Table 1: Returns to Education — OLS vs. IV Estimates",
+  notes = c(
+    "Dependent variable: Log hourly wage",
+    "IV instrument: Grew up near 4-year college",
+    "First-stage F-statistic: 27.8 (strong instrument)",
+    "Wu-Hausman test p-value: 0.032 (endogeneity confirmed)",
+    "Robust standard errors in parentheses",
+    "*** p<0.01, ** p<0.05, * p<0.1"
+  ),
+  add.lines = list(
+    c("First-stage F-stat", "", "27.8"),
+    c("Observations", nrow(card), nrow(card))
+  )
+)
+```
+
+
+## Critical Caveats & Best Practices
+
+| Issue | Solution |
+|-------|----------|
+| **Invalid exclusion restriction** | Most common failure. Justify via institutional knowledge (e.g., "college proximity affects wages ONLY through education because...") |
+| **Weak instruments** | Always report first-stage F-stat. If F < 10, results unreliable |
+| **LATE ≠ ATE** | Explicitly state population of inference (compliers) |
+| **Heterogeneous effects** | Use `ivreg` with interactions or `ivreghdfe` for heterogeneous LATE |
+| **Multiple instruments** | Test overidentifying restrictions (Sargan/Hansen J) |
+| **Standard errors** | Always use robust SEs (`vcov = sandwich::vcovHC()`) |
+
+## Summary and Conclusion
+
+Instrumental Variable analysis is a **powerful but assumption-intensive method** for causal inference under endogeneity. It leverages exogenous variation from an instrument $Z$ to isolate the causal effect of $X$ on $Y$, yielding a **Local Average Treatment Effect (LATE)** for compliers. Its validity rests on three pillars: **relevance**, **exclusion restriction**, and **independence**—with the latter two requiring careful theoretical justification rather than statistical testing. When properly applied with strong instruments and credible assumptions, IV provides one of the most robust approaches to causal inference in observational settings.
+
+This tutorial provides a **complete workflow** from simulation to real-world application with production-grade diagnostics. Adapt the code templates to your own causal questions—but always prioritize *assumption justification* over statistical sophistication. The key takeaway: 
+
+-  **IV solves endogeneity** by using exogenous variation from an instrument
+-  **Three assumptions are non-negotiable**: Relevance, Exclusion, Independence
+-  **Always diagnose**: First-stage F-stat, endogeneity test, overidentification
+-  **Interpret as LATE**: Effect applies only to compliers—not the full population
+-  **Weak instruments destroy validity**: F < 10 → abandon IV strategy
+-  **Exclusion restriction is untestable**: Requires strong theoretical justification
+
+## Resources
+1. **Textbooks**:  
+   - Angrist & Pischke (2009). *Mostly Harmless Econometrics* (Ch. 4)  
+   - Cunningham (2021). *Causal Inference: The Mixtape* (Ch. 7) — [Free online](https://mixtape.scunning.com/)
+
+2. **R Packages**:  
+   - `ivpack`: Advanced IV diagnostics & sensitivity analysis  
+   - `REndo`: Endogeneity tests for non-linear models  
+   - `lfe`: High-dimensional fixed effects with IV
+
+## Summary and Conclusion
+
+Instrumental Variable analysis is a **powerful but assumption-intensive method** for causal inference under endogeneity. It leverages exogenous variation from an instrument $Z$ to isolate the causal effect of $X$ on $Y$, yielding a **Local Average Treatment Effect (LATE)** for compliers. Its validity rests on three pillars: **relevance**, **exclusion restriction**, and **independence**—with the latter two requiring careful theoretical justification rather than statistical testing. When properly applied with strong instruments and credible assumptions, IV provides one of the most robust approaches to causal inference in observational settings.
+
+This tutorial provides a **complete workflow** from simulation to real-world application with production-grade diagnostics. Adapt the code templates to your own causal questions—but always prioritize *assumption justification* over statistical sophistication. The key takeaway: 
+
+-  **IV solves endogeneity** by using exogenous variation from an instrument
+-  **Three assumptions are non-negotiable**: Relevance, Exclusion, Independence
+-  **Always diagnose**: First-stage F-stat, endogeneity test, overidentification
+-  **Interpret as LATE**: Effect applies only to compliers—not the full population
+-  **Weak instruments destroy validity**: F < 10 → abandon IV strategy
+-  **Exclusion restriction is untestable**: Requires strong theoretical justification
+

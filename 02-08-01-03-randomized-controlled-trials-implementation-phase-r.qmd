@@ -1,0 +1,500 @@
+[![](Image/open_colab.png){fig-align="left" width="150"}](https://github.com/zia207/Causal_Inference_R/blob/main/Notebook/02_08_01_03_randomized_controlled_trials_implementation_phase_r.ipynb)
+
+![](Image/banner_Causal_Inference_RCT_R.png){fig-align="left" width="1400"}
+
+# 1.3 Implementation Phase of Randomized Controlled Trials (RCTs) {.unnumbered}
+
+Implementation phase of RCTs refers to the period after the randomization process has been completed and the intervention is being delivered to the participants. This phase is crucial for ensuring that the study is conducted according to the protocol and that the data collected is reliable and valid. During the implementation phase, researchers must monitor the delivery of the intervention to ensure that it is being administered as intended. This may involve training staff, providing resources, and addressing any challenges that arise during the implementation process. This tutorial will guide you through the implementation phase of RCTs using R programming language.
+
+##  Overview 
+
+Delivering the intervention **per protocol**—that is, exactly as specified in the study protocol—is a fundamental component of rigorous clinical trial conduct. This is often evaluated using a **per-protocol analysis population**, which includes only participants who sufficiently adhered to the planned intervention.
+
+Equally important is the systematic tracking of **trial conduct indicators**, including:
+
+* **Adherence (compliance):** the extent to which participants received and followed the assigned intervention as intended.
+* **Dropouts:** participants who were lost to follow-up or withdrew consent before study completion.
+* **Protocol deviations:** any departures from the approved protocol, such as ineligible participant enrollment, missed or delayed assessments, incorrect dosing, or other protocol violations.
+
+Together, these elements are critical for:
+
+* Assessing **internal validity and trial quality**
+* Interpreting **efficacy and safety results**
+* Ensuring compliance with reporting standards such as **CONSORT (Consolidated Standards of Reporting Trials)**
+
+## Implementation in R
+
+In **R**, these aspects can be systematically addressed through:
+
+* Careful **data cleaning and derivation of analysis populations** (e.g., ITT vs per-protocol)
+* **Summary statistics and tabular reports** describing adherence, deviations, and attrition
+* **Visualizations**, including participant timelines and **CONSORT flow diagrams**, to transparently document participant flow through the study
+
+This structured approach supports reproducible analysis and transparent reporting of randomized trials.
+
+
+## Setup and Required Packages
+
+
+```{r}
+#| message: false
+#| warning: false
+packages <- c(
+          'DiagrammeR',
+          'consort',
+          'dplyr',
+          'flowchart',
+          'ggconsort',
+          'table1',
+          'tidyverse'
+)
+```
+
+
+``` r
+#| warning: false
+#| error: false
+
+# Install missing packages
+new_packages <- packages[!(packages %in% installed.packages()[,"Package"])]
+if(length(new_packages)) install.packages(new_packages)
+devtools::install_github("tgerke/ggconsort")
+```
+
+
+
+
+
+
+### Verify Installation
+
+```{r}
+# Verify installation
+cat("Installed packages:\n")
+print(sapply(packages, requireNamespace, quietly = TRUE))
+```
+
+
+### Load Packages
+
+```{r}
+#| warning: false
+#| error: false
+# Load packages with suppressed messages
+invisible(lapply(packages, function(pkg) {
+  suppressPackageStartupMessages(library(pkg, character.only = TRUE))
+}))
+
+```
+
+### Check Loaded Packages
+
+```{r}
+# Check loaded packages
+cat("Successfully loaded packages:\n")
+print(search()[grepl("package:", search())])
+```
+
+### Data
+
+We simulate a simple two-arm RCT dataset (n = 300 randomized) with:
+
+* `id`: Participant ID
+* `arm`: Treatment arm ("Control" or "Intervention")
+* `eligible`: Was eligible at screening? (for exclusions)
+* `adherence`: Proportion of intervention sessions completed (0-1; NA if control or dropout)
+* `dropout`: Did the participant drop out? (Yes/No)
+* `dropout_reason`: Reason if dropout (e.g., "Lost to follow-up", "Adverse event", "Withdrawal")
+* `protocol_deviation`: Type of deviation (None, "Missed visit", "Incorrect dose", "Other")
+* `outcome`: Primary outcome (continuous, e.g., score at end of study; NA if dropout)
+
+This simulate dataset has realistic patterns: higher dropouts in one arm, adherence mostly >80% in intervention, some deviations.
+
+```{r}
+set.seed(123)
+n <- 300
+df <- data.frame(
+  id = 1:n,
+  randomized = TRUE,
+  arm = sample(c("Control", "Intervention"), n, replace = TRUE, prob = c(0.5, 0.5)),
+  eligible = rbinom(n, 1, 0.9) == 1,  # 10% ineligible example
+  adherence = ifelse(runif(n) < 0.85, runif(n, 0.6, 1), runif(n, 0, 0.6)),  # Mostly high adherence
+  dropout = rbinom(n, 1, 0.15) == 1,
+  protocol_deviation = sample(c("None", "Missed visit", "Incorrect dose", "Other"), n, replace = TRUE, prob = c(0.8, 0.1, 0.05, 0.05))
+)
+
+# Add dropout reasons and make outcome missing if dropout
+df <- df |> 
+  mutate(
+    dropout_reason = ifelse(dropout, sample(c("Lost to follow-up", "Adverse event", "Withdrawal", "Other"), sum(dropout), replace = TRUE), NA),
+    adherence = ifelse(arm == "Control" | dropout, NA, adherence),  # No adherence for control/dropouts
+    outcome = rnorm(n, mean = ifelse(arm == "Intervention", 10, 5), sd = 3),
+    outcome = ifelse(dropout, NA, outcome)
+  ) |> 
+  glimpse()
+
+```
+
+### Summarizing Implementation Metrics (Tracking Adherence, Dropouts, and Protocol Deviations)
+
+
+We can create summary tables to describe adherence, dropouts, and protocol deviations by treatment arm.
+
+```{r}
+# Overall dropout rate
+df |> 
+  summarise(
+    Total_randomized = n(),
+    Dropouts = sum(dropout, na.rm = TRUE),
+    Dropout_rate = mean(dropout, na.rm = TRUE) * 100,
+    Protocol_deviations = sum(protocol_deviation != "None", na.rm = TRUE),
+    Dev_rate = mean(protocol_deviation != "None", na.rm = TRUE) * 100
+  )
+```
+Or with dplyr for custom table:
+
+
+```{r}
+df |> 
+  group_by(arm) |> 
+  summarise(
+    n_randomized = n(),
+    n_dropout = sum(dropout),
+    pct_dropout = round(n_dropout / n_randomized * 100, 1),
+    n_deviation = sum(protocol_deviation != "None"),
+    pct_deviation = round(n_deviation / n_randomized * 100, 1),
+    median_adherence = median(adherence, na.rm = TRUE) * 100,  # % for intervention arm
+    .groups = "drop"
+  )
+```
+
+### Detailed Tables (detailed reasons for dropouts and deviations)
+
+```{r}
+# Dropout reasons by arm
+table(df$arm, df$dropout_reason, useNA = "ifany")
+
+# Protocol deviations by arm
+table(df$arm, df$protocol_deviation)
+```
+
+### Defining Analysis Populations
+
+In RCTs, defining analysis populations is critical for valid inference. Common populations:
+
+* `ITT (Intention-to-Treat)`: All randomized, regardless of adherence/deviations/dropouts.
+* `Per-Protocol (PP)`: Delivered per protocol (high adherence, no major deviations, completed study).
+* `Modified ITT (mITT)`: Randomized + received at least some intervention + baseline data.
+
+Example: Define per-protocol flag (e.g., adherence >= 0.8, no major deviation, no dropout)
+
+#### Intention-to-Treat (ITT) Population
+
+The ITT population includes all randomized participants, regardless of adherence, protocol deviations, or dropout status.
+
+```{r}
+itt <- subset(df, randomized == TRUE)
+nrow(itt)
+```
+
+#### Per-Protocol (PP) Population
+
+The per-protocol population typically includes participants who:
+
+* Received the assigned intervention
+
+* Adhered sufficiently
+
+* Had no major protocol deviations
+
+* Completed follow-up
+
+```{r}
+df <- df |> 
+  mutate(
+    per_protocol = (arm == "Control" | (!is.na(adherence) & adherence >= 0.8)) &
+                   (protocol_deviation == "None") & !dropout
+  )
+
+# Summary
+df |>  count(per_protocol)
+
+```
+
+#### Modified Intention-to-Treat (mITT) Population
+
+The modified ITT (mITT) population is a common compromise between full ITT and strict per-protocol analysis. It typically includes:
+
+* All randomized participants who
+
+- Received at least some of the assigned intervention (or at least one dose/session), and
+- Have at least one post-baseline assessment (or outcome measurement), and
+- Sometimes: were confirmed eligible after randomization (post-randomization eligibility check)
+
+mITT is frequently used in trials where:
+
+* Some participants never start treatment (e.g., withdrawn before first dose)
+* Very early dropouts have no evaluable data
+* The goal is to evaluate efficacy in those exposed to treatment while minimizing bias from massive non-adherence
+
+We’ll define mITT with these practical rules (you can adjust based on your protocol):
+
+* Randomized (everyone starts here)
+
+* Received at least minimal intervention:
+
+- Intervention arm: adherence > 0 (or ≥ some minimal threshold, e.g., ≥10%)
+- Control arm: usually assumed to have “received” usual care unless specified otherwise
+
+* Has at least one outcome value (i.e., not missing primary outcome due to dropout very early)
+
+* Optionally: eligible at baseline (post-randomization check)
+
+```{r}
+df <- df |> 
+  mutate(
+    # Minimal exposure: for intervention = any adherence > 0; for control = always TRUE
+    minimal_exposure = (arm == "Control") | (!is.na(adherence) & adherence > 0),
+    
+    # Has evaluable outcome
+    has_outcome = !is.na(outcome),
+    
+    # Optional: post-randomization eligibility confirmed
+    confirmed_eligible = eligible,   # in real trials this might come from central review
+    
+    # mITT flag
+    mitt = minimal_exposure & has_outcome & confirmed_eligible,
+    
+    # Also keep the previous ones for comparison
+    itt = TRUE,                      # everyone randomized
+    per_protocol = (arm == "Control" | (!is.na(adherence) & adherence >= 0.8)) &
+                   (protocol_deviation == "None") & !dropout
+  ) 
+# Summary
+df |>  count(mitt)
+
+```
+
+
+#### Summary Table of Analysis Populations by Arm
+
+```{r}
+df |> 
+  summarise(
+    .by = arm,
+    N_randomized      = n(),
+    N_ITT             = sum(itt),
+    N_mITT            = sum(mitt),
+    N_per_protocol    = sum(per_protocol),
+    pct_mITT          = round(mean(mitt) * 100, 1),
+    pct_per_protocol  = round(mean(per_protocol) * 100, 1),
+    median_adherence_mITT = round(median(adherence[mitt & arm == "Intervention"], na.rm = TRUE) * 100, 1)
+  )
+ 
+```
+### CONSORT (Consolidated Standards of Reporting Trials) 
+
+**CONSORT (Consolidated Standards of Reporting Trials)** is an evidence-based, minimum set of recommendations for **reporting randomized controlled trials (RCTs)**. Developed by a group of scientists, clinicians, and statisticians, CONSORT aims to improve the **transparency, completeness, and reliability** of RCT reports so that readers can critically appraise and interpret trial findings.
+
+Poorly reported trials can mislead clinicians, policymakers, and patients—leading to inappropriate treatments or wasted research funding. CONSORT combats this by providing a standardized framework for clear and honest reporting.
+
+### Why CONSORT Matters
+
+| Problem Without CONSORT | How CONSORT Helps |
+|------------------------|------------------|
+| Unclear randomization method → selection bias | Requires details on sequence generation & allocation concealment |
+| No mention of dropouts → overoptimistic results | Mandates flow diagram and reasons for discontinuation |
+| Primary outcome changed after data collection → "p-hacking" | Requires pre-specification of outcomes and analysis plan |
+| Incomplete reporting of harms | Requires systematic reporting of adverse events |
+| Poor description of interventions → irreproducibility | Demands precise, replicable intervention protocols |
+
+
+###  CONSORT Checklist (25 Items)
+
+A structured list covering all essential aspects of an RCT report:
+
+| Section | Key Items |
+|--------|---------|
+| **Title & Abstract** | Identify study as an RCT; include key elements (participants, interventions, outcomes) |
+| **Introduction** | Scientific background, specific objectives, and pre-specified hypotheses |
+| **Methods** | • Trial design (e.g., parallel, crossover)<br>• Eligibility criteria<br>• Interventions (precisely described)<br>• Outcomes (primary/secondary, timing)<br>• Sample size calculation<br>• Randomization method (sequence generation, allocation concealment)<br>• Blinding (who was blinded?)<br>• Statistical methods |
+| **Results** | • Participant flow (numbers screened, randomized, lost to follow-up)<br>• Baseline data (table of characteristics by group)<br>• Numbers analyzed (for each outcome)<br>• Outcome results (effect estimates with confidence intervals)<br>• Harms/adverse events |
+| **Discussion** | Interpretation in context of existing evidence, limitations, generalizability |
+| **Other Information** | Registration number, protocol availability, funding source, conflicts of interest |
+
+
+### Visualizing with CONSORT Flow Diagram
+
+A visual summary of participant progress through the trial phases:
+- Enrolled → Assessed for eligibility  
+- Randomized → Allocated to groups  
+- Received intervention / Lost to follow-up / Discontinued  
+- Analyzed (Full Analysis Set, Per-Protocol Set)
+
+
+#### Using `consort` Package
+
+Using the `consort` package, we can create a CONSORT flow diagram to visualize participant flow through the trial phases. 
+
+The consort package is solid but limited in aesthetics. For more flexible, publication-quality diagrams, consider:
+
+* `ggconsort` (ggplot2-based, highly customizable)
+
+* `flowchart` package (tidyverse-friendly, easy modifications)
+
+
+First, prepare data in the required format:
+
+```{r}
+#devtools::install_github("tgerke/ggconsort")
+library(ggconsort)
+library(consort)
+# 1. Prepare the data (make sure arm is kept as-is)
+df_consort <- df %>%
+  mutate(
+    trialno = id,
+    
+    # Enrollment exclusion
+    excl_enroll = ifelse(!eligible, "Ineligible", NA_character_),
+    
+    # Follow-up / mITT exclusions — combined into one column
+    excl_followup = case_when(
+      !minimal_exposure ~ "No exposure / never started",
+      dropout & is.na(outcome) ~ paste("Early dropout, no outcome:", dropout_reason),
+      TRUE ~ NA_character_
+    ),
+    
+    # Main analysis boxes (always shown)
+    analyzed_itt  = "Analyzed (ITT)",
+    analyzed_mitt = ifelse(mitt, "Analyzed (mITT)", NA_character_),
+    analyzed_pp   = ifelse(per_protocol, "Analyzed (Per-Protocol)", NA_character_)
+  )
+```
+
+
+```{r}
+#| fig.width: 10
+#| fig.height: 8
+# 2. Now build the plot – arm MUST be in orders
+g <- consort_plot(
+  data       = df_consort,
+  orders     = c(
+    trialno       = "Assessed for eligibility",
+    excl_enroll   = "Excluded",
+    arm           = "Randomized",                  # ← this line is required
+    excl_followup = "Excluded from mITT",
+    analyzed_itt  = "Analyzed (ITT)",
+    analyzed_mitt = "Analyzed (mITT)",
+    analyzed_pp   = "Analyzed (Per-Protocol)"
+  ),
+  side_box   = c("excl_enroll", "excl_followup"),
+  allocation = "arm",                              # ← tells package to split by arm
+  labels     = c("1" = "Enrollment", 
+                 "2" = "Allocation", 
+                 "3" = "Follow-up / Exposure", 
+                 "4" = "Analysis"),
+  cex        = 0.85
+)
+
+# Display
+plot(g)
+
+```
+
+#### Using `DiagrammeR` for Custom Flow Diagrams
+
+For more customized diagrams, you can use the `DiagrammeR` package to create flowcharts manually.
+
+```{r}
+#| fig.width: 8
+#| fig.height: 8
+library(DiagrammeR)
+graph <- grViz("
+digraph consort_flow {
+  node [shape = box, style = filled, color = lightgrey]
+  A [label = 'Assessed for eligibility (n=300)']
+  B [label = 'Excluded (n=30)\\n- Not meeting criteria (n=20)\\n- Declined to participate (n=10)']  
+  C [label = 'Randomized (n=270)']
+  D [label = 'Allocated to Control (n=135)']
+  E [label = 'Allocated to Intervention (n=135)']
+  F [label = 'Lost to follow-up (n=15)']
+  G [label = 'Discontinued intervention (n=10)']
+  H [label = 'Analyzed (ITT) (n=135)']
+  I [label = 'Analyzed (ITT) (n=135)']
+  J [label = 'Analyzed (mITT) (n=120)']
+  K [label = 'Analyzed (mITT) (n=115)']
+ 
+  A -> B -> C
+  C -> D -> F -> H
+  C -> E -> G -> I
+  D -> J
+  E -> K
+} 
+")
+graph
+```
+
+#### Using `flowchart` Package for Tidy Diagrams
+
+```{r}
+#| fig.width: 8
+#| fig.height: 8
+# install.packages("flowchart")
+library(dplyr)
+library(flowchart)
+
+# 1. Prepare summary data (this should already work from your previous steps)
+flow_data <- df %>%
+  group_by(arm) %>%
+  summarise(
+    n_randomized   = n(),
+    n_mitt         = sum(mitt, na.rm = TRUE),
+    n_per_protocol = sum(per_protocol, na.rm = TRUE),
+    n_no_exposure  = sum(!minimal_exposure, na.rm = TRUE),
+    n_no_outcome   = sum(!has_outcome & minimal_exposure, na.rm = TRUE),
+    .groups = "drop"
+  )
+
+# Re-build the flowchart (minimal version)
+fc <- flow_data %>%
+  as_fc(
+    label = "Randomized",
+    text_pattern = "{label}\nn = {n}"
+  ) %>%
+  fc_split(
+    var = arm,
+    text_pattern = "{label}\nn = {n} ({perc}%)"
+  ) %>%
+  fc_filter(
+    n_mitt > 0,
+    label = "mITT",
+    text_pattern = "{label}\nn = {n} ({perc}%)"
+  ) %>%
+  fc_filter(
+    n_no_exposure > 0,
+    label = "No exposure",
+    direction = "right",
+    text_pattern = "{label}\nn = {n} ({perc}%)"
+  ) %>%
+  fc_filter(
+    n_no_outcome > 0,
+    label = "No outcome",
+    direction = "right",
+    text_pattern = "{label}\nn = {n} ({perc}%)"
+  )
+
+# Plot — try these one by one until one works
+plot(fc)                # ← most reliable
+```
+
+## Summary and Conclusion
+
+The implementation phase of Randomized Controlled Trials (RCTs) is critical for ensuring the integrity and validity of the study. By delivering the intervention per protocol, tracking adherence, dropouts, and protocol deviations, researchers can assess the internal validity of the trial and interpret the results accurately. Using R programming language, we can systematically manage these aspects through data cleaning, summary statistics, and visualizations such as CONSORT flow diagrams. This structured approach supports reproducible analysis and transparent reporting of RCTs, ultimately contributing to high-quality evidence generation in clinical research. 
+
+## Resources
+
+* [CONSORT Statement](http://www.consort-statement.org/)
+* [R Documentation for consort package](https://cran.r-project.org/web/packages/consort/consort.pdf)
+* [DiagrammeR Package](https://rich-iannone.github.io/DiagrammeR/)
+* [ggconsort GitHub](https://github.com/tgerke/ggconsort)
+# [flowchart Package](https://bruigtp.github.io/flowchart/)

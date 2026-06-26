@@ -1,0 +1,2131 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.8.27">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+<title>potential-outcomes-framework-doubly-robust-estimators-r – Causal Inference in R</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+<script src="site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="site_libs/clipboard/clipboard.min.js"></script>
+<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="site_libs/quarto-search/fuse.min.js"></script>
+<script src="site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="./">
+<link href="./02-08-03-05-potential-outcomes-framework-difference-in-differences-r.html" rel="next">
+<link href="./02-08-03-03-potential-outcomes-framework-propensity-score-matching-r.html" rel="prev">
+<script src="site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="site_libs/quarto-html/axe/axe-check.js" type="module"></script>
+<script src="site_libs/quarto-html/popper.min.js"></script>
+<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="site_libs/quarto-html/anchor.min.js"></script>
+<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-8b4baf804e461d9b72633f0de59a0cac.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-dark-f1aadacce99040138bbb613f9330654f.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-8b4baf804e461d9b72633f0de59a0cac.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<script src="site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="site_libs/bootstrap/bootstrap-bf6de5ccb156a65fc439966d4053cafd.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="site_libs/bootstrap/bootstrap-dark-c3ddef8e9936373b1ee063945a43a984.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="site_libs/bootstrap/bootstrap-bf6de5ccb156a65fc439966d4053cafd.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light"><script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script><style>html{ scroll-behavior: smooth; }</style>
+<link href="site_libs/pagedtable-1.1/css/pagedtable.css" rel="stylesheet">
+<script src="site_libs/pagedtable-1.1/js/pagedtable.js"></script><script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script><script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script><script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+</head>
+<body class="nav-sidebar docked nav-fixed quarto-light"><script id="quarto-html-before-body" type="application/javascript">
+    const toggleBodyColorMode = (bsSheetEl) => {
+      const mode = bsSheetEl.getAttribute("data-mode");
+      const bodyEl = window.document.querySelector("body");
+      if (mode === "dark") {
+        bodyEl.classList.add("quarto-dark");
+        bodyEl.classList.remove("quarto-light");
+      } else {
+        bodyEl.classList.add("quarto-light");
+        bodyEl.classList.remove("quarto-dark");
+      }
+    }
+    const toggleBodyColorPrimary = () => {
+      const bsSheetEl = window.document.querySelector("link#quarto-bootstrap:not([rel=disabled-stylesheet])");
+      if (bsSheetEl) {
+        toggleBodyColorMode(bsSheetEl);
+      }
+    }
+    const setColorSchemeToggle = (alternate) => {
+      const toggles = window.document.querySelectorAll('.quarto-color-scheme-toggle');
+      for (let i=0; i < toggles.length; i++) {
+        const toggle = toggles[i];
+        if (toggle) {
+          if (alternate) {
+            toggle.classList.add("alternate");
+          } else {
+            toggle.classList.remove("alternate");
+          }
+        }
+      }
+    };
+    const toggleColorMode = (alternate) => {
+      // Switch the stylesheets
+      const primaryStylesheets = window.document.querySelectorAll('link.quarto-color-scheme:not(.quarto-color-alternate)');
+      const alternateStylesheets = window.document.querySelectorAll('link.quarto-color-scheme.quarto-color-alternate');
+      manageTransitions('#quarto-margin-sidebar .nav-link', false);
+      if (alternate) {
+        // note: dark is layered on light, we don't disable primary!
+        enableStylesheet(alternateStylesheets);
+        for (const sheetNode of alternateStylesheets) {
+          if (sheetNode.id === "quarto-bootstrap") {
+            toggleBodyColorMode(sheetNode);
+          }
+        }
+      } else {
+        disableStylesheet(alternateStylesheets);
+        enableStylesheet(primaryStylesheets)
+        toggleBodyColorPrimary();
+      }
+      manageTransitions('#quarto-margin-sidebar .nav-link', true);
+      // Switch the toggles
+      setColorSchemeToggle(alternate)
+      // Hack to workaround the fact that safari doesn't
+      // properly recolor the scrollbar when toggling (#1455)
+      if (navigator.userAgent.indexOf('Safari') > 0 && navigator.userAgent.indexOf('Chrome') == -1) {
+        manageTransitions("body", false);
+        window.scrollTo(0, 1);
+        setTimeout(() => {
+          window.scrollTo(0, 0);
+          manageTransitions("body", true);
+        }, 40);
+      }
+    }
+    const disableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        stylesheet.rel = 'disabled-stylesheet';
+      }
+    }
+    const enableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        if(stylesheet.rel !== 'stylesheet') { // for Chrome, which will still FOUC without this check
+          stylesheet.rel = 'stylesheet';
+        }
+      }
+    }
+    const manageTransitions = (selector, allowTransitions) => {
+      const els = window.document.querySelectorAll(selector);
+      for (let i=0; i < els.length; i++) {
+        const el = els[i];
+        if (allowTransitions) {
+          el.classList.remove('notransition');
+        } else {
+          el.classList.add('notransition');
+        }
+      }
+    }
+    const isFileUrl = () => {
+      return window.location.protocol === 'file:';
+    }
+    const hasAlternateSentinel = () => {
+      let styleSentinel = getColorSchemeSentinel();
+      if (styleSentinel !== null) {
+        return styleSentinel === "alternate";
+      } else {
+        return false;
+      }
+    }
+    const setStyleSentinel = (alternate) => {
+      const value = alternate ? "alternate" : "default";
+      if (!isFileUrl()) {
+        window.localStorage.setItem("quarto-color-scheme", value);
+      } else {
+        localAlternateSentinel = value;
+      }
+    }
+    const getColorSchemeSentinel = () => {
+      if (!isFileUrl()) {
+        const storageValue = window.localStorage.getItem("quarto-color-scheme");
+        return storageValue != null ? storageValue : localAlternateSentinel;
+      } else {
+        return localAlternateSentinel;
+      }
+    }
+    const toggleGiscusIfUsed = (isAlternate, darkModeDefault) => {
+      const baseTheme = document.querySelector('#giscus-base-theme')?.value ?? 'light';
+      const alternateTheme = document.querySelector('#giscus-alt-theme')?.value ?? 'dark';
+      let newTheme = '';
+      if(authorPrefersDark) {
+        newTheme = isAlternate ? baseTheme : alternateTheme;
+      } else {
+        newTheme = isAlternate ? alternateTheme : baseTheme;
+      }
+      const changeGiscusTheme = () => {
+        // From: https://github.com/giscus/giscus/issues/336
+        const sendMessage = (message) => {
+          const iframe = document.querySelector('iframe.giscus-frame');
+          if (!iframe) return;
+          iframe.contentWindow.postMessage({ giscus: message }, 'https://giscus.app');
+        }
+        sendMessage({
+          setConfig: {
+            theme: newTheme
+          }
+        });
+      }
+      const isGiscussLoaded = window.document.querySelector('iframe.giscus-frame') !== null;
+      if (isGiscussLoaded) {
+        changeGiscusTheme();
+      }
+    };
+    const authorPrefersDark = false;
+    const darkModeDefault = authorPrefersDark;
+      document.querySelector('link#quarto-text-highlighting-styles.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+      document.querySelector('link#quarto-bootstrap.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+    let localAlternateSentinel = darkModeDefault ? 'alternate' : 'default';
+    // Dark / light mode switch
+    window.quartoToggleColorScheme = () => {
+      // Read the current dark / light value
+      let toAlternate = !hasAlternateSentinel();
+      toggleColorMode(toAlternate);
+      setStyleSentinel(toAlternate);
+      toggleGiscusIfUsed(toAlternate, darkModeDefault);
+      window.dispatchEvent(new Event('resize'));
+    };
+    // Switch to dark mode if need be
+    if (hasAlternateSentinel()) {
+      toggleColorMode(true);
+    } else {
+      toggleColorMode(false);
+    }
+  </script>
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top quarto-banner"><nav class="navbar navbar-expand-lg " data-bs-theme="dark"><div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="./index.html">
+    <span class="navbar-title">Causal Inference in R</span>
+    </a>
+  </div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll me-auto">
+<li class="nav-item compact">
+    <a class="nav-link" href="https://sites.google.com/view/r-data-sci-env/home"> <i class="bi bi-house" role="img" aria-label="Home">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+</ul>
+<ul class="navbar-nav navbar-nav-scroll ms-auto">
+<li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/zia207/Causal_Inference_R/"> <i class="bi bi-github" role="img" aria-label="GitHub">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://www.linkedin.com/in/zia-ahmed207"> <i class="bi bi-linkedin" role="img" aria-label="LinkedIn">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="mailto:zia207@gmail.com"> <i class="bi bi-envelope" role="img" aria-label="Email">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+</ul>
+</div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+  <a href="" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="Toggle dark mode"><i class="bi"></i></a>
+</div>
+      </div> <!-- /container-fluid -->
+    </nav><nav class="quarto-secondary-nav"><div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./02-08-03-00-potential-outcomes-framework-introduction-r.html"><strong>Potential Outcomes Framework (Neyman–Rubin Causal Model)</strong></a></li><li class="breadcrumb-item"><a href="./02-08-03-04-potential-outcomes-framework-doubly-robust-estimators-r.html">Doubly Robust Estimators</a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav></header><!-- content --><header id="title-block-header" class="quarto-title-block"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./02-08-03-00-potential-outcomes-framework-introduction-r.html"><strong>Potential Outcomes Framework (Neyman–Rubin Causal Model)</strong></a></li><li class="breadcrumb-item"><a href="./02-08-03-04-potential-outcomes-framework-doubly-robust-estimators-r.html">Doubly Robust Estimators</a></li></ol></nav></header><div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation docked overflow-auto"><div class="pt-lg-2 mt-2 text-center sidebar-header">
+      <a href="./index.html" class="sidebar-logo-link">
+      <img src="./Image/chapter_logo_causal_inference_r.png" alt="" class="sidebar-logo light-content py-0 d-lg-inline d-none"><img src="./Image/chapter_logo_causal_inference_r.png" alt="" class="sidebar-logo dark-content py-0 d-lg-inline d-none"></a>
+      </div>
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Search"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+<li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="false">
+ <span class="menu-text"><strong>Causal Inference</strong></span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 ">
+<li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Introduction</span></a>
+  </div>
+</li>
+      </ul>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="false">
+ <span class="menu-text"><strong>Randomized Controlled Trials (RCTs)</strong></span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth1 ">
+<li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./02-08-01-00-randomized-controlled-trials-introduction-r.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Introduction to Randomized Controlled Trials (RCTs)</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./02-08-01-01-randomized-controlled-trials-design-r.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Design Phase of RCTs</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./02-08-01-02-randomized-controlled-trials-randomization-r.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Randomization of RCTs</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./02-08-01-03-randomized-controlled-trials-implementation-phase-r.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Implementation Phase of RCTs</span></a>
+  </div>
+</li>
+      </ul>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="false">
+ <span class="menu-text"><strong>Directed Acyclic Graphs (DAGs)</strong></span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-3" class="collapse list-unstyled sidebar-section depth1 ">
+<li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./02-08-02-00-graphical-models-introduction-r.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Introduction to Directed Acyclic Graphs (DAGs)</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./02-08-02-01-graphical-models-basic-work-example-r.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Basic Worked Example of DAGs</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./02-08-02-02-graphical-models-advanced-work-example-r.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">DAGs – Frontdoor Criterion and Time-Varying Confounding</span></a>
+  </div>
+</li>
+      </ul>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true">
+ <span class="menu-text"><strong>Potential Outcomes Framework (Neyman–Rubin Causal Model)</strong></span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-4" class="collapse list-unstyled sidebar-section depth1 show">
+<li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./02-08-03-00-potential-outcomes-framework-introduction-r.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Introduction to Potential Outcomes Framework</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./02-08-03-01-potential-outcomes-framework-causal-estimands-r.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Causal Estimands (Average Causal Effect)</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./02-08-03-02-potential-outcomes-framework-regression-adjustment-r.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Regression Adjustment</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./02-08-03-03-potential-outcomes-framework-propensity-score-matching-r.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Propensity Score Matching</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./02-08-03-04-potential-outcomes-framework-doubly-robust-estimators-r.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text">Doubly Robust Estimators</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./02-08-03-05-potential-outcomes-framework-difference-in-differences-r.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Difference-in-Differences (DiD)</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./02-08-03-06-potential-outcomes-framework-instrumental-variable-r.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Instrumental Variable (IV) Analysis</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./02-08-03-07-potential-outcomes-framework-regression-discontinuity-design-r.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Regression Discontinuity Design (RDD)</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./02-08-03-08-potential-outcomes-framework-g-methods-r.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Generalized Methods (G-Methods)</span></a>
+  </div>
+</li>
+      </ul>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="false">
+ <span class="menu-text"><strong>Temporal Causal Inference</strong></span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-5" class="collapse list-unstyled sidebar-section depth1 ">
+<li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./02-08-04-00-causal-timeseries-introduction-r.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Introduction to Temporal Causal Inference</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./02-08-04-01-causal-timeseries-var-granger-r.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Time-Series Causal Models: VAR, Granger Causality, SVAR, and ECM</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./02-08-04-02-causal-timeseries-its-bsts-r.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Interrupted Time Series and Bayesian Structural Time Series</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./02-08-04-03-causal-timeseries-panel-comparative-r.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Panel and Quasi-Experimental Comparative Methods</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./02-08-04-04-causal-timeseries-gmethods-tmle-r.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Longitudinal G-Methods and TMLE</span></a>
+  </div>
+</li>
+      </ul>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" role="navigation" aria-expanded="false">
+ <span class="menu-text"><strong>Causal Machine Learning (CausalML)</strong></span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" role="navigation" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-6" class="collapse list-unstyled sidebar-section depth1 ">
+<li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./02-08-05-00-casual-ml-introduction-r.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Machine Learning for Causal Inference</span></a>
+  </div>
+</li>
+          <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-7" role="navigation" aria-expanded="false">
+ <span class="menu-text"><strong>Tree-Based Models</strong></span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-7" role="navigation" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-7" class="collapse list-unstyled sidebar-section depth2 ">
+<li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./02-08-05-01-00-casual-tree-introduction-r.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Introduction to Tree-Based Models</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./02-08-05-01-01-causal-tree-r.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Causal Tree – Single Tree for Heterogeneous Treatment Effect</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./02-08-05-01-02-causal-forest-r.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Causal Forest (CF)</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./02-08-05-01-03-causal-survival-forest-r.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Causal Survival Forest (CSF)</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./02-08-05-01-04-instrumental-causal-forest-r.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Instrumental Forest</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./02-08-05-01-05-multi-arm-causal-forest-r.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Multi-arm/multi-outcome Causal Forest</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./02-08-05-01-06-causal-xgboost-r.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">The Boosted Model of Causal Inference (Causal XGBoost)</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./02-08-05-01-07-instrumental-causal-xgboost-r.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Instrumental Causal XGBoost</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./02-08-05-01-08-multi-arm-causal-boost-r.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Boosted Multi-Arm Causal Model</span></a>
+  </div>
+</li>
+      </ul>
+</li>
+          <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-8" role="navigation" aria-expanded="false">
+ <span class="menu-text"><strong>Meta-Learners</strong></span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-8" role="navigation" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-8" class="collapse list-unstyled sidebar-section depth2 ">
+<li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./02-08-05-02-00-meta-learners-introduction-r.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Introduction to Meta-Learners</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./02-08-05-02-01-meta-learners-binary-treatments-r.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Meta-Learner with Binary Treatments</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./02-08-05-02-02-meta-learners-multiple-discrete-treatment-r.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Meta-Learners with Multiple Discrete Treatments</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./02-08-05-02-03-meta-learners-continuous-treatment-r.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Meta Learner with Continuous Treatments</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./02-08-05-02-04-tmle-model-r.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Causal ML with Targeted Maximum Likelihood Estimation</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./02-08-05-02-05-meta-learners-domain-adaptation-learner-r.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Domain Adaptation Learner</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./02-08-05-02-06--meta-learners-doubly-robust-learners-r.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Doubly Robust Learners</span></a>
+  </div>
+</li>
+      </ul>
+</li>
+          <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-9" role="navigation" aria-expanded="false">
+ <span class="menu-text"><strong>Uplift-Learners</strong></span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-9" role="navigation" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-9" class="collapse list-unstyled sidebar-section depth2 ">
+<li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./02-08-05-03-00-uplift-trees-introduction-r.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Introduction to Uplift-Learners</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./02-08-05-03-01-uplift-trees-classification-r.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Uplift Tree-Classification</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./02-08-05-03-02-uplift-trees-regression-r.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Uplift Tree-Regression</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./02-08-05-03-03-uplift-randomForest-r.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Uplift Random Forest Regression</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./02-08-05-03-04-uplift-xgboost-r.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Uplift XGBoost Regression</span></a>
+  </div>
+</li>
+      </ul>
+</li>
+          <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-10" role="navigation" aria-expanded="false">
+ <span class="menu-text"><strong>Double/Debiased Machine Learning</strong></span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-10" role="navigation" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-10" class="collapse list-unstyled sidebar-section depth2 ">
+<li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./02-08-05-04-00-double-ml-introduction-r.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Introduction to Double/Debiased Machine Learning</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./02-08-05-04-01-double-ml-from-basics-to-application-r.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Double ML- Bias, Orthogonalization</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./02-08-05-04-02-double-ml- single-multiple-treatment-r.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Double ML - Single/multiple Treatment</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./02-08-05-04-03-double-ml-did-r.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">DoubleML for Difference-in-Differences (Did)</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./02-08-05-04-04-double-ml-iv-r.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Double ML with Instrumental Variables (IV)</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./02-08-05-04-05-double-ml-dynamic-ml.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Dynamic Double Machine Learning</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./02-08-05-04-06-double-ml-weighted-double-ml-r.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Weighted Double Machine Learning</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./02-08-05-04-07-double-ml-cluster-robust-r.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Cluster Robust Double Machine Learning</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./02-08-05-04-08-double-ml-ensemble-learners-r" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Double ML with Ensemble Learners</span></a>
+  </div>
+</li>
+      </ul>
+</li>
+          <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-11" role="navigation" aria-expanded="false">
+ <span class="menu-text"><strong>Deep Causal Learning</strong></span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-11" role="navigation" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-11" class="collapse list-unstyled sidebar-section depth2 ">
+<li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./02-08-05-05-00-DeepCausalML-introduction-r.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Introduction to Deep Causal Learning</span></a>
+  </div>
+</li>
+          <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-12" role="navigation" aria-expanded="false">
+ <span class="menu-text"><strong>Treatment Effect Estimators</strong></span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-12" role="navigation" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-12" class="collapse list-unstyled sidebar-section depth3 ">
+<li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./02-08-05-05-01-00-DeepCausalML-treatment-effect-estimators-introduction-r.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Introduction to Treatment Effect Estimators</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./02-08-05-05-01-01-DeepCausalML-TARNET-r.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">TARNet (Treatment-Agnostic Representation Network)</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./02-08-05-05-01-02-DeepCausalML-CFRTNet-r.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">CFRNet (Counterfactual Regression Network)</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./02-08-05-05-01-03-DeepCausalML-DragonNet-r.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">DragonNet: Propensity-Adjusted Networks for Causal Inference</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./02-08-05-05-01-04-DeepCausalML-GANITE-r.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">GANITE: Generative Adversarial Network for Inference of Treatment Effects</span></a>
+  </div>
+</li>
+      </ul>
+</li>
+          <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-13" role="navigation" aria-expanded="false">
+ <span class="menu-text"><strong>Generative Latent-Variable Causal Models (GLVCMs)</strong></span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-13" role="navigation" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-13" class="collapse list-unstyled sidebar-section depth3 ">
+<li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./02-08-05-05-02-00-DeepCausalML-generative-latent-variable-causal-models-introduction-r.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Introduction to GLVCMs</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./02-08-05-05-02-01-DeepCausalML-counterfactual-variational-autoencoder-CEVAE-r.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">CEVAE-Generative Model with Latent Confounders</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./02-08-05-05-02-02-DeepCausalML-variational-autoencoder-causalVAE.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Causal Variational Autoencoder (CausalVAE)</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./02-08-05-05-02-03-DeepCausalML-identifiable-variational-autoencoders-CausaliVAEs.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Identifiable Variational Autoencoders (CausaliVAEs)</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./02-08-05-05-02-04-DeepCausalML-causaldiscrepancyVAE-r.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">CausalDiscrepancyVAE- Discrepancy-Regularized Causal Representation Learning</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./02-08-05-05-02-05-DeepCausalML-causalGAN-r.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Causal Generative Network (CausalGAN)</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./02-08-05-05-02-06-DeepCausalML-deep-structural-causal-model-DSCM-r.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Deep Structural Causal Models (DSCMs)</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./02-08-05-05-02-07-DeepCausalML-causal-encoding-generative-EGN-r.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Causal Encoding Generative Modeling (CausalEGM)</span></a>
+  </div>
+</li>
+      </ul>
+</li>
+          <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-14" role="navigation" aria-expanded="false">
+ <span class="menu-text"><strong>Causal Structural Learning</strong></span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-14" role="navigation" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-14" class="collapse list-unstyled sidebar-section depth3 ">
+<li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./02-08-05-05-03-00-DeepCausalML-structural-learnering-introduction-r.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Introduction to Causal Structural Learning</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./02-08-05-05-03-01-DeepCausalML-continuous-optimization-models-NOTEARS-r.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Continuous Optimization Models (NOTEARS)</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./02-08-05-05-03-02-DeepCausalML-dag-structure-learning-graph-neural-networks-DagGNN-r.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">DAG-GNN - DAG Structure Learning with Graph Neural Networks</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./02-08-05-05-03-03-DeepCausalML-gradient-based-neural-learning-GranDag-r.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">GraN-DAG-Gradient-Based Neural DAG Learning</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./02-08-05-05-03-04-DeepCausalML-DAGMA-NoCurl-r.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">DAGMA and DAG-NoCurl for Causal Discovery</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./02-08-05-05-03-04-DeepCausalML-DAGMA-NoCurl-r.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">02-08-05-05-03-05-DeepCausalML-causal-structural-learning-regularization-CASTLE-r.qmd</span></a>
+  </div>
+</li>
+      </ul>
+</li>
+          <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-15" role="navigation" aria-expanded="false">
+ <span class="menu-text"><strong>Temporal Deep Causal ML</strong></span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-15" role="navigation" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-15" class="collapse list-unstyled sidebar-section depth3 ">
+<li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./02-08-05-05-04-00-DeepCuasalML-timesseries-introduction-r.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Introduction to Temporal Deep Causal ML</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./02-08-05-05-04-01-DeepCausalML-timeseries-neural-granger-cusuality-r.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Neural Granger Causality Models</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./02-08-05-05-04-02-DeepCausalML-timeseries-structural-causal-model-SMC-r.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Structural Causal Models (SCMs) with Deep Components</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./02-08-05-05-04-03-DeepCausalML-attension-transformer-r.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Attention-Based/Transformer Causal Models</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./02-08-05-05-04-04-DeepCausalML-timeseries-RNN-LSTM-causaML-r.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">RNN/LSTM-Based Causal Models</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./02-08-05-05-04-05-DeepCausalML-timeseries-graph-nn-r.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Graph Neural Network (GNN) Causal Models</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./02-08-05-05-04-06-DeepCausalML-timeseries-counterfactual-potential-causalML-r.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Counterfactual / Potential Outcomes Models</span></a>
+  </div>
+</li>
+      </ul>
+</li>
+      </ul>
+</li>
+          <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-16" role="navigation" aria-expanded="false">
+ <span class="menu-text"><strong>Terminiology</strong></span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-16" role="navigation" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-16" class="collapse list-unstyled sidebar-section depth2 ">
+<li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./00-scientific-terminology-glossary.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">A complete A–Z reference for causal inference and machine learning terminology</span></a>
+  </div>
+</li>
+      </ul>
+</li>
+      </ul>
+</li>
+    </ul>
+</div>
+</nav><div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active"><h2 id="toc-title">On This Page</h2>
+   
+  <ul>
+<li>
+<a href="#doubly-robust-estimators" id="toc-doubly-robust-estimators" class="nav-link active" data-scroll-target="#doubly-robust-estimators">3.4 Doubly Robust Estimators</a>
+  <ul>
+<li>
+<a href="#overview" id="toc-overview" class="nav-link" data-scroll-target="#overview">Overview</a>
+  <ul class="collapse">
+<li><a href="#core-concept-why-doubly-robust" id="toc-core-concept-why-doubly-robust" class="nav-link" data-scroll-target="#core-concept-why-doubly-robust">Core Concept: Why “Doubly Robust”?</a></li>
+  <li><a href="#canonical-form-augmented-inverse-probability-weighting-aipw" id="toc-canonical-form-augmented-inverse-probability-weighting-aipw" class="nav-link" data-scroll-target="#canonical-form-augmented-inverse-probability-weighting-aipw">Canonical Form: Augmented Inverse Probability Weighting (AIPW)</a></li>
+  <li><a href="#practical-advantages" id="toc-practical-advantages" class="nav-link" data-scroll-target="#practical-advantages">Practical Advantages</a></li>
+  <li><a href="#limitations-considerations" id="toc-limitations-considerations" class="nav-link" data-scroll-target="#limitations-considerations">Limitations &amp; Considerations</a></li>
+  </ul>
+</li>
+  <li><a href="#implementation-in-r" id="toc-implementation-in-r" class="nav-link" data-scroll-target="#implementation-in-r">Implementation in R</a></li>
+  <li>
+<a href="#setup-and-required-packages" id="toc-setup-and-required-packages" class="nav-link" data-scroll-target="#setup-and-required-packages">Setup and Required Packages</a>
+  <ul class="collapse">
+<li><a href="#verify-installation" id="toc-verify-installation" class="nav-link" data-scroll-target="#verify-installation">Verify Installation</a></li>
+  <li><a href="#load-packages" id="toc-load-packages" class="nav-link" data-scroll-target="#load-packages">Load Packages</a></li>
+  <li><a href="#check-loaded-packages" id="toc-check-loaded-packages" class="nav-link" data-scroll-target="#check-loaded-packages">Check Loaded Packages</a></li>
+  <li>
+<a href="#simulated-data-with-known-ground-truth" id="toc-simulated-data-with-known-ground-truth" class="nav-link" data-scroll-target="#simulated-data-with-known-ground-truth">Simulated Data with Known Ground Truth</a>
+  <ul class="collapse">
+<li><a href="#estimation-functions" id="toc-estimation-functions" class="nav-link" data-scroll-target="#estimation-functions">Estimation Functions</a></li>
+  <li><a href="#visualization-of-results" id="toc-visualization-of-results" class="nav-link" data-scroll-target="#visualization-of-results">Visualization of Results</a></li>
+  </ul>
+</li>
+  </ul>
+</li>
+  <li>
+<a href="#lalonde-dataset-analysis" id="toc-lalonde-dataset-analysis" class="nav-link" data-scroll-target="#lalonde-dataset-analysis">Lalonde Dataset Analysis</a>
+  <ul class="collapse">
+<li><a href="#data-preparation" id="toc-data-preparation" class="nav-link" data-scroll-target="#data-preparation">Data Preparation</a></li>
+  <li><a href="#propensity-score-estimation-diagnostics" id="toc-propensity-score-estimation-diagnostics" class="nav-link" data-scroll-target="#propensity-score-estimation-diagnostics">Propensity Score Estimation &amp; Diagnostics</a></li>
+  <li>
+<a href="#doubly-robust-estimation---augmented-inverse-probability-weighting-aipw" id="toc-doubly-robust-estimation---augmented-inverse-probability-weighting-aipw" class="nav-link" data-scroll-target="#doubly-robust-estimation---augmented-inverse-probability-weighting-aipw">Doubly Robust Estimation - Augmented Inverse Probability Weighting (AIPW)</a>
+  <ul class="collapse">
+<li><a href="#manual-aipw-implementation" id="toc-manual-aipw-implementation" class="nav-link" data-scroll-target="#manual-aipw-implementation">Manual AIPW Implementation</a></li>
+  <li><a href="#aipw-with-aipw-package-super-learner" id="toc-aipw-with-aipw-package-super-learner" class="nav-link" data-scroll-target="#aipw-with-aipw-package-super-learner">AIPW with AIPW Package &amp; Super Learner</a></li>
+  <li><a href="#comparison-with-alternative-methods" id="toc-comparison-with-alternative-methods" class="nav-link" data-scroll-target="#comparison-with-alternative-methods">Comparison with Alternative Methods</a></li>
+  </ul>
+</li>
+  </ul>
+</li>
+  <li><a href="#summary-and-conclusion" id="toc-summary-and-conclusion" class="nav-link" data-scroll-target="#summary-and-conclusion">Summary and Conclusion</a></li>
+  <li><a href="#resources" id="toc-resources" class="nav-link" data-scroll-target="#resources">Resources</a></li>
+  </ul>
+</li>
+  </ul></nav>
+    </div>
+<!-- main -->
+<main class="content quarto-banner-title-block" id="quarto-document-content"><div class="quarto-figure quarto-figure-left">
+<figure class="figure"><p><a href="https://github.com/zia207/Causal_Inference_R/blob/main/Notebook/02_08_03_04_potential_outcomes_framework_doubly_robust_estimators_r.ipynb"><img src="Image/open_colab.png" class="img-fluid quarto-figure quarto-figure-left figure-img" width="150"></a></p>
+</figure>
+</div>
+<div class="quarto-figure quarto-figure-left">
+<figure class="figure"><p><img src="Image/banner_Causal_Inference_Potential_Outcome_R.png" class="img-fluid quarto-figure quarto-figure-left figure-img" width="1400"></p>
+</figure>
+</div>
+<section id="doubly-robust-estimators" class="level1 unnumbered"><h1 class="unnumbered">3.4 Doubly Robust Estimators</h1>
+<p>Doubly robust estimators combine both outcome regression and propensity score weighting to estimate causal effects. The key advantage of doubly robust estimators is that they provide consistent estimates of the treatment effect if either the outcome model or the propensity score model is correctly specified, but not necessarily both. In this tutorial, we will implement a doubly robust estimator using R.</p>
+<section id="overview" class="level2"><h2 class="anchored" data-anchor-id="overview">Overview</h2>
+<p><strong>Doubly robust (DR) estimators</strong> are a class of statistical methods used primarily in <strong>causal inference</strong> and <strong>missing data problems</strong> that combine two modeling approaches—outcome regression and propensity score weighting—in a way that provides protection against model misspecification [[1]]. The key innovation is their “double robustness” property: the estimator remains <strong>consistent</strong> (converges to the true value) if <em>either</em> the outcome model <em>or</em> the propensity score model is correctly specified—not necessarily both [[14]].</p>
+<section id="core-concept-why-doubly-robust" class="level3"><h3 class="anchored" data-anchor-id="core-concept-why-doubly-robust">Core Concept: Why “Doubly Robust”?</h3>
+<p>Consider estimating the Average Treatment Effect (ATE) in an observational study where treatment assignment may be confounded by covariates <span class="math inline">\(X\)</span>:</p>
+<ul>
+<li>
+<strong>Approach 1 (Outcome Regression)</strong>: Model the outcome <span class="math inline">\(Y\)</span> as a function of treatment <span class="math inline">\(T\)</span> and covariates <span class="math inline">\(X\)</span>:</li>
+</ul>
+<p><span class="math display">\[E[Y|T,X] = g(T,X;β)\]</span></p>
+<p>→ Consistent only if <span class="math inline">\(g(·)\)</span> is correctly specified</p>
+<ul>
+<li>
+<strong>Approach 2 (Propensity Score Weighting/IPW)</strong>: Model treatment assignment probability:</li>
+</ul>
+<p><span class="math display">\[e(X) = P(T=1|X)\]</span></p>
+<p>→ Weight observations by inverse probability: <span class="math inline">\(T/e(X) - (1-T)/(1-e(X))\)</span></p>
+<p>→ Consistent only if <span class="math inline">\(e(X)\)</span> is correctly specified</p>
+<p><strong>Doubly robust estimators merge these approaches</strong> such that consistency is guaranteed if <em>at least one</em> model is correct. This provides a safety net against misspecification—a critical advantage in real-world applications where perfect model specification is rarely achievable.</p>
+</section><section id="canonical-form-augmented-inverse-probability-weighting-aipw" class="level3"><h3 class="anchored" data-anchor-id="canonical-form-augmented-inverse-probability-weighting-aipw">Canonical Form: Augmented Inverse Probability Weighting (AIPW)</h3>
+<p>The most widely used DR estimator is the <strong>Augmented Inverse Probability Weighting (AIPW) estimator</strong> for ATE:</p>
+<p><span class="math display">\[\hat{\tau}_{AIPW} = \frac{1}{n}\sum_{i=1}^n \left[ \frac{T_i(Y_i - \hat{\mu}_1(X_i))}{\hat{e}(X_i)} - \frac{(1-T_i)(Y_i - \hat{\mu}_0(X_i))}{1-\hat{e}(X_i)} + \hat{\mu}_1(X_i) - \hat{\mu}_0(X_i) \right]\]</span></p>
+<p>Where:</p>
+<ul>
+<li>
+<span class="math inline">\(\hat{e}(X_i)\)</span> = estimated propensity score</li>
+<li>
+<span class="math inline">\(\hat{\mu}_1(X_i) = \hat{E}[Y|T=1,X_i]\)</span> = predicted outcome under treatment</li>
+<li>
+<span class="math inline">\(\hat{\mu}_0(X_i) = \hat{E}[Y|T=0,X_i]\)</span> = predicted outcome under control</li>
+</ul>
+<p>The structure reveals the “augmentation”:</p>
+<ul>
+<li><p>First two terms: <strong>Inverse probability weighting</strong> (IPW) correction</p></li>
+<li><p>Last two terms: <strong>Outcome regression</strong> prediction</p></li>
+</ul>
+<p>→ The augmentation term makes the estimator robust to misspecification of either component</p>
+</section><section id="practical-advantages" class="level3"><h3 class="anchored" data-anchor-id="practical-advantages">Practical Advantages</h3>
+<ol type="1">
+<li>
+<strong>Model misspecification protection</strong>: Reduces reliance on perfect specification of either model [[1]]</li>
+<li>
+<strong>Improved efficiency</strong>: When <em>both</em> models are correct, DR estimators typically achieve lower variance than pure IPW or regression alone</li>
+<li>
+<strong>Flexibility with machine learning</strong>: Modern implementations (e.g., Double/Debiased Machine Learning [[28]]) allow flexible estimation of <span class="math inline">\(e(X)\)</span> and <span class="math inline">\(μ(X)\)</span> using ML algorithms (random forests, neural networks, gradient boosting) while maintaining valid inference through cross-fitting [[32]]</li>
+<li>
+<strong>Applicable to complex settings</strong>: Extensions exist for continuous treatments, heterogeneous effects, instrumental variables, and survival analysis</li>
+</ol></section><section id="limitations-considerations" class="level3"><h3 class="anchored" data-anchor-id="limitations-considerations">Limitations &amp; Considerations</h3>
+<ul>
+<li>
+<strong>Positivity violations</strong>: Requires sufficient overlap in treatment assignment across covariate space (i.e., <span class="math inline">\(0 &lt; e(X) &lt; 1\)</span>). Extreme propensity scores can cause high variance</li>
+<li>
+<strong>Not “doubly efficient”</strong>: Double robustness ≠ double efficiency. Variance can still be large if propensity scores are extreme</li>
+<li>
+<strong>Implementation complexity</strong>: Requires careful estimation of both components and often cross-fitting to avoid overfitting bias [[34]]</li>
+<li>
+<strong>Interpretation</strong>: The estimator’s consistency guarantee applies asymptotically; finite-sample performance depends on both models’ quality</li>
+</ul></section></section><section id="implementation-in-r" class="level2"><h2 class="anchored" data-anchor-id="implementation-in-r">Implementation in R</h2>
+<p>This tutorial provides a hands-on introduction to <strong>doubly robust (DR) estimators</strong>—a powerful class of methods for causal inference that combine outcome regression and propensity score weighting. We’ll progress from simulated data (where ground truth is known) to the classic Lalonde dataset, demonstrating implementation, diagnostics, and interpretation.</p>
+</section><section id="setup-and-required-packages" class="level2"><h2 class="anchored" data-anchor-id="setup-and-required-packages">Setup and Required Packages</h2>
+<div class="cell">
+<details open="" class="code-fold"><summary>Code</summary><div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">packages</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span></span>
+<span>          <span class="st">'AIPW'</span>,</span>
+<span>          <span class="st">'Matching'</span>,</span>
+<span>          <span class="st">'SuperLearner'</span>,</span>
+<span>          <span class="st">'WeightIt'</span>,</span>
+<span>          <span class="st">'cobalt'</span>,</span>
+<span>          <span class="st">'grf'</span>,</span>
+<span>          <span class="st">'survey'</span>,</span>
+<span>          <span class="st">'tidyr'</span>,</span>
+<span>          <span class="st">'tidyverse'</span></span>
+<span><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co">#| warning: false</span></span>
+<span><span class="co">#| error: false</span></span>
+<span></span>
+<span><span class="co"># Install missing packages</span></span>
+<span><span class="va">new_packages</span> <span class="op">&lt;-</span> <span class="va">packages</span><span class="op">[</span><span class="op">!</span><span class="op">(</span><span class="va">packages</span> <span class="op"><a href="https://rdrr.io/r/base/match.html">%in%</a></span> <span class="fu"><a href="https://rdrr.io/r/utils/installed.packages.html">installed.packages</a></span><span class="op">(</span><span class="op">)</span><span class="op">[</span>,<span class="st">"Package"</span><span class="op">]</span><span class="op">)</span><span class="op">]</span></span>
+<span><span class="kw">if</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/length.html">length</a></span><span class="op">(</span><span class="va">new_packages</span><span class="op">)</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html">install.packages</a></span><span class="op">(</span><span class="va">new_packages</span><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<section id="verify-installation" class="level3"><h3 class="anchored" data-anchor-id="verify-installation">Verify Installation</h3>
+<div class="cell">
+<details open="" class="code-fold"><summary>Code</summary><div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co"># Verify installation</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html">cat</a></span><span class="op">(</span><span class="st">"Installed packages:\n"</span><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details><div class="cell-output cell-output-stdout">
+<pre><code>Installed packages:</code></pre>
+</div>
+<details open="" class="code-fold"><summary>Code</summary><div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/print.html">print</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/lapply.html">sapply</a></span><span class="op">(</span><span class="va">packages</span>, <span class="va">requireNamespace</span>, quietly <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details><div class="cell-output cell-output-stdout">
+<pre><code>        AIPW     Matching SuperLearner     WeightIt       cobalt          grf 
+        TRUE         TRUE         TRUE         TRUE         TRUE         TRUE 
+      survey        tidyr    tidyverse 
+        TRUE         TRUE         TRUE </code></pre>
+</div>
+</div>
+</section><section id="load-packages" class="level3"><h3 class="anchored" data-anchor-id="load-packages">Load Packages</h3>
+<div class="cell">
+<details open="" class="code-fold"><summary>Code</summary><div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co"># Load packages with suppressed messages</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/invisible.html">invisible</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/lapply.html">lapply</a></span><span class="op">(</span><span class="va">packages</span>, <span class="kw">function</span><span class="op">(</span><span class="va">pkg</span><span class="op">)</span> <span class="op">{</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/message.html">suppressPackageStartupMessages</a></span><span class="op">(</span><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va">pkg</span>, character.only <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="op">}</span><span class="op">)</span><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+</div>
+</section><section id="check-loaded-packages" class="level3"><h3 class="anchored" data-anchor-id="check-loaded-packages">Check Loaded Packages</h3>
+<div class="cell">
+<details open="" class="code-fold"><summary>Code</summary><div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co"># Check loaded packages</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html">cat</a></span><span class="op">(</span><span class="st">"Successfully loaded packages:\n"</span><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details><div class="cell-output cell-output-stdout">
+<pre><code>Successfully loaded packages:</code></pre>
+</div>
+<details open="" class="code-fold"><summary>Code</summary><div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/print.html">print</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/search.html">search</a></span><span class="op">(</span><span class="op">)</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/grep.html">grepl</a></span><span class="op">(</span><span class="st">"package:"</span>, <span class="fu"><a href="https://rdrr.io/r/base/search.html">search</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span><span class="op">]</span><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details><div class="cell-output cell-output-stdout">
+<pre><code> [1] "package:lubridate"    "package:forcats"      "package:stringr"     
+ [4] "package:dplyr"        "package:purrr"        "package:readr"       
+ [7] "package:tibble"       "package:ggplot2"      "package:tidyverse"   
+[10] "package:tidyr"        "package:survey"       "package:survival"    
+[13] "package:Matrix"       "package:grid"         "package:grf"         
+[16] "package:cobalt"       "package:WeightIt"     "package:SuperLearner"
+[19] "package:gam"          "package:foreach"      "package:splines"     
+[22] "package:nnls"         "package:Matching"     "package:MASS"        
+[25] "package:AIPW"         "package:stats"        "package:graphics"    
+[28] "package:grDevices"    "package:utils"        "package:datasets"    
+[31] "package:methods"      "package:base"        </code></pre>
+</div>
+</div>
+</section><section id="simulated-data-with-known-ground-truth" class="level3"><h3 class="anchored" data-anchor-id="simulated-data-with-known-ground-truth">Simulated Data with Known Ground Truth</h3>
+<p>We’ll simulate data where the true Average Treatment Effect (ATE) = 5.0, then deliberately misspecify models to demonstrate double robustness.</p>
+<div class="cell">
+<details open="" class="code-fold"><summary>Code</summary><div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb12"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">simulate_dr_data</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">n</span> <span class="op">=</span> <span class="fl">1000</span>, <span class="va">misspecify_ps</span> <span class="op">=</span> <span class="cn">FALSE</span>, <span class="va">misspecify_outcome</span> <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span> <span class="op">{</span></span>
+<span>  <span class="co"># Covariates</span></span>
+<span>  <span class="va">X1</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html">rnorm</a></span><span class="op">(</span><span class="va">n</span>, <span class="fl">0</span>, <span class="fl">1</span><span class="op">)</span></span>
+<span>  <span class="va">X2</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/Binomial.html">rbinom</a></span><span class="op">(</span><span class="va">n</span>, <span class="fl">1</span>, <span class="fl">0.5</span><span class="op">)</span></span>
+<span>  <span class="va">X3</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/Uniform.html">runif</a></span><span class="op">(</span><span class="va">n</span>, <span class="fl">0</span>, <span class="fl">1</span><span class="op">)</span></span>
+<span>  </span>
+<span>  <span class="co"># True propensity score (logistic)</span></span>
+<span>  <span class="kw">if</span> <span class="op">(</span><span class="va">misspecify_ps</span><span class="op">)</span> <span class="op">{</span></span>
+<span>    <span class="co"># MISSPECIFIED: omit X3</span></span>
+<span>    <span class="va">logit_ps</span> <span class="op">&lt;-</span> <span class="op">-</span><span class="fl">0.5</span> <span class="op">+</span> <span class="fl">0.8</span><span class="op">*</span><span class="va">X1</span> <span class="op">+</span> <span class="fl">0.6</span><span class="op">*</span><span class="va">X2</span></span>
+<span>  <span class="op">}</span> <span class="kw">else</span> <span class="op">{</span></span>
+<span>    <span class="co"># CORRECT: include all confounders</span></span>
+<span>    <span class="va">logit_ps</span> <span class="op">&lt;-</span> <span class="op">-</span><span class="fl">0.5</span> <span class="op">+</span> <span class="fl">0.8</span><span class="op">*</span><span class="va">X1</span> <span class="op">+</span> <span class="fl">0.6</span><span class="op">*</span><span class="va">X2</span> <span class="op">+</span> <span class="fl">0.4</span><span class="op">*</span><span class="va">X3</span></span>
+<span>  <span class="op">}</span></span>
+<span>  <span class="va">ps</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/Logistic.html">plogis</a></span><span class="op">(</span><span class="va">logit_ps</span><span class="op">)</span></span>
+<span>  <span class="cn">T</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/Binomial.html">rbinom</a></span><span class="op">(</span><span class="va">n</span>, <span class="fl">1</span>, <span class="va">ps</span><span class="op">)</span>  <span class="co"># Treatment assignment</span></span>
+<span>  </span>
+<span>  <span class="co"># True outcome model (linear)</span></span>
+<span>  <span class="kw">if</span> <span class="op">(</span><span class="va">misspecify_outcome</span><span class="op">)</span> <span class="op">{</span></span>
+<span>    <span class="co"># MISSPECIFIED: omit interaction term</span></span>
+<span>    <span class="va">mu0</span> <span class="op">&lt;-</span> <span class="fl">10</span> <span class="op">+</span> <span class="fl">1.5</span><span class="op">*</span><span class="va">X1</span> <span class="op">+</span> <span class="fl">2</span><span class="op">*</span><span class="va">X2</span></span>
+<span>    <span class="va">mu1</span> <span class="op">&lt;-</span> <span class="va">mu0</span> <span class="op">+</span> <span class="fl">5</span>  <span class="co"># True ATE = 5</span></span>
+<span>  <span class="op">}</span> <span class="kw">else</span> <span class="op">{</span></span>
+<span>    <span class="co"># CORRECT: include interaction</span></span>
+<span>    <span class="va">mu0</span> <span class="op">&lt;-</span> <span class="fl">10</span> <span class="op">+</span> <span class="fl">1.5</span><span class="op">*</span><span class="va">X1</span> <span class="op">+</span> <span class="fl">2</span><span class="op">*</span><span class="va">X2</span> <span class="op">+</span> <span class="fl">1.2</span><span class="op">*</span><span class="va">X1</span><span class="op">*</span><span class="va">X2</span></span>
+<span>    <span class="va">mu1</span> <span class="op">&lt;-</span> <span class="va">mu0</span> <span class="op">+</span> <span class="fl">5</span> <span class="op">+</span> <span class="fl">0.8</span><span class="op">*</span><span class="va">X1</span>  <span class="co"># Heterogeneous treatment effect</span></span>
+<span>  <span class="op">}</span></span>
+<span>  </span>
+<span>  <span class="co"># Generate outcomes with noise</span></span>
+<span>  <span class="va">Y0</span> <span class="op">&lt;-</span> <span class="va">mu0</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html">rnorm</a></span><span class="op">(</span><span class="va">n</span>, <span class="fl">0</span>, <span class="fl">2</span><span class="op">)</span></span>
+<span>  <span class="va">Y1</span> <span class="op">&lt;-</span> <span class="va">mu1</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html">rnorm</a></span><span class="op">(</span><span class="va">n</span>, <span class="fl">0</span>, <span class="fl">2</span><span class="op">)</span></span>
+<span>  <span class="va">Y</span> <span class="op">&lt;-</span> <span class="cn">T</span> <span class="op">*</span> <span class="va">Y1</span> <span class="op">+</span> <span class="op">(</span><span class="fl">1</span> <span class="op">-</span> <span class="cn">T</span><span class="op">)</span> <span class="op">*</span> <span class="va">Y0</span></span>
+<span>  </span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html">data.frame</a></span><span class="op">(</span><span class="va">Y</span>, <span class="cn">T</span>, <span class="va">X1</span>, <span class="va">X2</span>, <span class="va">X3</span>, ps_true <span class="op">=</span> <span class="va">ps</span>, <span class="va">Y0</span>, <span class="va">Y1</span><span class="op">)</span></span>
+<span><span class="op">}</span></span>
+<span></span>
+<span><span class="co"># Generate four scenarios to test robustness property</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/Random.html">set.seed</a></span><span class="op">(</span><span class="fl">42</span><span class="op">)</span></span>
+<span><span class="va">data_correct</span> <span class="op">&lt;-</span> <span class="fu">simulate_dr_data</span><span class="op">(</span>n <span class="op">=</span> <span class="fl">2000</span><span class="op">)</span>  <span class="co"># Both models correct</span></span>
+<span><span class="va">data_misspec_ps</span> <span class="op">&lt;-</span> <span class="fu">simulate_dr_data</span><span class="op">(</span>n <span class="op">=</span> <span class="fl">2000</span>, misspecify_ps <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>  <span class="co"># PS misspecified</span></span>
+<span><span class="va">data_misspec_outcome</span> <span class="op">&lt;-</span> <span class="fu">simulate_dr_data</span><span class="op">(</span>n <span class="op">=</span> <span class="fl">2000</span>, misspecify_outcome <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>  <span class="co"># Outcome misspecified</span></span>
+<span><span class="va">data_both_misspec</span> <span class="op">&lt;-</span> <span class="fu">simulate_dr_data</span><span class="op">(</span>n <span class="op">=</span> <span class="fl">2000</span>, misspecify_ps <span class="op">=</span> <span class="cn">TRUE</span>, misspecify_outcome <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>  <span class="co"># Both wrong</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+</div>
+<section id="estimation-functions" class="level4"><h4 class="anchored" data-anchor-id="estimation-functions">Estimation Functions</h4>
+<p>The function <code>estimate_ate</code> implements Inverse Probability Weighting (IPW), regression, and doubly robust estimators. It fits the necessary models and computes the ATE based on the specified method.</p>
+<div class="cell">
+<details open="" class="code-fold"><summary>Code</summary><div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb13"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">estimate_ate</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">data</span>, <span class="va">method</span> <span class="op">=</span> <span class="st">"dr"</span><span class="op">)</span> <span class="op">{</span></span>
+<span>  <span class="co"># Fit propensity score model</span></span>
+<span>  <span class="va">ps_model</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/glm.html">glm</a></span><span class="op">(</span><span class="cn">T</span> <span class="op">~</span> <span class="va">X1</span> <span class="op">+</span> <span class="va">X2</span> <span class="op">+</span> <span class="va">X3</span>, data <span class="op">=</span> <span class="va">data</span>, family <span class="op">=</span> <span class="va">binomial</span><span class="op">)</span></span>
+<span>  <span class="va">ps_hat</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/predict.html">predict</a></span><span class="op">(</span><span class="va">ps_model</span>, type <span class="op">=</span> <span class="st">"response"</span><span class="op">)</span></span>
+<span>  </span>
+<span>  <span class="co"># Fit outcome models</span></span>
+<span>  <span class="va">outcome_model_0</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/lm.html">lm</a></span><span class="op">(</span><span class="va">Y</span> <span class="op">~</span> <span class="va">X1</span> <span class="op">+</span> <span class="va">X2</span> <span class="op">+</span> <span class="va">X3</span>, data <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/subset.html">subset</a></span><span class="op">(</span><span class="va">data</span>, <span class="cn">T</span> <span class="op">==</span> <span class="fl">0</span><span class="op">)</span><span class="op">)</span></span>
+<span>  <span class="va">outcome_model_1</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/lm.html">lm</a></span><span class="op">(</span><span class="va">Y</span> <span class="op">~</span> <span class="va">X1</span> <span class="op">+</span> <span class="va">X2</span> <span class="op">+</span> <span class="va">X3</span>, data <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/subset.html">subset</a></span><span class="op">(</span><span class="va">data</span>, <span class="cn">T</span> <span class="op">==</span> <span class="fl">1</span><span class="op">)</span><span class="op">)</span></span>
+<span>  </span>
+<span>  <span class="va">mu0_hat</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/predict.html">predict</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/lm.html">lm</a></span><span class="op">(</span><span class="va">Y</span> <span class="op">~</span> <span class="va">X1</span> <span class="op">+</span> <span class="va">X2</span> <span class="op">+</span> <span class="va">X3</span>, data <span class="op">=</span> <span class="va">data</span><span class="op">)</span>, newdata <span class="op">=</span> <span class="va">data</span><span class="op">)</span></span>
+<span>  <span class="va">mu1_hat</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/predict.html">predict</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/lm.html">lm</a></span><span class="op">(</span><span class="va">Y</span> <span class="op">~</span> <span class="va">X1</span> <span class="op">+</span> <span class="va">X2</span> <span class="op">+</span> <span class="va">X3</span>, data <span class="op">=</span> <span class="va">data</span><span class="op">)</span>, newdata <span class="op">=</span> <span class="va">data</span><span class="op">)</span></span>
+<span>  </span>
+<span>  <span class="co"># IPW estimator</span></span>
+<span>  <span class="va">ipw_weights</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/ifelse.html">ifelse</a></span><span class="op">(</span><span class="va">data</span><span class="op">$</span><span class="cn">T</span> <span class="op">==</span> <span class="fl">1</span>, <span class="fl">1</span><span class="op">/</span><span class="va">ps_hat</span>, <span class="op">-</span><span class="fl">1</span><span class="op">/</span><span class="op">(</span><span class="fl">1</span> <span class="op">-</span> <span class="va">ps_hat</span><span class="op">)</span><span class="op">)</span></span>
+<span>  <span class="va">ipw_ate</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html">mean</a></span><span class="op">(</span><span class="va">ipw_weights</span> <span class="op">*</span> <span class="va">data</span><span class="op">$</span><span class="va">Y</span><span class="op">)</span></span>
+<span>  </span>
+<span>  <span class="co"># Outcome regression estimator</span></span>
+<span>  <span class="va">reg_ate</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html">mean</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/predict.html">predict</a></span><span class="op">(</span><span class="va">outcome_model_1</span>, newdata <span class="op">=</span> <span class="va">data</span><span class="op">)</span> <span class="op">-</span> </span>
+<span>                  <span class="fu"><a href="https://rdrr.io/r/stats/predict.html">predict</a></span><span class="op">(</span><span class="va">outcome_model_0</span>, newdata <span class="op">=</span> <span class="va">data</span><span class="op">)</span><span class="op">)</span></span>
+<span>  </span>
+<span>  <span class="co"># Doubly robust (AIPW) estimator</span></span>
+<span>  <span class="va">dr_term</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/ifelse.html">ifelse</a></span><span class="op">(</span><span class="va">data</span><span class="op">$</span><span class="cn">T</span> <span class="op">==</span> <span class="fl">1</span>,</span>
+<span>                    <span class="op">(</span><span class="va">data</span><span class="op">$</span><span class="va">Y</span> <span class="op">-</span> <span class="va">mu1_hat</span><span class="op">)</span> <span class="op">/</span> <span class="va">ps_hat</span> <span class="op">+</span> <span class="va">mu1_hat</span>,</span>
+<span>                    <span class="op">(</span><span class="va">data</span><span class="op">$</span><span class="va">Y</span> <span class="op">-</span> <span class="va">mu0_hat</span><span class="op">)</span> <span class="op">/</span> <span class="op">(</span><span class="fl">1</span> <span class="op">-</span> <span class="va">ps_hat</span><span class="op">)</span> <span class="op">+</span> <span class="va">mu0_hat</span><span class="op">)</span></span>
+<span>  <span class="va">dr_ate</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html">mean</a></span><span class="op">(</span><span class="va">dr_term</span><span class="op">[</span><span class="va">data</span><span class="op">$</span><span class="cn">T</span> <span class="op">==</span> <span class="fl">1</span><span class="op">]</span><span class="op">)</span> <span class="op">-</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html">mean</a></span><span class="op">(</span><span class="va">dr_term</span><span class="op">[</span><span class="va">data</span><span class="op">$</span><span class="cn">T</span> <span class="op">==</span> <span class="fl">0</span><span class="op">]</span><span class="op">)</span></span>
+<span>  </span>
+<span>  <span class="co"># Return requested estimator</span></span>
+<span>  <span class="kw"><a href="https://rdrr.io/r/base/switch.html">switch</a></span><span class="op">(</span><span class="va">method</span>,</span>
+<span>         <span class="st">"ipw"</span> <span class="op">=</span> <span class="va">ipw_ate</span>,</span>
+<span>         <span class="st">"reg"</span> <span class="op">=</span> <span class="va">reg_ate</span>,</span>
+<span>         <span class="st">"dr"</span> <span class="op">=</span> <span class="va">dr_ate</span><span class="op">)</span></span>
+<span><span class="op">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+</div>
+<div class="cell">
+<details open="" class="code-fold"><summary>Code</summary><div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb14"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co"># Estimate ATE across scenarios</span></span>
+<span><span class="va">scenarios</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html">list</a></span><span class="op">(</span></span>
+<span>  correct <span class="op">=</span> <span class="va">data_correct</span>,</span>
+<span>  misspec_ps <span class="op">=</span> <span class="va">data_misspec_ps</span>,</span>
+<span>  misspec_outcome <span class="op">=</span> <span class="va">data_misspec_outcome</span>,</span>
+<span>  both_misspec <span class="op">=</span> <span class="va">data_both_misspec</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">results</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/lapply.html">lapply</a></span><span class="op">(</span><span class="va">scenarios</span>, <span class="kw">function</span><span class="op">(</span><span class="va">dat</span><span class="op">)</span> <span class="op">{</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span></span>
+<span>    ipw <span class="op">=</span> <span class="fu">estimate_ate</span><span class="op">(</span><span class="va">dat</span>, <span class="st">"ipw"</span><span class="op">)</span>,</span>
+<span>    reg <span class="op">=</span> <span class="fu">estimate_ate</span><span class="op">(</span><span class="va">dat</span>, <span class="st">"reg"</span><span class="op">)</span>,</span>
+<span>    dr <span class="op">=</span> <span class="fu">estimate_ate</span><span class="op">(</span><span class="va">dat</span>, <span class="st">"dr"</span><span class="op">)</span>,</span>
+<span>    truth <span class="op">=</span> <span class="fl">5.0</span></span>
+<span>  <span class="op">)</span></span>
+<span><span class="op">}</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Convert to data frame for plotting</span></span>
+<span><span class="va">results_df</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/do.call.html">do.call</a></span><span class="op">(</span><span class="va">rbind</span>, <span class="fu"><a href="https://rdrr.io/r/base/lapply.html">lapply</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/names.html">names</a></span><span class="op">(</span><span class="va">results</span><span class="op">)</span>, <span class="kw">function</span><span class="op">(</span><span class="va">name</span><span class="op">)</span> <span class="op">{</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html">data.frame</a></span><span class="op">(</span></span>
+<span>    scenario <span class="op">=</span> <span class="va">name</span>,</span>
+<span>    estimator <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">"IPW"</span>, <span class="st">"Regression"</span>, <span class="st">"Doubly Robust"</span>, <span class="st">"Truth"</span><span class="op">)</span>,</span>
+<span>    ate <span class="op">=</span> <span class="va">results</span><span class="op">[[</span><span class="va">name</span><span class="op">]</span><span class="op">]</span>,</span>
+<span>    stringsAsFactors <span class="op">=</span> <span class="cn">FALSE</span></span>
+<span>  <span class="op">)</span></span>
+<span><span class="op">}</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/print.html">print</a></span><span class="op">(</span><span class="va">results_df</span><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details><div class="cell-output cell-output-stdout">
+<pre><code>              scenario     estimator       ate
+ipw            correct           IPW  4.971359
+reg            correct    Regression  4.933144
+dr             correct Doubly Robust 12.548989
+truth          correct         Truth  5.000000
+ipw1        misspec_ps           IPW  5.021365
+reg1        misspec_ps    Regression  4.777029
+dr1         misspec_ps Doubly Robust 12.401772
+truth1      misspec_ps         Truth  5.000000
+ipw2   misspec_outcome           IPW  4.840774
+reg2   misspec_outcome    Regression  4.974390
+dr2    misspec_outcome Doubly Robust 11.916373
+truth2 misspec_outcome         Truth  5.000000
+ipw3      both_misspec           IPW  4.999452
+reg3      both_misspec    Regression  5.048397
+dr3       both_misspec Doubly Robust 12.288276
+truth3    both_misspec         Truth  5.000000</code></pre>
+</div>
+</div>
+</section><section id="visualization-of-results" class="level4"><h4 class="anchored" data-anchor-id="visualization-of-results">Visualization of Results</h4>
+<div class="cell">
+<details open="" class="code-fold"><summary>Code</summary><div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb16"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co"># Visualization</span></span>
+<span><span class="fu">ggplot</span><span class="op">(</span><span class="va">results_df</span>, <span class="fu">aes</span><span class="op">(</span>x <span class="op">=</span> <span class="va">scenario</span>, y <span class="op">=</span> <span class="va">ate</span>, color <span class="op">=</span> <span class="va">estimator</span>, group <span class="op">=</span> <span class="va">estimator</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu">geom_point</span><span class="op">(</span>size <span class="op">=</span> <span class="fl">3</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu">geom_hline</span><span class="op">(</span>yintercept <span class="op">=</span> <span class="fl">5</span>, linetype <span class="op">=</span> <span class="st">"dashed"</span>, color <span class="op">=</span> <span class="st">"darkgreen"</span>, size <span class="op">=</span> <span class="fl">1</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu">geom_line</span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu">labs</span><span class="op">(</span>title <span class="op">=</span> <span class="st">"Doubly Robust Estimator Performance Under Model Misspecification"</span>,</span>
+<span>       subtitle <span class="op">=</span> <span class="st">"True ATE = 5.0 (green dashed line)"</span>,</span>
+<span>       x <span class="op">=</span> <span class="st">"Scenario"</span>, y <span class="op">=</span> <span class="st">"Estimated ATE"</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu">theme_minimal</span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu">scale_color_manual</span><span class="op">(</span>values <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">"IPW"</span> <span class="op">=</span> <span class="st">"red"</span>, <span class="st">"Regression"</span> <span class="op">=</span> <span class="st">"blue"</span>, </span>
+<span>                                <span class="st">"Doubly Robust"</span> <span class="op">=</span> <span class="st">"purple"</span>, <span class="st">"Truth"</span> <span class="op">=</span> <span class="st">"darkgreen"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details><div class="cell-output-display">
+<div>
+<figure class="figure"><p><img src="02-08-03-04-potential-outcomes-framework-doubly-robust-estimators-r_files/figure-html/unnamed-chunk-8-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+</section></section></section><section id="lalonde-dataset-analysis" class="level2"><h2 class="anchored" data-anchor-id="lalonde-dataset-analysis">Lalonde Dataset Analysis</h2>
+<p>The Lalonde dataset evaluates the National Supported Work (NSW) job training program. We’ll estimate the effect of job training on 1978 earnings.</p>
+<section id="data-preparation" class="level3"><h3 class="anchored" data-anchor-id="data-preparation">Data Preparation</h3>
+<div class="cell">
+<details open="" class="code-fold"><summary>Code</summary><div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb17"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co"># Load Lalonde data (experimental + observational controls)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/data.html">data</a></span><span class="op">(</span><span class="st">"lalonde"</span>, package <span class="op">=</span> <span class="st">"cobalt"</span><span class="op">)</span></span>
+<span><span class="va">lalonde_data</span> <span class="op">&lt;-</span> <span class="va">lalonde</span> </span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+</div>
+</section><section id="propensity-score-estimation-diagnostics" class="level3"><h3 class="anchored" data-anchor-id="propensity-score-estimation-diagnostics">Propensity Score Estimation &amp; Diagnostics</h3>
+<div class="cell">
+<details open="" class="code-fold"><summary>Code</summary><div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb18"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co"># Estimate propensity scores with WeightIt (more stable than glm)</span></span>
+<span><span class="va">ps_weights</span> <span class="op">&lt;-</span> <span class="fu">weightit</span><span class="op">(</span><span class="va">treat</span> <span class="op">~</span><span class="va">age</span> <span class="op">+</span> <span class="va">educ</span> <span class="op">+</span> <span class="va">race</span> <span class="op">+</span> <span class="va">married</span> <span class="op">+</span> <span class="va">nodegree</span> <span class="op">+</span> <span class="va">re74</span> <span class="op">+</span> <span class="va">re75</span>,</span>
+<span>                       data <span class="op">=</span> <span class="va">lalonde_data</span>,</span>
+<span>                       method <span class="op">=</span> <span class="st">"ps"</span>,  <span class="co"># Propensity score weighting</span></span>
+<span>                       stabilize <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>  <span class="co"># Stabilized weights</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/summary.html">summary</a></span><span class="op">(</span><span class="va">ps_weights</span><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details><div class="cell-output cell-output-stdout">
+<pre><code>                  Summary of weights
+
+- Weight ranges:
+
+          Min                                  Max
+treated 0.353 |---------------------------| 12.075
+control 0.705  |----|                        3.314
+
+- Units with the 5 most extreme weights by group:
+                                       
+            68   116    10   137    124
+ treated 4.081 4.817 7.019 7.047 12.075
+           597   573   381   411    303
+ control 2.816 2.836 2.962  3.16  3.314
+
+- Weight statistics:
+
+        Coef of Var   MAD Entropy # Zeros
+treated       1.478 0.807   0.534       0
+control       0.552 0.391   0.118       0
+
+- Effective Sample Sizes:
+
+           Control Treated
+Unweighted  429.    185.  
+Weighted    329.01   58.33</code></pre>
+</div>
+</div>
+<div class="cell">
+<details open="" class="code-fold"><summary>Code</summary><div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb20"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co"># Balance diagnostics with cobalt</span></span>
+<span><span class="fu">bal.tab</span><span class="op">(</span><span class="va">ps_weights</span>, thresholds <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span>m <span class="op">=</span> <span class="fl">0.1</span><span class="op">)</span>, </span>
+<span>        binary <span class="op">=</span> <span class="st">"std"</span>, continuous <span class="op">=</span> <span class="st">"std"</span>,</span>
+<span>        un <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>  <span class="co"># Show unweighted + weighted balance</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details><div class="cell-output cell-output-stdout">
+<pre><code>Balance Measures
+                Type Diff.Un Diff.Adj        M.Threshold
+prop.score  Distance  1.7569   0.1360                   
+age          Contin. -0.2419  -0.1676 Not Balanced, &gt;0.1
+educ         Contin.  0.0448   0.1296 Not Balanced, &gt;0.1
+race_black    Binary  1.6708   0.1302 Not Balanced, &gt;0.1
+race_hispan   Binary -0.2774   0.0156     Balanced, &lt;0.1
+race_white    Binary -1.4080  -0.1378 Not Balanced, &gt;0.1
+married       Binary -0.7208  -0.2102 Not Balanced, &gt;0.1
+nodegree      Binary  0.2355  -0.1157 Not Balanced, &gt;0.1
+re74         Contin. -0.5958  -0.2740 Not Balanced, &gt;0.1
+re75         Contin. -0.2870  -0.1579 Not Balanced, &gt;0.1
+
+Balance tally for mean differences
+                   count
+Balanced, &lt;0.1         1
+Not Balanced, &gt;0.1     8
+
+Variable with the greatest mean difference
+ Variable Diff.Adj        M.Threshold
+     re74   -0.274 Not Balanced, &gt;0.1
+
+Effective sample sizes
+           Control Treated
+Unadjusted  429.    185.  
+Adjusted    329.01   58.33</code></pre>
+</div>
+</div>
+<div class="cell">
+<details open="" class="code-fold"><summary>Code</summary><div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb22"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co"># Visualize balance improvement</span></span>
+<span><span class="fu">love.plot</span><span class="op">(</span><span class="va">ps_weights</span>, thresholds <span class="op">=</span> <span class="fl">0.1</span>, </span>
+<span>          binary <span class="op">=</span> <span class="st">"std"</span>, continuous <span class="op">=</span> <span class="st">"std"</span>,</span>
+<span>          title <span class="op">=</span> <span class="st">"Balance Before and After Weighting"</span><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details><div class="cell-output-display">
+<div>
+<figure class="figure"><p><img src="02-08-03-04-potential-outcomes-framework-doubly-robust-estimators-r_files/figure-html/unnamed-chunk-12-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+</section><section id="doubly-robust-estimation---augmented-inverse-probability-weighting-aipw" class="level3"><h3 class="anchored" data-anchor-id="doubly-robust-estimation---augmented-inverse-probability-weighting-aipw">Doubly Robust Estimation - Augmented Inverse Probability Weighting (AIPW)</h3>
+<section id="manual-aipw-implementation" class="level4"><h4 class="anchored" data-anchor-id="manual-aipw-implementation">Manual AIPW Implementation</h4>
+<div class="cell">
+<details open="" class="code-fold"><summary>Code</summary><div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb23"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co"># Manual AIPW implementation</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/JasjeetSekhon/Matching">Matching</a></span><span class="op">)</span></span>
+<span><span class="va">aipw_estimate</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">Y</span>, <span class="va">A</span>, <span class="va">X</span><span class="op">)</span> <span class="op">{</span></span>
+<span>  <span class="co"># 1. Propensity score model with separation protection</span></span>
+<span>  <span class="va">ps_mod</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/glm.html">glm</a></span><span class="op">(</span><span class="va">A</span> <span class="op">~</span> <span class="va">.</span>, data <span class="op">=</span> <span class="va">X</span>, family <span class="op">=</span> <span class="va">binomial</span>,</span>
+<span>                control <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/glm.control.html">glm.control</a></span><span class="op">(</span>epsilon <span class="op">=</span> <span class="fl">1e-8</span>, maxit <span class="op">=</span> <span class="fl">50</span><span class="op">)</span><span class="op">)</span></span>
+<span>  <span class="va">ps_hat</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/predict.html">predict</a></span><span class="op">(</span><span class="va">ps_mod</span>, type <span class="op">=</span> <span class="st">"response"</span><span class="op">)</span></span>
+<span>  </span>
+<span>  <span class="co"># 2. CRITICAL: Stabilize extreme propensity scores</span></span>
+<span>  <span class="va">ps_hat</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html">pmin</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/Extremes.html">pmax</a></span><span class="op">(</span><span class="va">ps_hat</span>, <span class="fl">0.01</span><span class="op">)</span>, <span class="fl">0.99</span><span class="op">)</span>  <span class="co"># Prevent division by zero</span></span>
+<span>  </span>
+<span>  <span class="co"># 3. Outcome models (subset BOTH Y and X)</span></span>
+<span>  <span class="va">mu0_mod</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/lm.html">lm</a></span><span class="op">(</span><span class="va">Y</span><span class="op">[</span><span class="va">A</span> <span class="op">==</span> <span class="fl">0</span><span class="op">]</span> <span class="op">~</span> <span class="va">.</span>, data <span class="op">=</span> <span class="va">X</span><span class="op">[</span><span class="va">A</span> <span class="op">==</span> <span class="fl">0</span>, , drop <span class="op">=</span> <span class="cn">FALSE</span><span class="op">]</span><span class="op">)</span></span>
+<span>  <span class="va">mu1_mod</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/lm.html">lm</a></span><span class="op">(</span><span class="va">Y</span><span class="op">[</span><span class="va">A</span> <span class="op">==</span> <span class="fl">1</span><span class="op">]</span> <span class="op">~</span> <span class="va">.</span>, data <span class="op">=</span> <span class="va">X</span><span class="op">[</span><span class="va">A</span> <span class="op">==</span> <span class="fl">1</span>, , drop <span class="op">=</span> <span class="cn">FALSE</span><span class="op">]</span><span class="op">)</span></span>
+<span>  </span>
+<span>  <span class="va">mu0_hat</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/predict.html">predict</a></span><span class="op">(</span><span class="va">mu0_mod</span>, newdata <span class="op">=</span> <span class="va">X</span><span class="op">)</span></span>
+<span>  <span class="va">mu1_hat</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/predict.html">predict</a></span><span class="op">(</span><span class="va">mu1_mod</span>, newdata <span class="op">=</span> <span class="va">X</span><span class="op">)</span></span>
+<span>  </span>
+<span>  <span class="co"># 4. AIPW formula</span></span>
+<span>  <span class="va">dr0</span> <span class="op">&lt;-</span> <span class="op">(</span><span class="fl">1</span> <span class="op">-</span> <span class="va">A</span><span class="op">)</span> <span class="op">*</span> <span class="op">(</span><span class="va">Y</span> <span class="op">-</span> <span class="va">mu0_hat</span><span class="op">)</span> <span class="op">/</span> <span class="op">(</span><span class="fl">1</span> <span class="op">-</span> <span class="va">ps_hat</span><span class="op">)</span> <span class="op">+</span> <span class="va">mu0_hat</span></span>
+<span>  <span class="va">dr1</span> <span class="op">&lt;-</span> <span class="va">A</span> <span class="op">*</span> <span class="op">(</span><span class="va">Y</span> <span class="op">-</span> <span class="va">mu1_hat</span><span class="op">)</span> <span class="op">/</span> <span class="va">ps_hat</span> <span class="op">+</span> <span class="va">mu1_hat</span></span>
+<span>  </span>
+<span>  <span class="va">ate</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html">mean</a></span><span class="op">(</span><span class="va">dr1</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span> <span class="op">-</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html">mean</a></span><span class="op">(</span><span class="va">dr0</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
+<span>  </span>
+<span>  <span class="co"># 5. Variance estimation</span></span>
+<span>  <span class="va">phi</span> <span class="op">&lt;-</span> <span class="op">(</span><span class="va">A</span> <span class="op">*</span> <span class="op">(</span><span class="va">Y</span> <span class="op">-</span> <span class="va">mu1_hat</span><span class="op">)</span> <span class="op">/</span> <span class="va">ps_hat</span> <span class="op">-</span> </span>
+<span>          <span class="op">(</span><span class="fl">1</span> <span class="op">-</span> <span class="va">A</span><span class="op">)</span> <span class="op">*</span> <span class="op">(</span><span class="va">Y</span> <span class="op">-</span> <span class="va">mu0_hat</span><span class="op">)</span> <span class="op">/</span> <span class="op">(</span><span class="fl">1</span> <span class="op">-</span> <span class="va">ps_hat</span><span class="op">)</span> <span class="op">+</span> </span>
+<span>          <span class="va">mu1_hat</span> <span class="op">-</span> <span class="va">mu0_hat</span> <span class="op">-</span> <span class="va">ate</span><span class="op">)</span></span>
+<span>  <span class="va">se</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/sd.html">sd</a></span><span class="op">(</span><span class="va">phi</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span> <span class="op">/</span> <span class="fu"><a href="https://rdrr.io/r/base/MathFun.html">sqrt</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/sum.html">sum</a></span><span class="op">(</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/NA.html">is.na</a></span><span class="op">(</span><span class="va">phi</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
+<span>  </span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/list.html">list</a></span><span class="op">(</span>ATE <span class="op">=</span> <span class="va">ate</span>, SE <span class="op">=</span> <span class="va">se</span>, CI <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="va">ate</span> <span class="op">-</span> <span class="fl">1.96</span><span class="op">*</span><span class="va">se</span>, <span class="va">ate</span> <span class="op">+</span> <span class="fl">1.96</span><span class="op">*</span><span class="va">se</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="op">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+</div>
+<div class="cell">
+<details open="" class="code-fold"><summary>Code</summary><div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb24"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co"># Apply to Lalonde data</span></span>
+<span><span class="co"># Prepare data for AIPW</span></span>
+<span><span class="va">Y</span> <span class="op">&lt;-</span> <span class="va">lalonde_data</span><span class="op">$</span><span class="va">re78</span></span>
+<span><span class="va">A</span> <span class="op">&lt;-</span> <span class="va">lalonde_data</span><span class="op">$</span><span class="va">treat</span></span>
+<span><span class="va">X_cov</span> <span class="op">&lt;-</span> <span class="va">lalonde_data</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">"age"</span>, <span class="st">"educ"</span>, <span class="st">"race"</span>, <span class="st">"married"</span>, <span class="st">"nodegree"</span>, <span class="st">"re74"</span>, <span class="st">"re75"</span><span class="op">)</span><span class="op">]</span></span>
+<span></span>
+<span><span class="co"># Apply AIPW estimator</span></span>
+<span><span class="va">aipw_res</span> <span class="op">&lt;-</span> <span class="fu">aipw_estimate</span><span class="op">(</span><span class="va">Y</span>, <span class="va">A</span>, <span class="va">X_cov</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Results</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html">cat</a></span><span class="op">(</span><span class="st">"=== Doubly Robust ATE Estimate (AIPW) ===\n"</span><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details><div class="cell-output cell-output-stdout">
+<pre><code>=== Doubly Robust ATE Estimate (AIPW) ===</code></pre>
+</div>
+<details open="" class="code-fold"><summary>Code</summary><div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb26"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/cat.html">cat</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/sprintf.html">sprintf</a></span><span class="op">(</span><span class="st">"ATE: $%.0f\n"</span>, <span class="va">aipw_res</span><span class="op">$</span><span class="va">ATE</span><span class="op">)</span><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details><div class="cell-output cell-output-stdout">
+<pre><code>ATE: $470</code></pre>
+</div>
+<details open="" class="code-fold"><summary>Code</summary><div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb28"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/cat.html">cat</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/sprintf.html">sprintf</a></span><span class="op">(</span><span class="st">"SE:  $%.0f\n"</span>, <span class="va">aipw_res</span><span class="op">$</span><span class="va">SE</span><span class="op">)</span><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details><div class="cell-output cell-output-stdout">
+<pre><code>SE:  $926</code></pre>
+</div>
+<details open="" class="code-fold"><summary>Code</summary><div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb30"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/cat.html">cat</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/sprintf.html">sprintf</a></span><span class="op">(</span><span class="st">"95%% CI: [$%.0f, $%.0f]\n"</span>, <span class="va">aipw_res</span><span class="op">$</span><span class="va">CI_lower</span>, <span class="va">aipw_res</span><span class="op">$</span><span class="va">CI_upper</span><span class="op">)</span><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+</div>
+</section><section id="aipw-with-aipw-package-super-learner" class="level4"><h4 class="anchored" data-anchor-id="aipw-with-aipw-package-super-learner">AIPW with AIPW Package &amp; Super Learner</h4>
+<p>The <strong>{AIPW}</strong> R package provides an R6 class for doubly robust estimation of average causal effects using augmented inverse probability weighting. Create an object with <code>AIPW$new(Y, A, W.Q, W.g, Q.SL.library, g.SL.library, k_split, ...)</code>, fit nuisance models via <code>fit()</code> (or <code>stratified_fit()</code> for ATT/ATC), and obtain estimates with <code><a href="https://rdrr.io/r/base/summary.html">summary()</a></code>. Diagnostics include <code>plot.p_score()</code> and <code>plot.ip_weights()</code> for propensity scores and IP weights by exposure. If outcome is missing (assumed MAR), it estimates propensity for observation using <code>W</code> (disables separate <code>W.Q</code>/<code>W.g</code>). Missing exposure is not supported. Uses cross-fitting and SuperLearner-compatible libraries for flexible, bias-reduced estimation.</p>
+<div class="cell">
+<details open="" class="code-fold"><summary>Code</summary><div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb31"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/ecpolley/SuperLearner">SuperLearner</a></span><span class="op">)</span></span>
+<span><span class="co"># Load data (assuming cobalt is installed)</span></span>
+<span></span>
+<span><span class="co"># Outcome Y = re78 (continuous), A = treat (0/1)</span></span>
+<span><span class="va">Y</span> <span class="op">&lt;-</span> <span class="va">lalonde_data</span><span class="op">$</span><span class="va">re78</span></span>
+<span><span class="va">A</span> <span class="op">&lt;-</span> <span class="va">lalonde_data</span><span class="op">$</span><span class="va">treat</span></span>
+<span></span>
+<span><span class="co"># Covariates — use same set for both models here (common practice)</span></span>
+<span><span class="va">W</span> <span class="op">&lt;-</span> <span class="va">lalonde_data</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">"age"</span>, <span class="st">"educ"</span>, <span class="st">"race"</span>, <span class="st">"married"</span>, <span class="st">"nodegree"</span>, <span class="st">"re74"</span>, <span class="st">"re75"</span><span class="op">)</span><span class="op">]</span></span>
+<span></span>
+<span><span class="co"># Keep only rows with no missing values across Y, A, W.Q, W.g</span></span>
+<span><span class="va">complete_idx</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/complete.cases.html">complete.cases</a></span><span class="op">(</span><span class="va">Y</span>, <span class="va">A</span>, <span class="va">W</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">Y_clean</span> <span class="op">&lt;-</span> <span class="va">Y</span><span class="op">[</span><span class="va">complete_idx</span><span class="op">]</span></span>
+<span><span class="va">A_clean</span> <span class="op">&lt;-</span> <span class="va">A</span><span class="op">[</span><span class="va">complete_idx</span><span class="op">]</span></span>
+<span><span class="va">W_clean</span> <span class="op">&lt;-</span> <span class="va">W</span><span class="op">[</span><span class="va">complete_idx</span>, , drop <span class="op">=</span> <span class="cn">FALSE</span><span class="op">]</span>  <span class="co"># preserve matrix/data.frame</span></span>
+<span></span>
+<span><span class="co"># Create AIPW object with SuperLearner (simple example using means)</span></span>
+<span><span class="co"># Now create the object with cleaned data</span></span>
+<span><span class="va">aipw_sl</span> <span class="op">&lt;-</span> <span class="va">AIPW</span><span class="op">$</span><span class="fu">new</span><span class="op">(</span></span>
+<span>  Y <span class="op">=</span> <span class="va">Y_clean</span>,</span>
+<span>  A <span class="op">=</span> <span class="va">A_clean</span>,</span>
+<span>  W.Q <span class="op">=</span> <span class="va">W_clean</span>,</span>
+<span>  W.g <span class="op">=</span> <span class="va">W_clean</span>,</span>
+<span>  Q.SL.library <span class="op">=</span> <span class="st">"SL.mean"</span>,   <span class="co"># or better learners</span></span>
+<span>  g.SL.library <span class="op">=</span> <span class="st">"SL.mean"</span>,</span>
+<span>  k_split <span class="op">=</span> <span class="fl">2</span>,</span>
+<span>  verbose <span class="op">=</span> <span class="cn">FALSE</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Fit the models</span></span>
+<span><span class="va">aipw_sl</span><span class="op">$</span><span class="fu">fit</span><span class="op">(</span><span class="op">)</span></span>
+<span><span class="co"># Or for stratified estimates (ATE + ATT/ATC):</span></span>
+<span><span class="co"># aipw_sl$stratified_fit()</span></span>
+<span></span>
+<span><span class="co"># Summary: doubly robust ATE (risk difference by default)</span></span>
+<span><span class="va">aipw_sl</span><span class="op">$</span><span class="fu">summary</span><span class="op">(</span>g.bound <span class="op">=</span> <span class="fl">0.025</span><span class="op">)</span>   <span class="co"># g.bound truncates extreme propensity scores</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+</div>
+<div class="cell">
+<details open="" class="code-fold"><summary>Code</summary><div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb32"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co"># Plot propensity scores by treatment group (after truncation)</span></span>
+<span><span class="va">aipw_sl</span><span class="op">$</span><span class="fu">plot.p_score</span><span class="op">(</span><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details><div class="cell-output-display">
+<div>
+<figure class="figure"><p><img src="02-08-03-04-potential-outcomes-framework-doubly-robust-estimators-r_files/figure-html/unnamed-chunk-16-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+</section><section id="comparison-with-alternative-methods" class="level4"><h4 class="anchored" data-anchor-id="comparison-with-alternative-methods">Comparison with Alternative Methods</h4>
+<div class="cell">
+<details open="" class="code-fold"><summary>Code</summary><div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb33"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html">data</a></span><span class="op">(</span><span class="st">"lalonde"</span>, package <span class="op">=</span> <span class="st">"cobalt"</span><span class="op">)</span></span>
+<span><span class="va">lalonde_data</span> <span class="op">&lt;-</span> <span class="va">lalonde</span> </span>
+<span><span class="co"># 1. Simple (biased) difference in means</span></span>
+<span><span class="va">simple_diff</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/tapply.html">tapply</a></span><span class="op">(</span><span class="va">lalonde_data</span><span class="op">$</span><span class="va">re78</span>, <span class="va">lalonde_data</span><span class="op">$</span><span class="va">treat</span>, <span class="va">mean</span><span class="op">)</span></span>
+<span><span class="va">simple_ate</span> <span class="op">&lt;-</span> <span class="va">simple_diff</span><span class="op">[</span><span class="fl">2</span><span class="op">]</span> <span class="op">-</span> <span class="va">simple_diff</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html">cat</a></span><span class="op">(</span><span class="st">"Simple ATE (biased):"</span>, <span class="va">simple_ate</span>, <span class="st">"\n"</span><span class="op">)</span>   <span class="co"># ~ -800 something, negative!</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details><div class="cell-output cell-output-stdout">
+<pre><code>Simple ATE (biased): -635.0262 </code></pre>
+</div>
+<details open="" class="code-fold"><summary>Code</summary><div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb35"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co"># Fit propensity score model (logistic regression for simplicity)</span></span>
+<span><span class="va">ps_model</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/glm.html">glm</a></span><span class="op">(</span><span class="va">treat</span> <span class="op">~</span> <span class="va">age</span> <span class="op">+</span> <span class="va">educ</span> <span class="op">+</span> <span class="va">race</span> <span class="op">+</span> <span class="va">married</span> <span class="op">+</span> <span class="va">nodegree</span> <span class="op">+</span> <span class="va">re74</span> <span class="op">+</span> <span class="va">re75</span>,</span>
+<span>                data <span class="op">=</span> <span class="va">lalonde_data</span>,</span>
+<span>                family <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/family.html">binomial</a></span><span class="op">(</span>link <span class="op">=</span> <span class="st">"logit"</span><span class="op">)</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">lalonde_data</span><span class="op">$</span><span class="va">ps</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/predict.html">predict</a></span><span class="op">(</span><span class="va">ps_model</span>, type <span class="op">=</span> <span class="st">"response"</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Stabilized IPTW weights for ATE (recommended to reduce variance)</span></span>
+<span><span class="va">lalonde_data</span><span class="op">$</span><span class="va">iptw_ate</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/with.html">with</a></span><span class="op">(</span><span class="va">lalonde_data</span>,</span>
+<span>                         <span class="fu"><a href="https://rdrr.io/r/base/ifelse.html">ifelse</a></span><span class="op">(</span><span class="va">treat</span> <span class="op">==</span> <span class="fl">1</span>,</span>
+<span>                                <span class="fl">1</span> <span class="op">/</span> <span class="va">ps</span>,                    <span class="co"># treated weight</span></span>
+<span>                                <span class="fl">1</span> <span class="op">/</span> <span class="op">(</span><span class="fl">1</span> <span class="op">-</span> <span class="va">ps</span><span class="op">)</span><span class="op">)</span><span class="op">)</span>             <span class="co"># control weight</span></span>
+<span></span>
+<span><span class="co"># Stabilized version (divide by marginal prob of treatment)</span></span>
+<span><span class="va">p_treat</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html">mean</a></span><span class="op">(</span><span class="va">lalonde_data</span><span class="op">$</span><span class="va">treat</span><span class="op">)</span></span>
+<span><span class="va">lalonde_data</span><span class="op">$</span><span class="va">iptw_stab</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/with.html">with</a></span><span class="op">(</span><span class="va">lalonde_data</span>,</span>
+<span>                          <span class="fu"><a href="https://rdrr.io/r/base/ifelse.html">ifelse</a></span><span class="op">(</span><span class="va">treat</span> <span class="op">==</span> <span class="fl">1</span>,</span>
+<span>                                 <span class="va">p_treat</span> <span class="op">/</span> <span class="va">ps</span>,</span>
+<span>                                 <span class="op">(</span><span class="fl">1</span> <span class="op">-</span> <span class="va">p_treat</span><span class="op">)</span> <span class="op">/</span> <span class="op">(</span><span class="fl">1</span> <span class="op">-</span> <span class="va">ps</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Now create survey design with weights</span></span>
+<span><span class="va">ipw_design</span> <span class="op">&lt;-</span> <span class="fu">svydesign</span><span class="op">(</span>ids <span class="op">=</span> <span class="op">~</span><span class="fl">1</span>,              <span class="co"># no clustering</span></span>
+<span>                        weights <span class="op">=</span> <span class="op">~</span><span class="va">iptw_stab</span>,  <span class="co"># use your weights column</span></span>
+<span>                        data <span class="op">=</span> <span class="va">lalonde_data</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Weighted means and ATE</span></span>
+<span><span class="va">mean_treated</span> <span class="op">&lt;-</span> <span class="fu">svymean</span><span class="op">(</span><span class="op">~</span><span class="va">re78</span>, <span class="fu"><a href="https://rdrr.io/r/base/subset.html">subset</a></span><span class="op">(</span><span class="va">ipw_design</span>, <span class="va">treat</span> <span class="op">==</span> <span class="fl">1</span><span class="op">)</span><span class="op">)</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span></span>
+<span><span class="va">mean_control</span>  <span class="op">&lt;-</span> <span class="fu">svymean</span><span class="op">(</span><span class="op">~</span><span class="va">re78</span>, <span class="fu"><a href="https://rdrr.io/r/base/subset.html">subset</a></span><span class="op">(</span><span class="va">ipw_design</span>, <span class="va">treat</span> <span class="op">==</span> <span class="fl">0</span><span class="op">)</span><span class="op">)</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span></span>
+<span><span class="va">ipw_ate</span> <span class="op">&lt;-</span> <span class="va">mean_treated</span> <span class="op">-</span> <span class="va">mean_control</span></span>
+<span></span>
+<span><span class="co"># cat("IPW ATE (stabilized):", coef(ipw_ate), "\n")</span></span>
+<span></span>
+<span><span class="co"># Or one-liner for difference</span></span>
+<span><span class="va">ate_ipw</span> <span class="op">&lt;-</span> <span class="fu">svyby</span><span class="op">(</span><span class="op">~</span><span class="va">re78</span>, <span class="op">~</span><span class="va">treat</span>, <span class="va">ipw_design</span>, <span class="va">svymean</span>, vartype <span class="op">=</span> <span class="st">"ci"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/print.html">print</a></span><span class="op">(</span><span class="va">ate_ipw</span><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details><div class="cell-output cell-output-stdout">
+<pre><code>  treat     re78     ci_l     ci_u
+0     0 6422.839 5706.948 7138.730
+1     1 6647.515 5013.458 8281.573</code></pre>
+</div>
+</div>
+</section></section></section><section id="summary-and-conclusion" class="level2"><h2 class="anchored" data-anchor-id="summary-and-conclusion">Summary and Conclusion</h2>
+<p>Doubly robust estimators provide a <strong>principled safety net</strong> against model misspecification in observational causal inference. As demonstrated:</p>
+<ol type="1">
+<li>
+<strong>Simulations</strong> confirmed the theoretical property: DR estimators remain unbiased when either model component is correct</li>
+<li>
+<strong>Lalonde analysis</strong> showed practical implementation with real-world complexities (imbalance, nonlinearity)</li>
+<li>
+<strong>Modern extensions</strong> (causal forests, Super Learner) enable flexible estimation while preserving robustness</li>
+</ol>
+<p>Key Takeaways:</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 40%">
+<col style="width: 59%">
+</colgroup>
+<thead><tr class="header">
+<th>Concept</th>
+<th>Explanation</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td><strong>Double Robustness</strong></td>
+<td>Consistency guaranteed if <em>either</em> outcome model <em>or</em> propensity score model is correct—not both</td>
+</tr>
+<tr class="even">
+<td><strong>AIPW Formula</strong></td>
+<td>Combines IPW weights with outcome regression predictions: <code>Ŷ_DR = Ŷ_reg + (T - ê(X))/ê(X)(1-ê(X)) × (Y - Ŷ_reg)</code>
+</td>
+</tr>
+<tr class="odd">
+<td><strong>Cross-Fitting</strong></td>
+<td>Critical for modern DR estimators with ML; prevents overfitting bias by splitting data for model fitting/prediction</td>
+</tr>
+<tr class="even">
+<td><strong>Positivity Requirement</strong></td>
+<td>Requires sufficient overlap in treatment assignment (0 &lt; e(X) &lt; 1); extreme weights inflate variance</td>
+</tr>
+<tr class="odd">
+<td><strong>Efficiency Gain</strong></td>
+<td>When <em>both</em> models are correct, DR estimators achieve lower variance than IPW or regression alone</td>
+</tr>
+<tr class="even">
+<td><strong>Practical Workflow</strong></td>
+<td>1) Estimate propensity scores → 2) Check balance → 3) Fit outcome models → 4) Apply DR estimator with cross-fitting</td>
+</tr>
+<tr class="odd">
+<td><strong>Limitations</strong></td>
+<td>Not immune to unmeasured confounding; high variance with poor overlap; requires correct confounder specification</td>
+</tr>
+</tbody>
+</table></section><section id="resources" class="level2"><h2 class="anchored" data-anchor-id="resources">Resources</h2>
+<ol type="1">
+<li><p><strong>Bang, H., &amp; Robins, J. M. (2005).</strong> <em>Doubly robust estimation in missing data and causal inference models.</em> Biometrics, 61(4), 962–973.<br>
+→ Seminal paper establishing the double robustness property and AIPW estimator.</p></li>
+<li><p><strong>Kang, J. D., &amp; Schafer, J. L. (2007).</strong> <em>Demystifying double robustness: A comparison of alternative strategies for estimating a population mean from incomplete data.</em> Statistical Science, 22(4), 523–539.<br>
+→ Accessible tutorial with simulation studies demonstrating DR advantages.</p></li>
+<li><p><strong>Chernozhukov, V., et al.&nbsp;(2018).</strong> <em>Double/debiased machine learning for treatment and structural parameters.</em> The Econometrics Journal, 21(1), C1–C68.<br>
+→ Modern framework integrating ML with DR estimation via cross-fitting.</p></li>
+<li><p><strong>Funk, M. J., et al.&nbsp;(2011).</strong> <em>Doubly robust estimation of causal effects.</em> American Journal of Epidemiology, 173(7), 761–767.<br>
+→ Practical epidemiology-focused guide with implementation details.</p></li>
+<li><p><strong>Scharfstein, D. O., Rotnitzky, A., &amp; Robins, J. M. (1999).</strong> <em>Adjusting for nonignorable drop-out using semiparametric nonresponse models.</em> Journal of the American Statistical Association, 94(448), 1096–1120.<br>
+→ Early foundational work on DR methods for missing data problems.</p></li>
+</ol>
+
+
+</section></section><a onclick="window.scrollTo(0, 0); return false;" role="button" id="quarto-back-to-top"><i class="bi bi-arrow-up"></i> Back to top</a></main><!-- /main --><script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    // Ensure there is a toggle, if there isn't float one in the top right
+    if (window.document.querySelector('.quarto-color-scheme-toggle') === null) {
+      const a = window.document.createElement('a');
+      a.classList.add('top-right');
+      a.classList.add('quarto-color-scheme-toggle');
+      a.href = "";
+      a.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
+      const i = window.document.createElement("i");
+      i.classList.add('bi');
+      a.appendChild(i);
+      window.document.body.appendChild(a);
+    }
+    setColorSchemeToggle(hasAlternateSentinel())
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script><nav class="page-navigation"><div class="nav-page nav-page-previous">
+      <a href="./02-08-03-03-potential-outcomes-framework-propensity-score-matching-r.html" class="pagination-link" aria-label="Propensity Score Matching">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text">Propensity Score Matching</span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="./02-08-03-05-potential-outcomes-framework-difference-in-differences-r.html" class="pagination-link" aria-label="Difference-in-Differences (DiD)">
+        <span class="nav-page-text">Difference-in-Differences (DiD)</span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav>
+</div> <!-- /content -->
+<footer class="footer"><div class="nav-footer">
+    <div class="nav-footer-left">
+<p>© CC-By Zia Ahmed, Upatta Analytics, 2026</p>
+</div>   
+    <div class="nav-footer-center">
+      &nbsp;
+    </div>
+    <div class="nav-footer-right">
+<p>This page is built with <a href="https://quarto.org/">Quarto</a>.</p>
+</div>
+  </div>
+</footer>
+
+
+<script src="site_libs/quarto-html/zenscroll-min.js"></script>
+</body></html>

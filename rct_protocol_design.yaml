@@ -1,0 +1,35 @@
+hypothesis: Mindfulness app reduces GAD-7 vs. waitlist at 12 weeks
+population:
+  inclusion:
+  - Age 18–65
+  - GAD-7 score between 5 and 14 (mild-to-moderate anxiety)
+  - Owns smartphone with iOS/Android
+  - Provides informed consent
+  exclusion:
+  - Current psychotherapy or psychiatric medication
+  - History of severe mental illness (e.g., psychosis, bipolar disorder)
+  - GAD-7 ≥ 15 (severe anxiety)
+  target_n: 151.0
+conditions:
+  intervention:
+    name: Mindfulness App (‘CalmMind’)
+    description: Daily 10-min guided meditation + weekly psychoeducation module
+    duration_weeks: 12.0
+    delivery: Mobile application (iOS/Android)
+    adherence_tracking: App usage logs (sessions completed)
+  control:
+    name: Waitlist Control
+    description: No active intervention; offered app after 12 weeks
+    duration_weeks: 12.0
+    delivery: Standard care
+    adherence_tracking: None
+outcome:
+  name: Change in GAD-7 score from baseline to week 12
+  type: continuous
+  scale: 0–21 (higher = more anxiety)
+  measurement_timepoint: 12 weeks post-randomization
+  analysis_metric: mean difference (treatment - control)
+sample_size: 151.0
+alpha: 0.05
+power: 0.8
+effect_size_d: 0.5

@@ -1,0 +1,926 @@
+[![](Image/open_colab.png){fig-align="left" width="150"}](https://github.com/zia207/Causal_Inference_R/blob/main/Notebook/02_08_03_03_potential_outcomes_framework_propensity_score_matching_r.ipynb)
+
+![](Image/banner_Causal_Inference_Potential_Outcome_R.png){fig-align="left" width="1400"}
+
+# 3.3 Propensity Score Matching {.unnumbered}
+
+This section provides a comprehensive overview of Propensity Score Matching (PSM)  within the potential outcomes framework, including its mathematical foundation, assumptions, and practical implementation in R. 
+
+##  Overview 
+
+**Matching** is a family of statistical techniques designed to estimate causal effects from observational (non-experimental) data by creating comparable groups of treated and control units. Conceptually, matching attempts to reconstruct a randomized experiment by pairing or grouping units that are similar on observed covariates but differ in treatment status. The fundamental goal is to eliminate confounding bias by ensuring that—conditional on observed characteristics—treated and control units are exchangeable.
+
+### Why Use Matching for Causal Estimation?
+
+In observational studies, treatment assignment is typically not random, leading to systematic differences between treated and control groups (selection bias). Matching addresses this by:
+
+- `Balancing covariate distributions` between treatment groups before estimating effects
+- `Reducing model dependence` compared to pure regression adjustment—matching makes causal inferences less sensitive to functional form misspecification 
+- `Making assumptions explicit and diagnosable`, unlike regression where imbalance may be hidden in residuals, matching requires direct assessment of covariate balance
+
+### Propensity Score Matching
+
+**Propensity Score Matching (PSM)** is a statistical technique for estimating causal effects from observational data by matching treated and control units with similar *propensity scores, the conditional probability of receiving treatment given observed covariates:
+
+$$e(\mathbf{X}) = P(T = 1 \mid \mathbf{X})$$
+
+where $T$ is the binary treatment indicator and $\mathbf{X}$ is a vector of observed confounders. PSM reduces the dimensionality of the confounding problem from potentially many covariates to a single scalar score, then creates comparable groups by pairing units with similar scores [[1]].
+
+
+### Theoretical Foundation: The Balancing Score Theorem
+
+Rosenbaum & Rubin's (1983) seminal result provides the justification:
+
+> **Theorem**: If treatment assignment is *strongly ignorable* given covariates $\mathbf{X}$ (i.e., $(Y(1), Y(0)) \perp T \mid \mathbf{X}$), then it is also ignorable given *any balancing score* $b(\mathbf{X})$ where $\mathbf{X} \perp T \mid b(\mathbf{X})$. The propensity score $e(\mathbf{X})$ is the *coarsest* balancing score.
+
+**Key implication**: Conditional on the propensity score, the distribution of observed covariates $\mathbf{X}$ is the same across treatment groups—*if the propensity score model is correctly specified*. This enables unbiased causal effect estimation under ignorability.
+
+
+### Implementation Workflow
+
+#### Estimate the Propensity Score
+
+Fit a model predicting treatment assignment from covariates:
+
+| Method | Typical Use Case | Notes |
+|--------|------------------|-------|
+| Logistic regression | Standard approach; interpretable | Assumes linearity in log-odds; may miss complex interactions |
+| Gradient boosting (GBM) | High-dimensional or nonlinear relationships | Better predictive accuracy; implemented in `twang` (R) |
+| Random forests / neural nets | Complex interactions, many predictors | Risk of overfitting; requires careful tuning |
+
+*Critical point*: The goal is **balance**, not prediction accuracy. A model with lower AUC may yield better balance than one with higher AUC [[6]].
+
+####  Matching Algorithm Selection
+
+| Algorithm | Description | Trade-offs |
+|-----------|-------------|------------|
+| **Nearest neighbor (greedy)** | Each treated unit matched to closest control | Fast but suboptimal global balance; order-dependent |
+| **Nearest neighbor with caliper** | Restrict matches to units within distance $\delta$ (e.g., 0.2 × SD of logit $e(X)$) | Reduces poor-quality matches; discards more units |
+| **Optimal matching** | Minimizes total distance across *all* matches simultaneously | Better balance; computationally intensive (`optmatch` in R) |
+| **Full matching** | Forms matched sets of variable size covering all units | Retains more data; enables weighting-based analysis |
+| **Kernel/Radius matching** | Weight controls continuously by distance | No explicit matching; smoother but less transparent |
+
+####  Critical: Balance Diagnostics (Non-Negotiable *
+
+Matching on propensity scores **does not guarantee covariate balance**. You *must* verify balance empirically:
+
+```r
+# Example workflow in R (MatchIt + cobalt)
+library(MatchIt); library(cobalt)
+
+#  Estimate & match
+m.out <- matchit(treat ~ age + income + education, 
+                 data = df, method = "nearest", caliper = 0.2)
+
+#  Assess balance
+bal.tab(m.out, un = TRUE)          # Standardized mean differences (SMDs)
+love.plot(m.out, thresholds = 0.1) # Visualize pre/post balance
+```
+
+**Acceptable balance criteria**:
+
+- Standardized Mean Difference (SMD) < 0.1 for *all* covariates [[41]]
+- Variance ratios between 0.5–2.0
+- No systematic patterns in residual imbalances
+
+*Never* skip this step—studies show >30% of PSM applications fail to achieve adequate balance despite "successful" matching [[38]].
+
+####  Effect Estimation on Matched Sample 
+
+After confirming balance:
+- Analyze matched sample using simple difference-in-means
+- Or use weighted regression with matching weights
+- Report **effective sample size (ESS)** to quantify information loss:
+  
+  $$\text{ESS} = \frac{(\sum w_i)^2}{\sum w_i^2}$$
+
+
+### Critical Limitations & Common Misconceptions
+
+| Misconception | Reality |
+|---------------|---------|
+| "PSM removes selection bias" | Only removes bias from *observed* confounders; unobserved confounding remains |
+| "High AUC = good matching" | Prediction accuracy ≠ balance; focus on SMDs, not AUC |
+| "Matching guarantees balance" | Balance must be *verified*; poorly specified PS models yield imbalanced matches |
+| "PSM mimics RCTs" | Only approximates randomization *conditional on X*; external validity often reduced due to trimming |
+| "Always use PSM" | Often inferior to regression adjustment or doubly robust methods in simulation studies [[4]] |
+
+**Key critique**: King & Nielsen (2019) demonstrated that PSM can *increase* imbalance compared to the original data when common support is limited—a phenomenon called *"propensity score matching paradox"* [[21]]. This occurs because matching amplifies regions of poor overlap.
+
+
+### When to Use (and Avoid) PSM
+
+**Appropriate when**:
+- Strong theoretical basis for confounder selection
+- Adequate common support (visualize propensity score distributions)
+- Primary goal is transparency and diagnostic clarity
+- Combined with regression adjustment ("doubly robust" estimation)
+
+**Avoid or supplement when**:
+- High-dimensional covariates (>50) → consider regularized regression or TMLE
+- Limited overlap → use trimming + weighting (IPTW) or Bayesian approaches
+- Spatially correlated data → standard PSM ignores spatial autocorrelation; consider spatial matching constraints
+- Primary concern is precision → regression adjustment often more efficient
+
+
+## Implementation in R
+
+We'll cover:
+
+By the end of this tutorial, you will be able to:
+1. Simulate observational data with confounding
+2. Estimate propensity scores using multiple methods
+3. Implement 5+ matching algorithms with `MatchIt`
+4. Diagnose balance rigorously using `cobalt`
+5. Estimate causal effects with proper variance estimation
+6. Replicate the classic `LaLonde` (1986) job training study
+7. Avoid common pitfalls in PSM practice
+
+## Setup and Required Packages
+
+
+```{r}
+#| message: false
+#| warning: false
+packages <- c(
+          'tidyverse',
+          'MatchIt',
+          'cobalt',
+          'tableone',
+          'survey',
+          'broom',
+          'optmatch',
+          'rgenoud',
+          'twang',
+          'EValue'
+)
+```
+
+
+``` r
+#| warning: false
+#| error: false
+
+ install.packages(
+  "https://cran.r-project.org/src/contrib/Archive/rgenoud/rgenoud_5.9-0.10.tar.gz",
+  repos = NULL,
+  type = "source"
+)
+
+# Install missing packages
+new_packages <- packages[!(packages %in% installed.packages()[,"Package"])]
+if(length(new_packages)) install.packages(new_packages)
+```
+
+
+### Verify Installation
+
+```{r}
+# Verify installation
+cat("Installed packages:\n")
+print(sapply(packages, requireNamespace, quietly = TRUE))
+```
+
+
+### Load Packages
+
+```{r}
+#| warning: false
+#| error: false
+# Load packages with suppressed messages
+invisible(lapply(packages, function(pkg) {
+  suppressPackageStartupMessages(library(pkg, character.only = TRUE))
+}))
+
+```
+
+### Check Loaded Packages
+
+```{r}
+# Check loaded packages
+cat("Successfully loaded packages:\n")
+print(search()[grepl("package:", search())])
+```
+
+###  Simulated Data 
+
+```{r}
+# Set seed for reproducibility
+set.seed(2026)
+
+#  Simulate confounders FIRST
+n <- 2000
+sim_data <- data.frame(
+  age = rnorm(n, 35, 10),
+  income = rnorm(n, 50000, 15000),
+  education = sample(c("HS", "College", "Grad"), n, 
+                     replace = TRUE, prob = c(0.4, 0.4, 0.2))
+)
+
+# Simulate treatment assignment (depends on confounders)
+# Higher age → slightly more likely to be treated
+# Higher income → less likely to be treated
+# More education → much more likely to be treated
+sim_data$treat <- rbinom(
+  n, 
+  1, 
+  plogis(
+    -2 + 
+      0.03 * sim_data$age - 
+      0.00004 * sim_data$income + 
+      ifelse(sim_data$education == "College", 0.8, 0) + 
+      ifelse(sim_data$education == "Grad", 1.5, 0)
+  )
+)
+
+# Simulate potential outcomes
+# Baseline outcome (without treatment)
+sim_data$y0 <- 30000 + 
+  500 * sim_data$age + 
+  0.3 * sim_data$income + 
+  ifelse(sim_data$education == "College", 8000, 0) + 
+  ifelse(sim_data$education == "Grad", 15000, 0) + 
+  rnorm(n, 0, 5000)
+
+# True causal effect (homogeneous treatment effect = $5,000)
+sim_data$tau <- 5000
+
+# Observed outcome (only one potential outcome observed per unit)
+sim_data$income_next_year <- sim_data$y0 + sim_data$tau * sim_data$treat
+
+# Quick sanity check
+head(sim_data)
+table(sim_data$treat)  # Treatment prevalence
+```
+
+### Pre-Matching Diagnostics: Quantify Initial Imbalance
+
+Pre-matching diagnostics are crucial to understand the extent of confounding and justify the need for matching. We will create a Table 1 comparing treated vs control groups before matching and visualize the propensity score distributions.
+
+#### Create Table 1: Compare treated vs control BEFORE matching
+
+```{r}
+# Create Table 1: Compare treated vs control BEFORE matching
+tab1_before <- CreateTableOne(
+  vars = c("age", "income", "education"),
+  strata = "treat",
+  data = sim_data
+)
+print(tab1_before, smd = TRUE)  # Standardized Mean Differences (SMDs)
+```
+
+#### Visualize Propensity Score Distributions
+
+```{r}
+#| fig.width: 7
+#| fig.height: 5
+# Visualize propensity score distributions
+sim_data_ps <- glm(treat ~ age + income + education, 
+                   family = binomial, data = sim_data)
+
+sim_data$ps <- predict(sim_data_ps, type = "response")
+
+ggplot(sim_data, aes(x = ps, fill = factor(treat))) +
+  geom_histogram(alpha = 0.6, position = "identity", bins = 50) +
+  labs(title = "Propensity Score Distributions (Pre-Matching)",
+       x = "Propensity Score", fill = "Treatment") +
+  theme_minimal() +
+  geom_vline(xintercept = 0.5, linetype = "dashed", color = "red")
+```
+
+**Interpretation**: Large SMDs (>0.1) and non-overlapping PS distributions indicate severe confounding—exactly why we need matching.
+
+
+###  Propensity Score Estimation & Matching Algorithms
+
+#### Nearest Neighbor Matching with Caliper (1:1)
+
+Nearest neighbor matching is the most common algorithm, but it can yield poor balance if not combined with a caliper to restrict matches to similar units. Here we use a caliper of 0.2 standard deviations of the logit of the propensity score, which is a common recommendation 
+
+```{r}
+# Method 1: Nearest Neighbor Matching (1:1) with caliper
+m_nn <- matchit(treat ~ age + income + education,
+                data = sim_data,
+                method = "nearest",
+                ratio = 1,
+                caliper = 0.2,          # 0.2 * SD of logit(PS)
+                replace = FALSE)        # Without replacement
+# summary(m_nn)
+```
+
+
+```{r}
+# Assess Balance Statistics
+bal_nn <- bal.tab(m_nn, un = TRUE,  # un=TRUE shows pre-matching stats
+                  disp.vr = TRUE,   # Show variance ratios
+                  disp.ks = TRUE)   # Show KS statistics
+print(bal_nn)
+```
+
+
+```{r}
+#| fig.width: 7
+#| fig.height: 5
+# Visualize balance with Love Plot (gold standard diagnostic)
+love.plot(m_nn,
+          thresholds = c(m = 0.1),  # Target SMD < 0.1
+          binary = "std",           # Standardize binary vars
+          stars = "std",            # Show stars for imbalance
+          title = "Balance Assessment: Nearest Neighbor Matching")
+
+# Compare balance across ALL methods simultaneously
+bal_comparison_nn <- bal.plot(m_nn, var.name = "age", which = "both",
+                           title = "Age Distribution: Treated vs Control (Matched Sample)")
+```
+
+
+#### Optimal Full Matching 
+
+Optimal full matching forms matched sets of variable size that minimize the total distance across all matches simultaneously. This method retains more units and often achieves better balance than greedy nearest neighbor matching. 
+
+```{r}
+# Method 2: Optimal Full Matching (retains all units)
+m_full <- matchit(treat ~ age + income + education,
+                  data = sim_data,
+                  method = "full")
+# summary(m_full)
+```
+
+
+```{r}
+# Assess Balance Statistics
+bal_full <- bal.tab(m_full, un = TRUE,  # un=TRUE shows pre-matching stats
+                  disp.vr = TRUE,   # Show variance ratios
+                  disp.ks = TRUE)   # Show KS statistics
+print(bal_full)
+```
+
+
+```{r}
+#| fig.width: 7
+#| fig.height: 5
+# Visualize balance with Love Plot (gold standard diagnostic)
+love.plot(m_full,
+          thresholds = c(m = 0.1),  # Target SMD < 0.1
+          binary = "std",           # Standardize binary vars
+          stars = "std",            # Show stars for imbalance
+          title = "Balance Assessment: Optimal Full Matching ")
+
+# Compare balance across ALL methods simultaneously
+bal_comparison_full <- bal.plot(m_full, var.name = "age", which = "both",
+                           title = "Age Distribution: Treated vs Control (Matched Sample)")
+```
+
+
+#### Genetic Matching 
+
+Genetic matching uses an evolutionary algorithm to optimize balance directly, rather than relying on a propensity score model. It can achieve superior balance but is computationally intensive. 
+
+```{r}
+# Method 3: Genetic Matching (optimizes balance directly)
+# install.packages("rgenoud", repos="https://cran.r-project.org/src/contrib/Archive/rgenoud/rgenoud_5.9-0.10.tar.gz", repos=NULL, type="source")  # Not on CRAN for R 4.6+; install from source
+m_genetic <- matchit(treat ~ age + income + education,
+                     data = sim_data,
+                     method = "genetic",
+                     pop.size = 100)
+# summary(m_genetic)
+```
+
+
+```{r}
+# Assess Balance Statistics
+bal_genetic <- bal.tab(m_genetic, un = TRUE,  # un=TRUE shows pre-matching stats
+                  disp.vr = TRUE,   # Show variance ratios
+                  disp.ks = TRUE)   # Show KS statistics
+print(bal_genetic)
+```
+
+
+```{r}
+#| fig.width: 7
+#| fig.height: 5
+# Visualize balance with Love Plot (gold standard diagnostic)
+love.plot(m_genetic,
+          thresholds = c(m = 0.1),  # Target SMD < 0.1
+          binary = "std",           # Standardize binary vars
+          stars = "std",            # Show stars for imbalance
+          title = "Balance Assessment: Genetic Matching  ")
+
+# Compare balance across ALL methods simultaneously
+bal_comparison_genetic <- bal.plot(m_genetic, var.name = "age", which = "both",
+                           title = "Age Distribution: Treated vs Control (Matched Sample)")
+```
+
+
+#### Coarsened Exact Matching (CEM)
+
+Coarsened Exact Matching (CEM) creates strata based on coarsened covariate values and matches treated and control units within these strata. It has monotonic imbalance bounding properties, meaning that balance improves as the coarsening becomes finer. 
+
+```{r}
+# Method 4: Coarsened Exact Matching (CEM) - monotonic imbalance bounding
+m_cem <- matchit(treat ~ age + income + education,
+                 data = sim_data,
+                 method = "cem",
+                 k2k = TRUE)  # Keep-to-keep matching
+# summary(m_cem)
+```
+
+
+```{r}
+# Assess Balance Statistics
+bal_cem <- bal.tab(m_cem, un = TRUE,  # un=TRUE shows pre-matching stats
+                  disp.vr = TRUE,   # Show variance ratios
+                  disp.ks = TRUE)   # Show KS statistics
+print(bal_cem)
+```
+
+
+```{r}
+#| fig.width: 7
+#| fig.height: 5
+# Visualize balance with Love Plot (gold standard diagnostic)
+love.plot(m_cem,
+          thresholds = c(m = 0.1),  # Target SMD < 0.1
+          binary = "std",           # Standardize binary vars
+          stars = "std",            # Show stars for imbalance
+          title = "Balance Assessment: Coarsened Exact Matching ")
+
+# Compare balance across ALL methods simultaneously
+bal_comparison_cem <- bal.plot(m_cem, var.name = "age", which = "both",
+                           title = "Age Distribution: Treated vs Control (Matched Sample)")
+```
+
+
+#### Kernel/Radius Matching
+
+Kernel or radius matching weights control units continuously by their distance from treated units, rather than forming discrete matches. This can yield smoother estimates but may be less transparent than explicit matching.
+
+```{r}
+# Method 5: Radius-style matching via nearest neighbor WITH REPLACEMENT
+m_radius <- matchit(treat ~ age + income + education,
+                    data = sim_data,
+                    method = "nearest",
+                    replace = TRUE,   # Critical: allows multiple matches per control
+                    caliper = 0.2)    # Max distance threshold
+
+# summary(m_radius)
+```
+
+
+```{r}
+# Assess Balance Statistics
+bal_radius <- bal.tab(m_radius, un = TRUE,  # un=TRUE shows pre-matching stats
+                  disp.vr = TRUE,   # Show variance ratios
+                  disp.ks = TRUE)   # Show KS statistics
+print(bal_radius)
+```
+
+
+```{r}
+#| fig.width: 7
+#| fig.height: 5
+# Visualize balance with Love Plot (gold standard diagnostic)
+love.plot(m_radius,
+          thresholds = c(m = 0.1),  # Target SMD < 0.1
+          binary = "std",           # Standardize binary vars
+          stars = "std",            # Show stars for imbalance
+          title = "Balance Assessment: Kernel/Radius Matching ")
+
+# Compare balance across ALL methods simultaneously
+bal_comparison_radius <- bal.plot(m_radius, var.name = "age", which = "both",
+                           title = "Age Distribution: Treated vs Control (Matched Sample)")
+```
+
+
+**Critical check**: All SMDs must be < 0.1. If not, iterate:
+- Try different PS specification (add interactions/polynomials)
+- Adjust caliper width
+- Switch matching algorithm
+- Consider trimming extreme PS values
+
+
+### Effect Estimation on Matched Sample
+
+```{r}
+# Extract matched dataset
+matched_data <- match.data(m_nn)
+
+# Simple difference-in-means (ATT estimator)
+att_simple <- with(matched_data, 
+                   mean(income_next_year[treat == 1]) - 
+                   mean(income_next_year[treat == 0]))
+cat("Simple ATT estimate:", round(att_simple, 2), "\n")
+
+# Proper variance estimation using survey weights
+# (accounts for matched-pair structure)
+design <- svydesign(ids = ~subclass, weights = ~weights, 
+                    data = matched_data)
+model <- svyglm(income_next_year ~ treat, design = design)
+summary(model)
+
+# Extract ATT with robust SE
+att_robust <- coef(model)["treat"]
+se_robust <- sqrt(vcov(model)["treat", "treat"])
+ci_lower <- att_robust - 1.96 * se_robust
+ci_upper <- att_robust + 1.96 * se_robust
+
+cat("\nATT =", round(att_robust, 2),
+    "SE =", round(se_robust, 2),
+    "\n95% CI: [", round(ci_lower, 2), ",", round(ci_upper, 2), "]\n")
+
+# Compare to true effect (5000)
+cat("\nTrue causal effect: 5000")
+cat("\nBias:", round(att_robust - 5000, 2))
+```
+
+**Key insight**: Simple difference-in-means underestimates uncertainty. Always use pair-aware variance estimation (`svydesign` with `subclass`).
+
+
+## Real-World Application — LaLonde Job Training Study
+
+The **LaLonde (1986)** study evaluates the National Supported Work (NSW) job training program. Randomized experiment showed $1,796 earnings gain, but *observational* analyses using CPS/PSID controls initially found implausibly large effects ($10k+)—highlighting selection bias dangers.
+
+```{r}
+# Load the dataset
+data("lalonde", package = "cobalt")
+# subset covariates excluding the treatment and outcome:
+covs <- subset(lalonde, select = -c(treat, re78))
+names(covs)  # Check covariate names 
+```
+
+
+### Pre-Matching Imbalance Assessment
+
+```{r}
+# Table 1: Severe imbalance expected
+tab1_lalonde <- CreateTableOne(
+  vars = c("age", "educ", "race", "married", "nodegree", "re74", "re75"),
+  strata = "treat",
+  data = lalonde,
+  factorVars = c("race", "married", "nodegree")
+)
+print(tab1_lalonde, smd = TRUE)
+```
+
+
+```{r}
+#| fig.width: 7
+#| fig.height: 5
+# Propensity score distribution
+ggplot(lalonde, aes(x = re74, color = factor(treat))) +
+  geom_density() +
+  scale_x_log10(labels = scales::dollar) +
+  labs(title = "1974 Earnings Distribution (Log Scale)",
+       x = "RE74 (1974 Real Earnings)", color = "Treatment") +
+  theme_minimal()
+```
+
+**Observation**: Treated units have much lower pre-treatment earnings (RE74/RE75)—classic selection bias where disadvantaged individuals self-select into training.
+
+
+### Assessing Unadjusted Balance
+
+Before any preprocessing, use `bal.tab()` to check covariate balance between treated and control groups.
+
+```{r}
+# Basic balance table (unadjusted)
+bal.tab(treat ~ covs, data = lalonde)
+```
+
+To standardize binary variables and include variance ratios:
+
+```{r}
+bal.tab(treat ~ covs, data = lalonde,
+        binary = "std", continuous = "std",
+        stats = c("mean.diffs", "variance.ratios"))
+```
+
+### Propensity Score Matching with MatchIt and Balance Assessment
+
+Use {MatchIt} for nearest neighbor matching on propensity scores, then assess with {cobalt}.
+
+```{r}
+# Estimate propensity score matching (1:1 nearest neighbor with replacement)
+m.out <- matchit(treat ~ age + educ + race + married + nodegree + re74 + re75,
+                 data = lalonde,
+                 method = "nearest",
+                 replace = TRUE)
+
+#  Check summary from MatchIt
+summary(m.out)
+```
+
+
+```{r}
+# Balance table with cobalt
+bal.tab(m.out, un = TRUE,  # Include unadjusted balance
+         disp.vr = TRUE,   # Show variance ratios
+         disp.ks = TRUE,   # Show KS statistics
+        binary = "std",    # Standardize binary differences
+        thresholds = c(m = 0.1))  # Threshold for SMD < 0.1
+```
+ Visualize balance with Love Plot (gold standard diagnostic): 
+
+```{r}
+#| fig.width: 7
+#| fig.height: 5
+love.plot(m.out,
+          binary = "std",
+          thresholds = c(m = 0.1),
+          abs = TRUE,
+          var.order = "unadjusted",
+          title = "Covariate Balance Before & After Matching")
+```
+
+###  Propensity Score Matching with Multiple Specifications
+
+```{r}
+# Specification 1: Basic logistic regression
+m_lalonde_basic <- matchit(treat ~ age + educ + race + married + nodegree + re74 + re75,
+                           data = lalonde,
+                           method = "nearest",
+                           ratio = 1,
+                           caliper = 0.2)
+
+# Specification 2: With interactions (more flexible)
+m_lalonde_int <- matchit(treat ~ age + educ + race + married + nodegree + re74 + re75 +
+                           age:educ + re74:re75,
+                         data = lalonde,
+                         method = "nearest",
+                         caliper = 0.2)
+
+```
+
+
+###  Rigorous Balance Assessment
+
+```{r}
+# Compare balance across specifications
+bal_basic <- bal.tab(m_lalonde_basic, un = TRUE)
+bal_int <- bal.tab(m_lalonde_int, un = TRUE)
+
+# Love plots for visual comparison
+par(mfrow = c(1, 3), mar = c(4, 4, 2, 1))
+love.plot(m_lalonde_basic, thresholds = 0.1, title = "Basic PS Model")
+love.plot(m_lalonde_int, thresholds = 0.1, title = "With Interactions")
+par(mfrow = c(1, 1))
+```
+
+
+## Causal Effect Estimation on Matched Sample
+
+### Data Preparation
+
+```{r}
+# Preprocess: log-transform skewed earnings (critical for balance)
+lalonde_cps <- lalonde %>%
+  mutate(
+    log_re74 = log1p(re74),  # Handles $0 earnings safely
+    log_re75 = log1p(re75)
+  )
+
+# Verify data structure
+cat("=== DATASET OVERVIEW ===\n")
+cat("Total observations:", nrow(lalonde_cps), "\n")
+cat("Treated units (NSW trainees):", sum(lalonde_cps$treat), "\n")
+cat("Control units (CPS):", sum(lalonde_cps$treat == 0), "\n\n")
+```
+
+### Create Matched Sample
+
+
+```{r}
+# Perform nearest-neighbor matching with caliper
+m_out <- matchit(
+ treat ~ age + educ + race + married + nodegree + re74 + re75,
+  data = lalonde_cps,
+  method = "nearest",
+  ratio = 1,
+  caliper = 0.2,        # 0.2 * SD of logit(propensity score)
+  replace = FALSE,      # Without replacement (strict 1:1 matching)
+  m.order = "random"    # Random matching order to avoid sequence dependence
+)
+
+# CRITICAL: Extract matched dataset BEFORE analysis
+matched_data <- match.data(m_out)
+```
+
+### ATT Estimation 
+
+Why proper variance estimation matters: Standard regression SEs assume independent observations. Matched pairs induce correlation—ignoring this underestimates SEs by 30-50%, inflating Type I error rates . We demonstrate three statistically valid approaches
+
+#### Survey Design (Recommended — Accounts for Pair Structure)
+
+Survey design approach treats matched pairs as clusters, properly accounting for within-pair correlation when estimating standard errors.
+
+```{r}
+# Create survey design object that recognizes matched pairs (via subclass IDs)
+design_survey <- svydesign(
+  ids = ~subclass,      # Critical: subclass = matched pair ID
+  weights = ~weights,   # Matching weights (1 for 1:1 matching)
+  data = matched_data
+)
+
+# Estimate ATT with pair-aware SEs
+model_survey <- svyglm(re78 ~ treat, design = design_survey)
+
+att_survey <- coef(model_survey)["treat"]
+se_survey <- sqrt(vcov(model_survey)["treat", "treat"])
+ci_survey <- confint(model_survey, "treat", level = 0.95)
+```
+
+
+#### Cluster-Robust Standard Errors (Alternative)
+
+Cluster-robust SEs treat matched pairs as clusters, adjusting for within-pair correlation. This is a simpler alternative but less flexible than survey design. 
+
+```{r}
+# Fit model on matched data with cluster-robust SEs (clusters = matched pairs)
+library(sandwich)
+library(lmtest)
+
+model_lm <- lm(re78 ~ treat, data = matched_data)
+vcov_cluster <- vcovCL(model_lm, cluster = ~subclass, type = "HC1")
+se_cluster <- sqrt(diag(vcov_cluster))["treat"]
+ci_cluster <- confint(model_lm, "treat", level = 0.95, vcov = vcov_cluster)
+```
+
+
+#### Bootstrap with Matching Re-estimation (Gold Standard)
+
+Boostrapping that re-estimates the propensity scores and matching in each replicate is the most robust method to account for finite-sample issues, though it is computationally intensive. 
+
+```{r}
+# Bootstrap that re-estimates PS and matching in each replicate
+# (Computationally intensive but most robust to finite-sample issues)
+set.seed(2026)
+n_boot <- 200  # Increase to 1000+ for publication
+
+boot_atts <- numeric(n_boot)
+for (i in 1:n_boot) {
+  # Sample WITH REPLACEMENT from ORIGINAL data (not matched data!)
+  boot_sample <- lalonde_cps[sample(nrow(lalonde), replace = TRUE), ]
+  
+  # Re-estimate PS and matching in bootstrap sample
+  boot_match <- tryCatch({
+    matchit(
+       treat ~ age + educ + race + married + nodegree + re74 + re75,
+      data = boot_sample,
+      method = "nearest",
+      caliper = 0.2,
+      replace = FALSE
+    )
+  }, error = function(e) return(NULL))
+  
+  if (!is.null(boot_match)) {
+    boot_matched <- match.data(boot_match)
+    if (nrow(boot_matched) > 0) {
+      boot_atts[i] <- with(boot_matched, mean(re78[treat == 1]) - mean(re78[treat == 0]))
+    } else {
+      boot_atts[i] <- NA
+    }
+  } else {
+    boot_atts[i] <- NA
+  }
+}
+
+# Calculate bootstrap SE and CI (percentile method)
+boot_atts <- boot_atts[!is.na(boot_atts)]
+se_boot <- sd(boot_atts)
+ci_boot <- quantile(boot_atts, probs = c(0.025, 0.975))
+att_boot <- mean(boot_atts)
+
+# Print bootstrap results
+cat("\nBootstrap ATT Estimate:", round(att_boot, 2),
+    " | SE:", round(se_boot, 2),
+    " | 95% CI: [", round(ci_boot[1], 2),
+    ",", round(ci_boot[2], 2), "]\n")
+
+```
+
+### Compile and Compare Results from All Three Methods
+
+```{r}
+# Compile results table
+results <- data.frame(
+  Method = c("Survey Design (Recommended)", 
+             "Cluster-Robust SEs", 
+             "Bootstrap (200 reps)"),
+  ATT_Estimate = c(att_survey, coef(model_lm)["treat"], att_boot),
+  SE = c(se_survey, se_cluster, se_boot),
+  CI_Lower = c(ci_survey[1], ci_cluster[1], ci_boot[1]),
+  CI_Upper = c(ci_survey[2], ci_cluster[2], ci_boot[2])
+)
+
+cat("=== CAUSAL EFFECT ESTIMATES (ATT) ===\n")
+print(results, digits = 2)
+```
+
+
+```{r}
+# Compare to experimental benchmark
+cat("\n=== BENCHMARK COMPARISON ===\n")
+cat("NSW RCT (experimental benchmark): $1,796\n")
+cat("PSM ATT (Survey Design):        $", format(round(att_survey, 2), big.mark = ","), "\n")
+cat("Absolute bias:                  $", format(round(abs(att_survey - 1796), 2), big.mark = ","), "\n")
+cat("Relative bias:                  ", round(100 * abs(att_survey - 1796) / 1796, 1), "%\n\n")
+```
+
+
+```{r}
+# Sample retention report
+cat("=== SAMPLE RETENTION ===\n")
+cat("Original N:  ", format(nrow(lalonde_cps), big.mark = ","), "\n")
+cat("Matched N:   ", format(nrow(matched_data), big.mark = ","), "\n")
+cat("Treated kept:", sum(matched_data$treat), "\n")
+cat("Controls kept:", sum(matched_data$treat == 0), "\n")
+cat("Discarded:   ", format(nrow(lalonde_cps) - nrow(matched_data), big.mark = ","), 
+    sprintf("(%.1f%% loss)\n", 100 * (nrow(lalonde_cps) - nrow(matched_data)) / nrow(lalonde_cps)))
+```
+
+### Sensitivity Analysis for Unobserved Confounding
+
+Sensitivity analysis quantifies how strong an unmeasured confounder would need to be to explain away the observed treatment effect. The `E-value` is a popular metric for this purpose.  The  E-value calculation below provides immediate, dependency-free insight into confounding robustness   (VanderWeele & Ding, *Ann Intern Med* 2017):
+
+$$E = \frac{|\Delta|}{2\sigma} + \sqrt{\left(\frac{|\Delta|}{2\sigma}\right)^2 + 1}$$
+
+Where:
+
+- $\Delta$ = ATT estimate
+- $\sigma$ = SD of outcome in matched sample
+
+
+```{r}
+# After matching and ATT estimation:
+att <- as.numeric(coef(model)["treat"])
+se <- as.numeric(sqrt(vcov(model)["treat", "treat"]))
+ci_lower <- att - 1.96 * se
+outcome_sd <- sd(matched_data$re78)
+
+# Manual E-value
+evalue_manual <- abs(att) / (2 * outcome_sd) + 
+                 sqrt((abs(att) / (2 * outcome_sd))^2 + 1)
+
+cat("ATT: $", round(att, 2), 
+    " | 95% CI: [$", round(ci_lower, 2), ", $", round(att + 1.96*se, 2), "]\n")
+cat("E-value:", round(evalue_manual, 2), "\n")
+```
+
+##  Best Practices Checklist for Rigorous PSM
+
+### Pre-Matching
+- [ ] **Theoretical confounder selection** (not data-driven fishing)
+- [ ] **Assess common support** (discard units outside overlap region)
+- [ ] **Pre-specify matching algorithm & caliper** (avoid p-hacking via algorithm shopping)
+- [ ] **Report initial imbalance** (SMDs > 0.2 indicate severe confounding)
+
+### Matching Execution
+- [ ] **Prefer methods with monotonic properties** (CEM) or direct balance optimization (genetic matching)
+- [ ] **Always use calipers** (0.2 × SD of logit(PS) standard)
+- [ ] **Consider full/optimal matching** to retain sample size
+- [ ] **For high-dimensional data**: Use GBM/ML PS estimators tuned for *balance*, not AUC
+
+### Post-Matching Validation (MOST CRITICAL)
+- [ ] **Verify SMD < 0.1 for ALL covariates** (not just "on average")
+- [ ] **Check variance ratios** (0.5–2.0 acceptable)
+- [ ] **Plot love plots** for transparency
+- [ ] **Never skip balance checks**—>30% of published PSM studies fail this step [[38]]
+
+### Effect Estimation
+- [ ] **Use pair-aware variance estimation** (`svydesign` with `subclass`)
+- [ ] **Report effective sample size (ESS)** after matching
+- [ ] **Distinguish ATT vs ATE** (most PSM estimates ATT)
+- [ ] **Combine with outcome regression** for doubly robust estimation:
+
+
+##  Common Pitfalls to Avoid
+
+| Pitfall | Consequence | Solution |
+|---------|-------------|----------|
+| Matching without balance checks | Residual confounding | Always report SMDs pre/post |
+| Using PS as covariate in regression | Model dependence returns | Use matching *or* weighting, not both naively |
+| Ignoring common support | Extrapolation bias | Trim extreme PS values; report discarded units |
+| Reporting only "successful" matches | Publication bias | Pre-register matching protocol |
+| Spatial data without spatial controls | Spatial confounding | Include spatial coordinates/PCs as covariates |
+
+## Summary and Conclusion
+
+This tutorial provides a foundation—but rigorous causal inference requires domain knowledge, transparent reporting, and humility about untestable assumptions. Always pair PSM with subject-matter expertise and sensitivity analyses. PSM is a powerful tool, but only when wielded with care. At its core, causal inference is about asking the right questions, not just applying algorithms. At end of the tutorial, you should be able to:
+
+1. Simulate observational data with confounding
+2. Estimate propensity scores using multiple methods
+3. Implement 5+ matching algorithms with `MatchIt`
+4. Diagnose balance rigorously using `cobalt`
+5. Estimate causal effects with proper variance estimation
+6. Sensitivity analysis for unobserved confounding
+
+
+## Resources
+
+1. **Rosenbaum & Rubin (1983)** – Propensity score theory foundation  
+2. **Ho et al. (2007)** – Matching as nonparametric preprocessing  
+3. **King & Nielsen (2019)** – "Propensity score matching paradox" warning  
+4. **Stuart (2010)** – Best practices review in *Statistical Science*  
+5. **Thoemmes & Greifer (2020)** – `cobalt` package methodology  
+6. **Dehejia & Wahba (1999)** – LaLonde replication methodology  
+
